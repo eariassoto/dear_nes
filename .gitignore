@@ -1,4 +1,4 @@
-include/
+/include/
 thirdparty/
 lib/
 # Created by https://www.gitignore.io/api/cmake,visualstudio
