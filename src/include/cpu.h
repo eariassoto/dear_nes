@@ -38,7 +38,12 @@ class Cpu {
     };
 
     uint8_t GetFlag(FLAGS flag) const;
-    void SetFlag(FLAGS flag, bool value);
+
+    inline uint16_t GetProgramCounter() const { return m_ProgramCounter; }
+    inline uint16_t GetStackPointer() const { return m_StackPointer; }
+    inline uint8_t GetRegisterA() const { return m_RegisterA; }
+    inline uint8_t GetRegisterX() const { return m_RegisterX; }
+    inline uint8_t GetRegisterY() const { return m_RegisterY; }
 
     void Clock();
     void Reset();
@@ -74,6 +79,7 @@ class Cpu {
     Bus* m_Bus = nullptr;
 
    private:
+    void SetFlag(FLAGS flag, bool value);
     uint8_t Read(uint16_t address);
     void Write(uint16_t address, uint8_t data);
 
