@@ -2,17 +2,18 @@
 #include <array>
 #include <cinttypes>
 
-#include "include/cpu.h"
 namespace cpuemulator {
+
 class Bus {
    public:
     Bus();
+    ~Bus();
+
+	inline const uint8_t* GetMemoryPtr() const { return m_RAM; }
 
    private:
-    Cpu m_CPU;
-
     // fake ram
-    std::array<uint8_t, 64 * 1024> m_RAM;
+    uint8_t *m_RAM = nullptr;
 
    public:
     void Write(uint16_t address, uint8_t data);
