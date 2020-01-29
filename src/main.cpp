@@ -4,9 +4,12 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <iostream>
+#include <sstream>
 
 #include "include/cpu.h"
+#include "include/bus.h"
 #include "include/cpu_widget.h"
+#include "include/ram_widget.h"
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
@@ -30,7 +33,7 @@ int main(void) {
         return -1;
     }
 
-    glViewport(0, 0, 800, 600);
+    glViewport(0, 0, 1250, 600);
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 
     ImGui::CreateContext();
@@ -38,8 +41,34 @@ int main(void) {
     ImGui_ImplOpenGL3_Init(NULL);
     ImGui::StyleColorsDark();
 
-	cpuemulator::Cpu cpu;
+	
+    cpuemulator::Bus bus;
+    cpuemulator::Cpu cpu;
+    cpu.ConnectBus(&bus);
+	
 	cpuemulator::CpuWidget cpuWidget{cpu};
+    cpuemulator::RamWidget ramWidget1{"Memory Editor 1", bus, 0xFF, 0x0000};
+    cpuemulator::RamWidget ramWidget2{"Memory Editor 2", bus, 0xFF, 0x8000};
+
+	// Convert hex string into bytes for RAM
+    std::stringstream ss;
+    ss << "A2 0A 8E 00 00 A2 03 8E 01 00 AC 00 00 A9 00 18 6D 01 00 88 D0 FA "
+          "8D 02 00 EA EA EA";
+    uint16_t nOffset = 0x8000;
+    while (!ss.eof()) {
+        std::string b;
+        ss >> b;
+        bus.Write(nOffset++, (uint8_t)std::stoul(b, nullptr, 16));
+    }
+
+	// Set Reset Vector
+    bus.Write(0xFFFC, 0x00);
+    bus.Write(0xFFFD, 0x80);
+
+	cpu.Reset();
+    do {
+        cpu.Clock();
+    } while (!cpu.InstructionComplete());
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -54,6 +83,8 @@ int main(void) {
 
 		// render widgets
         cpuWidget.Render();
+        ramWidget1.Render();
+        ramWidget2.Render();
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
