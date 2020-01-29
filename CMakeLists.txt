@@ -1,5 +1,4 @@
-
-cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 project(nes-emulator)
 
 link_directories(${CMAKE_SOURCE_DIR}/lib)
@@ -28,6 +27,9 @@ message(STATUS "Found GLFW3 in ${GLFW3_INCLUDE_DIR}")
 # GLAD
 add_library(GLAD "thirdparty/glad.c")
 
+add_subdirectory(external/fmt)
+include_directories(${fmt_INCLUDE_DIRS})
+
 # Imgui
 add_library(IMGUI
 	"thirdparty/imgui/imgui.cpp"
@@ -38,7 +40,7 @@ add_library(IMGUI
 	"thirdparty/imgui/imgui_widgets.cpp"
 )
 
-set(LIBS glfw3 opengl32 GLAD IMGUI)
+set(LIBS glfw3 opengl32 GLAD IMGUI fmt::fmt)
 
 include_directories(
 	"${CMAKE_SOURCE_DIR}/src"
@@ -47,6 +49,9 @@ include_directories(
 )
 
 target_link_libraries(${PROJECT_NAME} ${LIBS})
+
+set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
+set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
 
 # Create virtual folders to make it look nicer in VS
 if(MSVC_IDE)
