@@ -16,6 +16,8 @@ void Cpu::Clock() {
 
         SetFlag(FLAGS::U, 1);
 
+		m_ProgramCounter++;
+
         // todo handle illegal ops
         Instruction& instr = m_InstructionSet.at(m_OpCode);
 
