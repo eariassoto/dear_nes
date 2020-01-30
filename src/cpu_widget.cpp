@@ -1,5 +1,5 @@
-#include "include\cpu_widget.h"
-#include "include\cpu.h"
+#include "include/cpu_widget.h"
+#include "include/cpu.h"
 
 namespace cpuemulator {
 

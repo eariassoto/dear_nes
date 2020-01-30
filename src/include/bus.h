@@ -9,7 +9,7 @@ class Bus {
     Bus();
     ~Bus();
 
-	inline const uint8_t* GetMemoryPtr() const { return m_RAM; }
+	inline const uint8_t* GetMemoryPtr(uint16_t b) const { return m_RAM + b; }
 
    private:
     // fake ram

@@ -6,9 +6,10 @@
 #include <iostream>
 #include <sstream>
 
-#include "include/cpu.h"
 #include "include/bus.h"
+#include "include/cpu.h"
 #include "include/cpu_widget.h"
+#include "include/instruction_disassembler.h"
 #include "include/ram_widget.h"
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
@@ -20,7 +21,8 @@ int main(void) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(800, 600, "LearnOpenGL", NULL, NULL);
+    GLFWwindow* window =
+        glfwCreateWindow(1000, 650, "NES Emulator", NULL, NULL);
     if (window == NULL) {
         std::cout << "Failed to create GLFW window" << '\n';
         glfwTerminate();
@@ -41,16 +43,21 @@ int main(void) {
     ImGui_ImplOpenGL3_Init(NULL);
     ImGui::StyleColorsDark();
 
-	
     cpuemulator::Bus bus;
     cpuemulator::Cpu cpu;
     cpu.ConnectBus(&bus);
-	
-	cpuemulator::CpuWidget cpuWidget{cpu};
-    cpuemulator::RamWidget ramWidget1{"Memory Editor 1", bus, 0xFF, 0x0000};
-    cpuemulator::RamWidget ramWidget2{"Memory Editor 2", bus, 0xFF, 0x8000};
 
-	// Convert hex string into bytes for RAM
+    cpuemulator::CpuWidget cpuWidget{cpu};
+
+    void* ramSection1Ptr = (void*)(bus.GetMemoryPtr(0x0000));
+    void* ramSection2Ptr = (void*)(bus.GetMemoryPtr(0x8000));
+    cpuemulator::RamWidget ramWidget1{"Memory Editor 1", ramSection1Ptr, 0xFF,
+                                      0x0000};
+    cpuemulator::RamWidget ramWidget2{"Memory Editor 2", ramSection2Ptr, 0xFF,
+                                      0x8000};
+
+    cpuemulator::InstructionDisassembler instr{bus};
+    // Convert hex string into bytes for RAM
     std::stringstream ss;
     ss << "A2 0A 8E 00 00 A2 03 8E 01 00 AC 00 00 A9 00 18 6D 01 00 88 D0 FA "
           "8D 02 00 EA EA EA";
@@ -61,11 +68,13 @@ int main(void) {
         bus.Write(nOffset++, (uint8_t)std::stoul(b, nullptr, 16));
     }
 
-	// Set Reset Vector
+    instr.DisassembleMemory(0x8000, 0x80F0);
+
+    // Set Reset Vector
     bus.Write(0xFFFC, 0x00);
     bus.Write(0xFFFD, 0x80);
 
-	cpu.Reset();
+    cpu.Reset();
     do {
         cpu.Clock();
     } while (!cpu.InstructionComplete());
@@ -81,10 +90,11 @@ int main(void) {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-		// render widgets
+        // render widgets
         cpuWidget.Render();
         ramWidget1.Render();
         ramWidget2.Render();
+        instr.Render(cpu.GetProgramCounter());
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
