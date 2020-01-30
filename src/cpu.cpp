@@ -16,10 +16,10 @@ void Cpu::Clock() {
 
         SetFlag(FLAGS::U, 1);
 
-		m_ProgramCounter++;
+        m_ProgramCounter++;
 
         // todo handle illegal ops
-        Instruction& instr = m_InstructionSet.at(m_OpCode);
+        Instruction& instr = m_InstrSet.at(m_OpCode);
 
         uint8_t cycles = instr.m_Cycles;
 
@@ -823,462 +823,329 @@ uint8_t Cpu::Instruction_TYA() {
 }
 
 void Cpu::RegisterAllInstructionSet() {
-    m_InstructionSet.reserve(151);
+    m_InstrSet.reserve(151);
 
     using am = AddressingMode;
-    m_InstructionSet.emplace(
-        0x00, Instruction{"BRK", std::bind(&Cpu::Instruction_BRK, this),
-                          am::IMPLIED_ADDRESSING, 7});
-    m_InstructionSet.emplace(
-        0x01, Instruction{"ORA", std::bind(&Cpu::Instruction_ORA, this),
-                          am::INDEXED_INDIRECT_ADDRESSING_X, 6});
-    m_InstructionSet.emplace(
-        0x05, Instruction{"ORA", std::bind(&Cpu::Instruction_ORA, this),
-                          am::ZERO_PAGE_ADDRESSING, 3});
-    m_InstructionSet.emplace(
-        0x06, Instruction{"ASL", std::bind(&Cpu::Instruction_ASL, this),
-                          am::ZERO_PAGE_ADDRESSING, 5});
-    m_InstructionSet.emplace(
-        0x08, Instruction{"PHP", std::bind(&Cpu::Instruction_PHP, this),
-                          am::IMPLIED_ADDRESSING, 3});
-    m_InstructionSet.emplace(
-        0x09, Instruction{"ORA", std::bind(&Cpu::Instruction_ORA, this),
-                          am::IMMEDIATE_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0x0A, Instruction{"ASL", std::bind(&Cpu::Instruction_ASL, this),
-                          am::ACCUMMULATOR_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0x0D, Instruction{"ORA", std::bind(&Cpu::Instruction_ORA, this),
-                          am::ABSOLUTE_ADDRESSING, 4});
-    m_InstructionSet.emplace(
-        0x0E, Instruction{"ASL", std::bind(&Cpu::Instruction_ASL, this),
-                          am::ABSOLUTE_ADDRESSING, 6});
-    m_InstructionSet.emplace(
-        0x10, Instruction{"BPL", std::bind(&Cpu::Instruction_BPL, this),
-                          am::RELATIVE_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0x11, Instruction{"ORA", std::bind(&Cpu::Instruction_ORA, this),
-                          am::INDIRECT_INDEXED_ADDRESSING_Y, 5});
-    m_InstructionSet.emplace(
-        0x15, Instruction{"ORA", std::bind(&Cpu::Instruction_ORA, this),
-                          am::INDEXED_ZERO_PAGE_ADDRESSING_X, 4});
-    m_InstructionSet.emplace(
-        0x16, Instruction{"ASL", std::bind(&Cpu::Instruction_ASL, this),
-                          am::INDEXED_ZERO_PAGE_ADDRESSING_X, 6});
-    m_InstructionSet.emplace(
-        0x18, Instruction{"CLC", std::bind(&Cpu::Instruction_CLC, this),
-                          am::IMPLIED_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0x19, Instruction{"ORA", std::bind(&Cpu::Instruction_ORA, this),
-                          am::INDEXED_ABSOLUTE_ADDRESSING_Y, 4});
-    m_InstructionSet.emplace(
-        0x1D, Instruction{"ORA", std::bind(&Cpu::Instruction_ORA, this),
-                          am::INDEXED_ABSOLUTE_ADDRESSING_X, 4});
-    m_InstructionSet.emplace(
-        0x1E, Instruction{"ASL", std::bind(&Cpu::Instruction_ASL, this),
-                          am::INDEXED_ABSOLUTE_ADDRESSING_X, 7});
-    m_InstructionSet.emplace(
-        0x20, Instruction{"JSR", std::bind(&Cpu::Instruction_JSR, this),
-                          am::ABSOLUTE_ADDRESSING, 6});
-    m_InstructionSet.emplace(
-        0x21, Instruction{"AND", std::bind(&Cpu::Instruction_AND, this),
-                          am::INDEXED_INDIRECT_ADDRESSING_X, 6});
-    m_InstructionSet.emplace(
-        0x24, Instruction{"BIT", std::bind(&Cpu::Instruction_BIT, this),
-                          am::ZERO_PAGE_ADDRESSING, 3});
-    m_InstructionSet.emplace(
-        0x25, Instruction{"AND", std::bind(&Cpu::Instruction_AND, this),
-                          am::ZERO_PAGE_ADDRESSING, 3});
-    m_InstructionSet.emplace(
-        0x26, Instruction{"ROL", std::bind(&Cpu::Instruction_ROL, this),
-                          am::ZERO_PAGE_ADDRESSING, 5});
-    m_InstructionSet.emplace(
-        0x28, Instruction{"PLP", std::bind(&Cpu::Instruction_PLP, this),
-                          am::IMPLIED_ADDRESSING, 4});
-    m_InstructionSet.emplace(
-        0x29, Instruction{"AND", std::bind(&Cpu::Instruction_AND, this),
-                          am::IMMEDIATE_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0x2A, Instruction{"ROL", std::bind(&Cpu::Instruction_ROL, this),
-                          am::ACCUMMULATOR_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0x2C, Instruction{"BIT", std::bind(&Cpu::Instruction_BIT, this),
-                          am::ABSOLUTE_ADDRESSING, 4});
-    m_InstructionSet.emplace(
-        0x2D, Instruction{"AND", std::bind(&Cpu::Instruction_AND, this),
-                          am::ABSOLUTE_ADDRESSING, 4});
-    m_InstructionSet.emplace(
-        0x2E, Instruction{"ROL", std::bind(&Cpu::Instruction_ROL, this),
-                          am::ABSOLUTE_ADDRESSING, 6});
-    m_InstructionSet.emplace(
-        0x30, Instruction{"BMI", std::bind(&Cpu::Instruction_BMI, this),
-                          am::RELATIVE_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0x31, Instruction{"AND", std::bind(&Cpu::Instruction_AND, this),
-                          am::INDIRECT_INDEXED_ADDRESSING_Y, 5});
-    m_InstructionSet.emplace(
-        0x35, Instruction{"AND", std::bind(&Cpu::Instruction_AND, this),
-                          am::INDEXED_ZERO_PAGE_ADDRESSING_X, 4});
-    m_InstructionSet.emplace(
-        0x36, Instruction{"ROL", std::bind(&Cpu::Instruction_ROL, this),
-                          am::INDEXED_ZERO_PAGE_ADDRESSING_X, 6});
-    m_InstructionSet.emplace(
-        0x38, Instruction{"SEC", std::bind(&Cpu::Instruction_SEC, this),
-                          am::IMPLIED_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0x39, Instruction{"AND", std::bind(&Cpu::Instruction_AND, this),
-                          am::INDEXED_ABSOLUTE_ADDRESSING_Y, 4});
-    m_InstructionSet.emplace(
-        0x3D, Instruction{"AND", std::bind(&Cpu::Instruction_AND, this),
-                          am::INDEXED_ABSOLUTE_ADDRESSING_X, 4});
-    m_InstructionSet.emplace(
-        0x3E, Instruction{"ROL", std::bind(&Cpu::Instruction_ROL, this),
-                          am::INDEXED_ABSOLUTE_ADDRESSING_X});
-    m_InstructionSet.emplace(
-        0x40, Instruction{"RTI", std::bind(&Cpu::Instruction_RTI, this),
-                          am::IMPLIED_ADDRESSING, 6});
-    m_InstructionSet.emplace(
-        0x41, Instruction{"EOR", std::bind(&Cpu::Instruction_EOR, this),
-                          am::INDEXED_INDIRECT_ADDRESSING_X, 6});
-    m_InstructionSet.emplace(
-        0x45, Instruction{"EOR", std::bind(&Cpu::Instruction_EOR, this),
-                          am::ZERO_PAGE_ADDRESSING, 3});
-    m_InstructionSet.emplace(
-        0x46, Instruction{"LSR", std::bind(&Cpu::Instruction_LSR, this),
-                          am::ZERO_PAGE_ADDRESSING, 5});
-    m_InstructionSet.emplace(
-        0x48, Instruction{"PHA", std::bind(&Cpu::Instruction_PHA, this),
-                          am::IMPLIED_ADDRESSING, 3});
-    m_InstructionSet.emplace(
-        0x49, Instruction{"EOR", std::bind(&Cpu::Instruction_EOR, this),
-                          am::IMMEDIATE_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0x4A, Instruction{"LSR", std::bind(&Cpu::Instruction_LSR, this),
-                          am::ACCUMMULATOR_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0x4C, Instruction{"JMP", std::bind(&Cpu::Instruction_JMP, this),
-                          am::ABSOLUTE_ADDRESSING, 3});
-    m_InstructionSet.emplace(
-        0x4D, Instruction{"EOR", std::bind(&Cpu::Instruction_EOR, this),
-                          am::ABSOLUTE_ADDRESSING, 4});
-    m_InstructionSet.emplace(
-        0x4E, Instruction{"LSR", std::bind(&Cpu::Instruction_LSR, this),
-                          am::ABSOLUTE_ADDRESSING, 6});
-    m_InstructionSet.emplace(
-        0x50, Instruction{"BVC", std::bind(&Cpu::Instruction_BVC, this),
-                          am::RELATIVE_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0x51, Instruction{"EOR", std::bind(&Cpu::Instruction_EOR, this),
-                          am::INDIRECT_INDEXED_ADDRESSING_Y, 5});
-    m_InstructionSet.emplace(
-        0x55, Instruction{"EOR", std::bind(&Cpu::Instruction_EOR, this),
-                          am::INDEXED_ZERO_PAGE_ADDRESSING_X, 4});
-    m_InstructionSet.emplace(
-        0x56, Instruction{"LSR", std::bind(&Cpu::Instruction_LSR, this),
-                          am::INDEXED_ZERO_PAGE_ADDRESSING_X, 6});
-    m_InstructionSet.emplace(
-        0x58, Instruction{"CLI", std::bind(&Cpu::Instruction_CLI, this),
-                          am::IMPLIED_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0x59, Instruction{"EOR", std::bind(&Cpu::Instruction_EOR, this),
-                          am::INDEXED_ABSOLUTE_ADDRESSING_Y, 4});
-    m_InstructionSet.emplace(
-        0x5D, Instruction{"EOR", std::bind(&Cpu::Instruction_EOR, this),
-                          am::INDEXED_ABSOLUTE_ADDRESSING_X, 4});
-    m_InstructionSet.emplace(
-        0x5E, Instruction{"LSR", std::bind(&Cpu::Instruction_LSR, this),
-                          am::INDEXED_ABSOLUTE_ADDRESSING_X, 7});
-    m_InstructionSet.emplace(
-        0x60, Instruction{"RTS", std::bind(&Cpu::Instruction_RTS, this),
-                          am::IMPLIED_ADDRESSING, 6});
-    m_InstructionSet.emplace(
-        0x61, Instruction{"ADC", std::bind(&Cpu::Instruction_ADC, this),
-                          am::INDEXED_INDIRECT_ADDRESSING_X, 6});
-    m_InstructionSet.emplace(
-        0x65, Instruction{"ADC", std::bind(&Cpu::Instruction_ADC, this),
-                          am::ZERO_PAGE_ADDRESSING, 3});
-    m_InstructionSet.emplace(
-        0x66, Instruction{"ROR", std::bind(&Cpu::Instruction_ROR, this),
-                          am::ZERO_PAGE_ADDRESSING, 5});
-    m_InstructionSet.emplace(
-        0x68, Instruction{"PLA", std::bind(&Cpu::Instruction_PLA, this),
-                          am::IMPLIED_ADDRESSING, 4});
-    m_InstructionSet.emplace(
-        0x69, Instruction{"ADC", std::bind(&Cpu::Instruction_ADC, this),
-                          am::IMMEDIATE_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0x6A, Instruction{"ROR", std::bind(&Cpu::Instruction_ROR, this),
-                          am::ACCUMMULATOR_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0x6C, Instruction{"JMP", std::bind(&Cpu::Instruction_JMP, this),
-                          am::ABSOLUTE_INDIRECT_ADDRESSING, 5});
-    m_InstructionSet.emplace(
-        0x6D, Instruction{"ADC", std::bind(&Cpu::Instruction_ADC, this),
-                          am::ABSOLUTE_ADDRESSING, 4});
-    m_InstructionSet.emplace(
-        0x6E, Instruction{"ROR", std::bind(&Cpu::Instruction_ROR, this),
-                          am::ABSOLUTE_ADDRESSING, 6});
-    m_InstructionSet.emplace(
-        0x70, Instruction{"BVS", std::bind(&Cpu::Instruction_BVS, this),
-                          am::RELATIVE_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0x71, Instruction{"ADC", std::bind(&Cpu::Instruction_ADC, this),
-                          am::INDIRECT_INDEXED_ADDRESSING_Y, 5});
-    m_InstructionSet.emplace(
-        0x75, Instruction{"ADC", std::bind(&Cpu::Instruction_ADC, this),
-                          am::INDEXED_ZERO_PAGE_ADDRESSING_X, 4});
-    m_InstructionSet.emplace(
-        0x76, Instruction{"ROR", std::bind(&Cpu::Instruction_ROR, this),
-                          am::INDEXED_ZERO_PAGE_ADDRESSING_X, 6});
-    m_InstructionSet.emplace(
-        0x78, Instruction{"SEI", std::bind(&Cpu::Instruction_SEI, this),
-                          am::IMPLIED_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0x79, Instruction{"ADC", std::bind(&Cpu::Instruction_ADC, this),
-                          am::INDEXED_ABSOLUTE_ADDRESSING_Y, 4});
-    m_InstructionSet.emplace(
-        0x7D, Instruction{"ADC", std::bind(&Cpu::Instruction_ADC, this),
-                          am::INDEXED_ABSOLUTE_ADDRESSING_X, 4});
-    m_InstructionSet.emplace(
-        0x7E, Instruction{"ROR", std::bind(&Cpu::Instruction_ROR, this),
-                          am::INDEXED_ABSOLUTE_ADDRESSING_X, 7});
-    m_InstructionSet.emplace(
-        0x81, Instruction{"STA", std::bind(&Cpu::Instruction_STA, this),
-                          am::INDEXED_INDIRECT_ADDRESSING_X, 6});
-    m_InstructionSet.emplace(
-        0x84, Instruction{"STY", std::bind(&Cpu::Instruction_STY, this),
-                          am::ZERO_PAGE_ADDRESSING, 3});
-    m_InstructionSet.emplace(
-        0x85, Instruction{"STA", std::bind(&Cpu::Instruction_STA, this),
-                          am::ZERO_PAGE_ADDRESSING, 3});
-    m_InstructionSet.emplace(
-        0x86, Instruction{"STX", std::bind(&Cpu::Instruction_STX, this),
-                          am::ZERO_PAGE_ADDRESSING, 3});
-    m_InstructionSet.emplace(
-        0x88, Instruction{"DEY", std::bind(&Cpu::Instruction_DEY, this),
-                          am::IMPLIED_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0x8A, Instruction{"TXA", std::bind(&Cpu::Instruction_TXA, this),
-                          am::IMPLIED_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0x8C, Instruction{"STY", std::bind(&Cpu::Instruction_STY, this),
-                          am::ABSOLUTE_ADDRESSING, 4});
-    m_InstructionSet.emplace(
-        0x8D, Instruction{"STA", std::bind(&Cpu::Instruction_STA, this),
-                          am::ABSOLUTE_ADDRESSING, 4});
-    m_InstructionSet.emplace(
-        0x8E, Instruction{"STX", std::bind(&Cpu::Instruction_STX, this),
-                          am::ABSOLUTE_ADDRESSING, 4});
-    m_InstructionSet.emplace(
-        0x90, Instruction{"BCC", std::bind(&Cpu::Instruction_BCC, this),
-                          am::RELATIVE_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0x91, Instruction{"STA", std::bind(&Cpu::Instruction_STA, this),
-                          am::INDIRECT_INDEXED_ADDRESSING_Y, 6});
-    m_InstructionSet.emplace(
-        0x94, Instruction{"STY", std::bind(&Cpu::Instruction_STY, this),
-                          am::INDEXED_ZERO_PAGE_ADDRESSING_X, 4});
-    m_InstructionSet.emplace(
-        0x95, Instruction{"STA", std::bind(&Cpu::Instruction_STA, this),
-                          am::INDEXED_ZERO_PAGE_ADDRESSING_X, 4});
-    m_InstructionSet.emplace(
-        0x96, Instruction{"STX", std::bind(&Cpu::Instruction_STX, this),
-                          am::INDEXED_ZERO_PAGE_ADDRESSING_Y, 4});
-    m_InstructionSet.emplace(
-        0x98, Instruction{"TYA", std::bind(&Cpu::Instruction_TYA, this),
-                          am::IMPLIED_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0x99, Instruction{"STA", std::bind(&Cpu::Instruction_STA, this),
-                          am::INDEXED_ABSOLUTE_ADDRESSING_Y, 5});
-    m_InstructionSet.emplace(
-        0x9A, Instruction{"TXS", std::bind(&Cpu::Instruction_TXS, this),
-                          am::IMPLIED_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0x9D, Instruction{"STA", std::bind(&Cpu::Instruction_STA, this),
-                          am::INDEXED_ABSOLUTE_ADDRESSING_X, 5});
-    m_InstructionSet.emplace(
-        0xA0, Instruction{"LDY", std::bind(&Cpu::Instruction_LDY, this),
-                          am::IMMEDIATE_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0xA1, Instruction{"LDA", std::bind(&Cpu::Instruction_LDA, this),
-                          am::INDEXED_INDIRECT_ADDRESSING_X, 6});
-    m_InstructionSet.emplace(
-        0xA2, Instruction{"LDX", std::bind(&Cpu::Instruction_LDX, this),
-                          am::IMMEDIATE_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0xA4, Instruction{"LDY", std::bind(&Cpu::Instruction_LDY, this),
-                          am::ZERO_PAGE_ADDRESSING, 3});
-    m_InstructionSet.emplace(
-        0xA5, Instruction{"LDA", std::bind(&Cpu::Instruction_LDA, this),
-                          am::ZERO_PAGE_ADDRESSING, 3});
-    m_InstructionSet.emplace(
-        0xA6, Instruction{"LDX", std::bind(&Cpu::Instruction_LDX, this),
-                          am::ZERO_PAGE_ADDRESSING, 3});
-    m_InstructionSet.emplace(
-        0xA8, Instruction{"TAY", std::bind(&Cpu::Instruction_TAY, this),
-                          am::IMPLIED_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0xA9, Instruction{"LDA", std::bind(&Cpu::Instruction_LDA, this),
-                          am::IMMEDIATE_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0xAA, Instruction{"TAX", std::bind(&Cpu::Instruction_TAX, this),
-                          am::IMPLIED_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0xAC, Instruction{"LDY", std::bind(&Cpu::Instruction_LDY, this),
-                          am::ABSOLUTE_ADDRESSING, 4});
-    m_InstructionSet.emplace(
-        0xAD, Instruction{"LDA", std::bind(&Cpu::Instruction_LDA, this),
-                          am::ABSOLUTE_ADDRESSING, 4});
-    m_InstructionSet.emplace(
-        0xAE, Instruction{"LDX", std::bind(&Cpu::Instruction_LDX, this),
-                          am::ABSOLUTE_ADDRESSING, 4});
-    m_InstructionSet.emplace(
-        0xB0, Instruction{"BCS", std::bind(&Cpu::Instruction_BCS, this),
-                          am::RELATIVE_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0xB1, Instruction{"LDA", std::bind(&Cpu::Instruction_LDA, this),
-                          am::INDIRECT_INDEXED_ADDRESSING_Y, 5});
-    m_InstructionSet.emplace(
-        0xB4, Instruction{"LDY", std::bind(&Cpu::Instruction_LDY, this),
-                          am::INDEXED_ZERO_PAGE_ADDRESSING_X, 4});
-    m_InstructionSet.emplace(
-        0xB5, Instruction{"LDA", std::bind(&Cpu::Instruction_LDA, this),
-                          am::INDEXED_ZERO_PAGE_ADDRESSING_X, 4});
-    m_InstructionSet.emplace(
-        0xB6, Instruction{"LDX", std::bind(&Cpu::Instruction_LDX, this),
-                          am::INDEXED_ZERO_PAGE_ADDRESSING_Y, 4});
-    m_InstructionSet.emplace(
-        0xB8, Instruction{"CLV", std::bind(&Cpu::Instruction_CLV, this),
-                          am::IMPLIED_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0xB9, Instruction{"LDA", std::bind(&Cpu::Instruction_LDA, this),
-                          am::INDEXED_ABSOLUTE_ADDRESSING_Y, 4});
-    m_InstructionSet.emplace(
-        0xBA, Instruction{"TSX", std::bind(&Cpu::Instruction_TSX, this),
-                          am::IMPLIED_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0xBC, Instruction{"LDY", std::bind(&Cpu::Instruction_LDY, this),
-                          am::INDEXED_ABSOLUTE_ADDRESSING_X, 4});
-    m_InstructionSet.emplace(
-        0xBD, Instruction{"LDA", std::bind(&Cpu::Instruction_LDA, this),
-                          am::INDEXED_ABSOLUTE_ADDRESSING_X, 4});
-    m_InstructionSet.emplace(
-        0xBE, Instruction{"LDX", std::bind(&Cpu::Instruction_LDX, this),
-                          am::INDEXED_ABSOLUTE_ADDRESSING_Y, 4});
-    m_InstructionSet.emplace(
-        0xC0, Instruction{"CPY", std::bind(&Cpu::Instruction_CPY, this),
-                          am::IMMEDIATE_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0xC1, Instruction{"CMP", std::bind(&Cpu::Instruction_CMP, this),
-                          am::INDEXED_INDIRECT_ADDRESSING_X, 6});
-    m_InstructionSet.emplace(
-        0xC4, Instruction{"CPY", std::bind(&Cpu::Instruction_CPY, this),
-                          am::ZERO_PAGE_ADDRESSING, 3});
-    m_InstructionSet.emplace(
-        0xC5, Instruction{"CMP", std::bind(&Cpu::Instruction_CMP, this),
-                          am::ZERO_PAGE_ADDRESSING, 3});
-    m_InstructionSet.emplace(
-        0xC6, Instruction{"DEC", std::bind(&Cpu::Instruction_DEC, this),
-                          am::ZERO_PAGE_ADDRESSING, 5});
-    m_InstructionSet.emplace(
-        0xC8, Instruction{"INY", std::bind(&Cpu::Instruction_INY, this),
-                          am::IMPLIED_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0xC9, Instruction{"CMP", std::bind(&Cpu::Instruction_CMP, this),
-                          am::IMMEDIATE_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0xCA, Instruction{"DEX", std::bind(&Cpu::Instruction_DEX, this),
-                          am::IMPLIED_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0xCC, Instruction{"CPY", std::bind(&Cpu::Instruction_CPY, this),
-                          am::ABSOLUTE_ADDRESSING, 4});
-    m_InstructionSet.emplace(
-        0xCD, Instruction{"CMP", std::bind(&Cpu::Instruction_CMP, this),
-                          am::ABSOLUTE_ADDRESSING, 4});
-    m_InstructionSet.emplace(
-        0xCE, Instruction{"DEC", std::bind(&Cpu::Instruction_DEC, this),
-                          am::ABSOLUTE_ADDRESSING, 6});
-    m_InstructionSet.emplace(
-        0xD0, Instruction{"BNE", std::bind(&Cpu::Instruction_BNE, this),
-                          am::RELATIVE_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0xD1, Instruction{"CMP", std::bind(&Cpu::Instruction_CMP, this),
-                          am::INDIRECT_INDEXED_ADDRESSING_Y, 5});
-    m_InstructionSet.emplace(
-        0xD5, Instruction{"CMP", std::bind(&Cpu::Instruction_CMP, this),
-                          am::INDEXED_ZERO_PAGE_ADDRESSING_X, 4});
-    m_InstructionSet.emplace(
-        0xD6, Instruction{"DEC", std::bind(&Cpu::Instruction_DEC, this),
-                          am::INDEXED_ZERO_PAGE_ADDRESSING_X, 6});
-    m_InstructionSet.emplace(
-        0xD8, Instruction{"CLD", std::bind(&Cpu::Instruction_CLD, this),
-                          am::IMPLIED_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0xD9, Instruction{"CMP", std::bind(&Cpu::Instruction_CMP, this),
-                          am::INDEXED_ABSOLUTE_ADDRESSING_Y, 4});
-    m_InstructionSet.emplace(
-        0xDD, Instruction{"CMP", std::bind(&Cpu::Instruction_CMP, this),
-                          am::INDEXED_ABSOLUTE_ADDRESSING_X, 4});
-    m_InstructionSet.emplace(
-        0xDF, Instruction{"DEC", std::bind(&Cpu::Instruction_DEC, this),
-                          am::INDEXED_ABSOLUTE_ADDRESSING_X, 7});
-    m_InstructionSet.emplace(
-        0xE0, Instruction{"CPX", std::bind(&Cpu::Instruction_CPX, this),
-                          am::IMMEDIATE_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0xE1, Instruction{"SBC", std::bind(&Cpu::Instruction_SBC, this),
-                          am::INDEXED_INDIRECT_ADDRESSING_X, 6});
-    m_InstructionSet.emplace(
-        0xE4, Instruction{"CPX", std::bind(&Cpu::Instruction_CPX, this),
-                          am::ZERO_PAGE_ADDRESSING, 3});
-    m_InstructionSet.emplace(
-        0xE5, Instruction{"SBC", std::bind(&Cpu::Instruction_SBC, this),
-                          am::ZERO_PAGE_ADDRESSING, 3});
-    m_InstructionSet.emplace(
-        0xE6, Instruction{"INC", std::bind(&Cpu::Instruction_INC, this),
-                          am::ZERO_PAGE_ADDRESSING, 5});
-    m_InstructionSet.emplace(
-        0xE8, Instruction{"INX", std::bind(&Cpu::Instruction_INX, this),
-                          am::IMPLIED_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0xE9, Instruction{"SBC", std::bind(&Cpu::Instruction_SBC, this),
-                          am::IMMEDIATE_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0xEA, Instruction{"NOP", std::bind(&Cpu::Instruction_NOP, this),
-                          am::IMPLIED_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0xEC, Instruction{"CPX", std::bind(&Cpu::Instruction_CPX, this),
-                          am::ABSOLUTE_ADDRESSING, 4});
-    m_InstructionSet.emplace(
-        0xED, Instruction{"SBC", std::bind(&Cpu::Instruction_SBC, this),
-                          am::ABSOLUTE_ADDRESSING, 4});
-    m_InstructionSet.emplace(
-        0xEE, Instruction{"INC", std::bind(&Cpu::Instruction_INC, this),
-                          am::ABSOLUTE_ADDRESSING, 6});
-    m_InstructionSet.emplace(
-        0xF0, Instruction{"BEQ", std::bind(&Cpu::Instruction_BEQ, this),
-                          am::RELATIVE_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0xF1, Instruction{"SBC", std::bind(&Cpu::Instruction_SBC, this),
-                          am::INDIRECT_INDEXED_ADDRESSING_Y, 5});
-    m_InstructionSet.emplace(
-        0xF5, Instruction{"SBC", std::bind(&Cpu::Instruction_SBC, this),
-                          am::INDEXED_ZERO_PAGE_ADDRESSING_X, 4});
-    m_InstructionSet.emplace(
-        0xF6, Instruction{"INC", std::bind(&Cpu::Instruction_INC, this),
-                          am::INDEXED_ZERO_PAGE_ADDRESSING_X, 6});
-    m_InstructionSet.emplace(
-        0xF8, Instruction{"SED", std::bind(&Cpu::Instruction_SED, this),
-                          am::IMPLIED_ADDRESSING, 2});
-    m_InstructionSet.emplace(
-        0xF9, Instruction{"SBC", std::bind(&Cpu::Instruction_SBC, this),
-                          am::INDEXED_ABSOLUTE_ADDRESSING_Y, 4});
-    m_InstructionSet.emplace(
-        0xFD, Instruction{"SBC", std::bind(&Cpu::Instruction_SBC, this),
-                          am::INDEXED_ABSOLUTE_ADDRESSING_X, 4});
-    m_InstructionSet.emplace(
-        0xFE, Instruction{"INC", std::bind(&Cpu::Instruction_INC, this),
-                          am::INDEXED_ABSOLUTE_ADDRESSING_X, 7});
+    m_InstrSet.emplace(0x00, Instruction{std::bind(&Cpu::Instruction_BRK, this),
+                                         am::IMPLIED_ADDRESSING, 7});
+    m_InstrSet.emplace(0x01, Instruction{std::bind(&Cpu::Instruction_ORA, this),
+                                         am::INDEXED_INDIRECT_ADDRESSING_X, 6});
+    m_InstrSet.emplace(0x05, Instruction{std::bind(&Cpu::Instruction_ORA, this),
+                                         am::ZERO_PAGE_ADDRESSING, 3});
+    m_InstrSet.emplace(0x06, Instruction{std::bind(&Cpu::Instruction_ASL, this),
+                                         am::ZERO_PAGE_ADDRESSING, 5});
+    m_InstrSet.emplace(0x08, Instruction{std::bind(&Cpu::Instruction_PHP, this),
+                                         am::IMPLIED_ADDRESSING, 3});
+    m_InstrSet.emplace(0x09, Instruction{std::bind(&Cpu::Instruction_ORA, this),
+                                         am::IMMEDIATE_ADDRESSING, 2});
+    m_InstrSet.emplace(0x0A, Instruction{std::bind(&Cpu::Instruction_ASL, this),
+                                         am::ACCUMMULATOR_ADDRESSING, 2});
+    m_InstrSet.emplace(0x0D, Instruction{std::bind(&Cpu::Instruction_ORA, this),
+                                         am::ABSOLUTE_ADDRESSING, 4});
+    m_InstrSet.emplace(0x0E, Instruction{std::bind(&Cpu::Instruction_ASL, this),
+                                         am::ABSOLUTE_ADDRESSING, 6});
+    m_InstrSet.emplace(0x10, Instruction{std::bind(&Cpu::Instruction_BPL, this),
+                                         am::RELATIVE_ADDRESSING, 2});
+    m_InstrSet.emplace(0x11, Instruction{std::bind(&Cpu::Instruction_ORA, this),
+                                         am::INDIRECT_INDEXED_ADDRESSING_Y, 5});
+    m_InstrSet.emplace(0x15,
+                       Instruction{std::bind(&Cpu::Instruction_ORA, this),
+                                   am::INDEXED_ZERO_PAGE_ADDRESSING_X, 4});
+    m_InstrSet.emplace(0x16,
+                       Instruction{std::bind(&Cpu::Instruction_ASL, this),
+                                   am::INDEXED_ZERO_PAGE_ADDRESSING_X, 6});
+    m_InstrSet.emplace(0x18, Instruction{std::bind(&Cpu::Instruction_CLC, this),
+                                         am::IMPLIED_ADDRESSING, 2});
+    m_InstrSet.emplace(0x19, Instruction{std::bind(&Cpu::Instruction_ORA, this),
+                                         am::INDEXED_ABSOLUTE_ADDRESSING_Y, 4});
+    m_InstrSet.emplace(0x1D, Instruction{std::bind(&Cpu::Instruction_ORA, this),
+                                         am::INDEXED_ABSOLUTE_ADDRESSING_X, 4});
+    m_InstrSet.emplace(0x1E, Instruction{std::bind(&Cpu::Instruction_ASL, this),
+                                         am::INDEXED_ABSOLUTE_ADDRESSING_X, 7});
+    m_InstrSet.emplace(0x20, Instruction{std::bind(&Cpu::Instruction_JSR, this),
+                                         am::ABSOLUTE_ADDRESSING, 6});
+    m_InstrSet.emplace(0x21, Instruction{std::bind(&Cpu::Instruction_AND, this),
+                                         am::INDEXED_INDIRECT_ADDRESSING_X, 6});
+    m_InstrSet.emplace(0x24, Instruction{std::bind(&Cpu::Instruction_BIT, this),
+                                         am::ZERO_PAGE_ADDRESSING, 3});
+    m_InstrSet.emplace(0x25, Instruction{std::bind(&Cpu::Instruction_AND, this),
+                                         am::ZERO_PAGE_ADDRESSING, 3});
+    m_InstrSet.emplace(0x26, Instruction{std::bind(&Cpu::Instruction_ROL, this),
+                                         am::ZERO_PAGE_ADDRESSING, 5});
+    m_InstrSet.emplace(0x28, Instruction{std::bind(&Cpu::Instruction_PLP, this),
+                                         am::IMPLIED_ADDRESSING, 4});
+    m_InstrSet.emplace(0x29, Instruction{std::bind(&Cpu::Instruction_AND, this),
+                                         am::IMMEDIATE_ADDRESSING, 2});
+    m_InstrSet.emplace(0x2A, Instruction{std::bind(&Cpu::Instruction_ROL, this),
+                                         am::ACCUMMULATOR_ADDRESSING, 2});
+    m_InstrSet.emplace(0x2C, Instruction{std::bind(&Cpu::Instruction_BIT, this),
+                                         am::ABSOLUTE_ADDRESSING, 4});
+    m_InstrSet.emplace(0x2D, Instruction{std::bind(&Cpu::Instruction_AND, this),
+                                         am::ABSOLUTE_ADDRESSING, 4});
+    m_InstrSet.emplace(0x2E, Instruction{std::bind(&Cpu::Instruction_ROL, this),
+                                         am::ABSOLUTE_ADDRESSING, 6});
+    m_InstrSet.emplace(0x30, Instruction{std::bind(&Cpu::Instruction_BMI, this),
+                                         am::RELATIVE_ADDRESSING, 2});
+    m_InstrSet.emplace(0x31, Instruction{std::bind(&Cpu::Instruction_AND, this),
+                                         am::INDIRECT_INDEXED_ADDRESSING_Y, 5});
+    m_InstrSet.emplace(0x35,
+                       Instruction{std::bind(&Cpu::Instruction_AND, this),
+                                   am::INDEXED_ZERO_PAGE_ADDRESSING_X, 4});
+    m_InstrSet.emplace(0x36,
+                       Instruction{std::bind(&Cpu::Instruction_ROL, this),
+                                   am::INDEXED_ZERO_PAGE_ADDRESSING_X, 6});
+    m_InstrSet.emplace(0x38, Instruction{std::bind(&Cpu::Instruction_SEC, this),
+                                         am::IMPLIED_ADDRESSING, 2});
+    m_InstrSet.emplace(0x39, Instruction{std::bind(&Cpu::Instruction_AND, this),
+                                         am::INDEXED_ABSOLUTE_ADDRESSING_Y, 4});
+    m_InstrSet.emplace(0x3D, Instruction{std::bind(&Cpu::Instruction_AND, this),
+                                         am::INDEXED_ABSOLUTE_ADDRESSING_X, 4});
+    m_InstrSet.emplace(0x3E, Instruction{std::bind(&Cpu::Instruction_ROL, this),
+                                         am::INDEXED_ABSOLUTE_ADDRESSING_X});
+    m_InstrSet.emplace(0x40, Instruction{std::bind(&Cpu::Instruction_RTI, this),
+                                         am::IMPLIED_ADDRESSING, 6});
+    m_InstrSet.emplace(0x41, Instruction{std::bind(&Cpu::Instruction_EOR, this),
+                                         am::INDEXED_INDIRECT_ADDRESSING_X, 6});
+    m_InstrSet.emplace(0x45, Instruction{std::bind(&Cpu::Instruction_EOR, this),
+                                         am::ZERO_PAGE_ADDRESSING, 3});
+    m_InstrSet.emplace(0x46, Instruction{std::bind(&Cpu::Instruction_LSR, this),
+                                         am::ZERO_PAGE_ADDRESSING, 5});
+    m_InstrSet.emplace(0x48, Instruction{std::bind(&Cpu::Instruction_PHA, this),
+                                         am::IMPLIED_ADDRESSING, 3});
+    m_InstrSet.emplace(0x49, Instruction{std::bind(&Cpu::Instruction_EOR, this),
+                                         am::IMMEDIATE_ADDRESSING, 2});
+    m_InstrSet.emplace(0x4A, Instruction{std::bind(&Cpu::Instruction_LSR, this),
+                                         am::ACCUMMULATOR_ADDRESSING, 2});
+    m_InstrSet.emplace(0x4C, Instruction{std::bind(&Cpu::Instruction_JMP, this),
+                                         am::ABSOLUTE_ADDRESSING, 3});
+    m_InstrSet.emplace(0x4D, Instruction{std::bind(&Cpu::Instruction_EOR, this),
+                                         am::ABSOLUTE_ADDRESSING, 4});
+    m_InstrSet.emplace(0x4E, Instruction{std::bind(&Cpu::Instruction_LSR, this),
+                                         am::ABSOLUTE_ADDRESSING, 6});
+    m_InstrSet.emplace(0x50, Instruction{std::bind(&Cpu::Instruction_BVC, this),
+                                         am::RELATIVE_ADDRESSING, 2});
+    m_InstrSet.emplace(0x51, Instruction{std::bind(&Cpu::Instruction_EOR, this),
+                                         am::INDIRECT_INDEXED_ADDRESSING_Y, 5});
+    m_InstrSet.emplace(0x55,
+                       Instruction{std::bind(&Cpu::Instruction_EOR, this),
+                                   am::INDEXED_ZERO_PAGE_ADDRESSING_X, 4});
+    m_InstrSet.emplace(0x56,
+                       Instruction{std::bind(&Cpu::Instruction_LSR, this),
+                                   am::INDEXED_ZERO_PAGE_ADDRESSING_X, 6});
+    m_InstrSet.emplace(0x58, Instruction{std::bind(&Cpu::Instruction_CLI, this),
+                                         am::IMPLIED_ADDRESSING, 2});
+    m_InstrSet.emplace(0x59, Instruction{std::bind(&Cpu::Instruction_EOR, this),
+                                         am::INDEXED_ABSOLUTE_ADDRESSING_Y, 4});
+    m_InstrSet.emplace(0x5D, Instruction{std::bind(&Cpu::Instruction_EOR, this),
+                                         am::INDEXED_ABSOLUTE_ADDRESSING_X, 4});
+    m_InstrSet.emplace(0x5E, Instruction{std::bind(&Cpu::Instruction_LSR, this),
+                                         am::INDEXED_ABSOLUTE_ADDRESSING_X, 7});
+    m_InstrSet.emplace(0x60, Instruction{std::bind(&Cpu::Instruction_RTS, this),
+                                         am::IMPLIED_ADDRESSING, 6});
+    m_InstrSet.emplace(0x61, Instruction{std::bind(&Cpu::Instruction_ADC, this),
+                                         am::INDEXED_INDIRECT_ADDRESSING_X, 6});
+    m_InstrSet.emplace(0x65, Instruction{std::bind(&Cpu::Instruction_ADC, this),
+                                         am::ZERO_PAGE_ADDRESSING, 3});
+    m_InstrSet.emplace(0x66, Instruction{std::bind(&Cpu::Instruction_ROR, this),
+                                         am::ZERO_PAGE_ADDRESSING, 5});
+    m_InstrSet.emplace(0x68, Instruction{std::bind(&Cpu::Instruction_PLA, this),
+                                         am::IMPLIED_ADDRESSING, 4});
+    m_InstrSet.emplace(0x69, Instruction{std::bind(&Cpu::Instruction_ADC, this),
+                                         am::IMMEDIATE_ADDRESSING, 2});
+    m_InstrSet.emplace(0x6A, Instruction{std::bind(&Cpu::Instruction_ROR, this),
+                                         am::ACCUMMULATOR_ADDRESSING, 2});
+    m_InstrSet.emplace(0x6C, Instruction{std::bind(&Cpu::Instruction_JMP, this),
+                                         am::ABSOLUTE_INDIRECT_ADDRESSING, 5});
+    m_InstrSet.emplace(0x6D, Instruction{std::bind(&Cpu::Instruction_ADC, this),
+                                         am::ABSOLUTE_ADDRESSING, 4});
+    m_InstrSet.emplace(0x6E, Instruction{std::bind(&Cpu::Instruction_ROR, this),
+                                         am::ABSOLUTE_ADDRESSING, 6});
+    m_InstrSet.emplace(0x70, Instruction{std::bind(&Cpu::Instruction_BVS, this),
+                                         am::RELATIVE_ADDRESSING, 2});
+    m_InstrSet.emplace(0x71, Instruction{std::bind(&Cpu::Instruction_ADC, this),
+                                         am::INDIRECT_INDEXED_ADDRESSING_Y, 5});
+    m_InstrSet.emplace(0x75,
+                       Instruction{std::bind(&Cpu::Instruction_ADC, this),
+                                   am::INDEXED_ZERO_PAGE_ADDRESSING_X, 4});
+    m_InstrSet.emplace(0x76,
+                       Instruction{std::bind(&Cpu::Instruction_ROR, this),
+                                   am::INDEXED_ZERO_PAGE_ADDRESSING_X, 6});
+    m_InstrSet.emplace(0x78, Instruction{std::bind(&Cpu::Instruction_SEI, this),
+                                         am::IMPLIED_ADDRESSING, 2});
+    m_InstrSet.emplace(0x79, Instruction{std::bind(&Cpu::Instruction_ADC, this),
+                                         am::INDEXED_ABSOLUTE_ADDRESSING_Y, 4});
+    m_InstrSet.emplace(0x7D, Instruction{std::bind(&Cpu::Instruction_ADC, this),
+                                         am::INDEXED_ABSOLUTE_ADDRESSING_X, 4});
+    m_InstrSet.emplace(0x7E, Instruction{std::bind(&Cpu::Instruction_ROR, this),
+                                         am::INDEXED_ABSOLUTE_ADDRESSING_X, 7});
+    m_InstrSet.emplace(0x81, Instruction{std::bind(&Cpu::Instruction_STA, this),
+                                         am::INDEXED_INDIRECT_ADDRESSING_X, 6});
+    m_InstrSet.emplace(0x84, Instruction{std::bind(&Cpu::Instruction_STY, this),
+                                         am::ZERO_PAGE_ADDRESSING, 3});
+    m_InstrSet.emplace(0x85, Instruction{std::bind(&Cpu::Instruction_STA, this),
+                                         am::ZERO_PAGE_ADDRESSING, 3});
+    m_InstrSet.emplace(0x86, Instruction{std::bind(&Cpu::Instruction_STX, this),
+                                         am::ZERO_PAGE_ADDRESSING, 3});
+    m_InstrSet.emplace(0x88, Instruction{std::bind(&Cpu::Instruction_DEY, this),
+                                         am::IMPLIED_ADDRESSING, 2});
+    m_InstrSet.emplace(0x8A, Instruction{std::bind(&Cpu::Instruction_TXA, this),
+                                         am::IMPLIED_ADDRESSING, 2});
+    m_InstrSet.emplace(0x8C, Instruction{std::bind(&Cpu::Instruction_STY, this),
+                                         am::ABSOLUTE_ADDRESSING, 4});
+    m_InstrSet.emplace(0x8D, Instruction{std::bind(&Cpu::Instruction_STA, this),
+                                         am::ABSOLUTE_ADDRESSING, 4});
+    m_InstrSet.emplace(0x8E, Instruction{std::bind(&Cpu::Instruction_STX, this),
+                                         am::ABSOLUTE_ADDRESSING, 4});
+    m_InstrSet.emplace(0x90, Instruction{std::bind(&Cpu::Instruction_BCC, this),
+                                         am::RELATIVE_ADDRESSING, 2});
+    m_InstrSet.emplace(0x91, Instruction{std::bind(&Cpu::Instruction_STA, this),
+                                         am::INDIRECT_INDEXED_ADDRESSING_Y, 6});
+    m_InstrSet.emplace(0x94,
+                       Instruction{std::bind(&Cpu::Instruction_STY, this),
+                                   am::INDEXED_ZERO_PAGE_ADDRESSING_X, 4});
+    m_InstrSet.emplace(0x95,
+                       Instruction{std::bind(&Cpu::Instruction_STA, this),
+                                   am::INDEXED_ZERO_PAGE_ADDRESSING_X, 4});
+    m_InstrSet.emplace(0x96,
+                       Instruction{std::bind(&Cpu::Instruction_STX, this),
+                                   am::INDEXED_ZERO_PAGE_ADDRESSING_Y, 4});
+    m_InstrSet.emplace(0x98, Instruction{std::bind(&Cpu::Instruction_TYA, this),
+                                         am::IMPLIED_ADDRESSING, 2});
+    m_InstrSet.emplace(0x99, Instruction{std::bind(&Cpu::Instruction_STA, this),
+                                         am::INDEXED_ABSOLUTE_ADDRESSING_Y, 5});
+    m_InstrSet.emplace(0x9A, Instruction{std::bind(&Cpu::Instruction_TXS, this),
+                                         am::IMPLIED_ADDRESSING, 2});
+    m_InstrSet.emplace(0x9D, Instruction{std::bind(&Cpu::Instruction_STA, this),
+                                         am::INDEXED_ABSOLUTE_ADDRESSING_X, 5});
+    m_InstrSet.emplace(0xA0, Instruction{std::bind(&Cpu::Instruction_LDY, this),
+                                         am::IMMEDIATE_ADDRESSING, 2});
+    m_InstrSet.emplace(0xA1, Instruction{std::bind(&Cpu::Instruction_LDA, this),
+                                         am::INDEXED_INDIRECT_ADDRESSING_X, 6});
+    m_InstrSet.emplace(0xA2, Instruction{std::bind(&Cpu::Instruction_LDX, this),
+                                         am::IMMEDIATE_ADDRESSING, 2});
+    m_InstrSet.emplace(0xA4, Instruction{std::bind(&Cpu::Instruction_LDY, this),
+                                         am::ZERO_PAGE_ADDRESSING, 3});
+    m_InstrSet.emplace(0xA5, Instruction{std::bind(&Cpu::Instruction_LDA, this),
+                                         am::ZERO_PAGE_ADDRESSING, 3});
+    m_InstrSet.emplace(0xA6, Instruction{std::bind(&Cpu::Instruction_LDX, this),
+                                         am::ZERO_PAGE_ADDRESSING, 3});
+    m_InstrSet.emplace(0xA8, Instruction{std::bind(&Cpu::Instruction_TAY, this),
+                                         am::IMPLIED_ADDRESSING, 2});
+    m_InstrSet.emplace(0xA9, Instruction{std::bind(&Cpu::Instruction_LDA, this),
+                                         am::IMMEDIATE_ADDRESSING, 2});
+    m_InstrSet.emplace(0xAA, Instruction{std::bind(&Cpu::Instruction_TAX, this),
+                                         am::IMPLIED_ADDRESSING, 2});
+    m_InstrSet.emplace(0xAC, Instruction{std::bind(&Cpu::Instruction_LDY, this),
+                                         am::ABSOLUTE_ADDRESSING, 4});
+    m_InstrSet.emplace(0xAD, Instruction{std::bind(&Cpu::Instruction_LDA, this),
+                                         am::ABSOLUTE_ADDRESSING, 4});
+    m_InstrSet.emplace(0xAE, Instruction{std::bind(&Cpu::Instruction_LDX, this),
+                                         am::ABSOLUTE_ADDRESSING, 4});
+    m_InstrSet.emplace(0xB0, Instruction{std::bind(&Cpu::Instruction_BCS, this),
+                                         am::RELATIVE_ADDRESSING, 2});
+    m_InstrSet.emplace(0xB1, Instruction{std::bind(&Cpu::Instruction_LDA, this),
+                                         am::INDIRECT_INDEXED_ADDRESSING_Y, 5});
+    m_InstrSet.emplace(0xB4,
+                       Instruction{std::bind(&Cpu::Instruction_LDY, this),
+                                   am::INDEXED_ZERO_PAGE_ADDRESSING_X, 4});
+    m_InstrSet.emplace(0xB5,
+                       Instruction{std::bind(&Cpu::Instruction_LDA, this),
+                                   am::INDEXED_ZERO_PAGE_ADDRESSING_X, 4});
+    m_InstrSet.emplace(0xB6,
+                       Instruction{std::bind(&Cpu::Instruction_LDX, this),
+                                   am::INDEXED_ZERO_PAGE_ADDRESSING_Y, 4});
+    m_InstrSet.emplace(0xB8, Instruction{std::bind(&Cpu::Instruction_CLV, this),
+                                         am::IMPLIED_ADDRESSING, 2});
+    m_InstrSet.emplace(0xB9, Instruction{std::bind(&Cpu::Instruction_LDA, this),
+                                         am::INDEXED_ABSOLUTE_ADDRESSING_Y, 4});
+    m_InstrSet.emplace(0xBA, Instruction{std::bind(&Cpu::Instruction_TSX, this),
+                                         am::IMPLIED_ADDRESSING, 2});
+    m_InstrSet.emplace(0xBC, Instruction{std::bind(&Cpu::Instruction_LDY, this),
+                                         am::INDEXED_ABSOLUTE_ADDRESSING_X, 4});
+    m_InstrSet.emplace(0xBD, Instruction{std::bind(&Cpu::Instruction_LDA, this),
+                                         am::INDEXED_ABSOLUTE_ADDRESSING_X, 4});
+    m_InstrSet.emplace(0xBE, Instruction{std::bind(&Cpu::Instruction_LDX, this),
+                                         am::INDEXED_ABSOLUTE_ADDRESSING_Y, 4});
+    m_InstrSet.emplace(0xC0, Instruction{std::bind(&Cpu::Instruction_CPY, this),
+                                         am::IMMEDIATE_ADDRESSING, 2});
+    m_InstrSet.emplace(0xC1, Instruction{std::bind(&Cpu::Instruction_CMP, this),
+                                         am::INDEXED_INDIRECT_ADDRESSING_X, 6});
+    m_InstrSet.emplace(0xC4, Instruction{std::bind(&Cpu::Instruction_CPY, this),
+                                         am::ZERO_PAGE_ADDRESSING, 3});
+    m_InstrSet.emplace(0xC5, Instruction{std::bind(&Cpu::Instruction_CMP, this),
+                                         am::ZERO_PAGE_ADDRESSING, 3});
+    m_InstrSet.emplace(0xC6, Instruction{std::bind(&Cpu::Instruction_DEC, this),
+                                         am::ZERO_PAGE_ADDRESSING, 5});
+    m_InstrSet.emplace(0xC8, Instruction{std::bind(&Cpu::Instruction_INY, this),
+                                         am::IMPLIED_ADDRESSING, 2});
+    m_InstrSet.emplace(0xC9, Instruction{std::bind(&Cpu::Instruction_CMP, this),
+                                         am::IMMEDIATE_ADDRESSING, 2});
+    m_InstrSet.emplace(0xCA, Instruction{std::bind(&Cpu::Instruction_DEX, this),
+                                         am::IMPLIED_ADDRESSING, 2});
+    m_InstrSet.emplace(0xCC, Instruction{std::bind(&Cpu::Instruction_CPY, this),
+                                         am::ABSOLUTE_ADDRESSING, 4});
+    m_InstrSet.emplace(0xCD, Instruction{std::bind(&Cpu::Instruction_CMP, this),
+                                         am::ABSOLUTE_ADDRESSING, 4});
+    m_InstrSet.emplace(0xCE, Instruction{std::bind(&Cpu::Instruction_DEC, this),
+                                         am::ABSOLUTE_ADDRESSING, 6});
+    m_InstrSet.emplace(0xD0, Instruction{std::bind(&Cpu::Instruction_BNE, this),
+                                         am::RELATIVE_ADDRESSING, 2});
+    m_InstrSet.emplace(0xD1, Instruction{std::bind(&Cpu::Instruction_CMP, this),
+                                         am::INDIRECT_INDEXED_ADDRESSING_Y, 5});
+    m_InstrSet.emplace(0xD5,
+                       Instruction{std::bind(&Cpu::Instruction_CMP, this),
+                                   am::INDEXED_ZERO_PAGE_ADDRESSING_X, 4});
+    m_InstrSet.emplace(0xD6,
+                       Instruction{std::bind(&Cpu::Instruction_DEC, this),
+                                   am::INDEXED_ZERO_PAGE_ADDRESSING_X, 6});
+    m_InstrSet.emplace(0xD8, Instruction{std::bind(&Cpu::Instruction_CLD, this),
+                                         am::IMPLIED_ADDRESSING, 2});
+    m_InstrSet.emplace(0xD9, Instruction{std::bind(&Cpu::Instruction_CMP, this),
+                                         am::INDEXED_ABSOLUTE_ADDRESSING_Y, 4});
+    m_InstrSet.emplace(0xDD, Instruction{std::bind(&Cpu::Instruction_CMP, this),
+                                         am::INDEXED_ABSOLUTE_ADDRESSING_X, 4});
+    m_InstrSet.emplace(0xDF, Instruction{std::bind(&Cpu::Instruction_DEC, this),
+                                         am::INDEXED_ABSOLUTE_ADDRESSING_X, 7});
+    m_InstrSet.emplace(0xE0, Instruction{std::bind(&Cpu::Instruction_CPX, this),
+                                         am::IMMEDIATE_ADDRESSING, 2});
+    m_InstrSet.emplace(0xE1, Instruction{std::bind(&Cpu::Instruction_SBC, this),
+                                         am::INDEXED_INDIRECT_ADDRESSING_X, 6});
+    m_InstrSet.emplace(0xE4, Instruction{std::bind(&Cpu::Instruction_CPX, this),
+                                         am::ZERO_PAGE_ADDRESSING, 3});
+    m_InstrSet.emplace(0xE5, Instruction{std::bind(&Cpu::Instruction_SBC, this),
+                                         am::ZERO_PAGE_ADDRESSING, 3});
+    m_InstrSet.emplace(0xE6, Instruction{std::bind(&Cpu::Instruction_INC, this),
+                                         am::ZERO_PAGE_ADDRESSING, 5});
+    m_InstrSet.emplace(0xE8, Instruction{std::bind(&Cpu::Instruction_INX, this),
+                                         am::IMPLIED_ADDRESSING, 2});
+    m_InstrSet.emplace(0xE9, Instruction{std::bind(&Cpu::Instruction_SBC, this),
+                                         am::IMMEDIATE_ADDRESSING, 2});
+    m_InstrSet.emplace(0xEA, Instruction{std::bind(&Cpu::Instruction_NOP, this),
+                                         am::IMPLIED_ADDRESSING, 2});
+    m_InstrSet.emplace(0xEC, Instruction{std::bind(&Cpu::Instruction_CPX, this),
+                                         am::ABSOLUTE_ADDRESSING, 4});
+    m_InstrSet.emplace(0xED, Instruction{std::bind(&Cpu::Instruction_SBC, this),
+                                         am::ABSOLUTE_ADDRESSING, 4});
+    m_InstrSet.emplace(0xEE, Instruction{std::bind(&Cpu::Instruction_INC, this),
+                                         am::ABSOLUTE_ADDRESSING, 6});
+    m_InstrSet.emplace(0xF0, Instruction{std::bind(&Cpu::Instruction_BEQ, this),
+                                         am::RELATIVE_ADDRESSING, 2});
+    m_InstrSet.emplace(0xF1, Instruction{std::bind(&Cpu::Instruction_SBC, this),
+                                         am::INDIRECT_INDEXED_ADDRESSING_Y, 5});
+    m_InstrSet.emplace(0xF5,
+                       Instruction{std::bind(&Cpu::Instruction_SBC, this),
+                                   am::INDEXED_ZERO_PAGE_ADDRESSING_X, 4});
+    m_InstrSet.emplace(0xF6,
+                       Instruction{std::bind(&Cpu::Instruction_INC, this),
+                                   am::INDEXED_ZERO_PAGE_ADDRESSING_X, 6});
+    m_InstrSet.emplace(0xF8, Instruction{std::bind(&Cpu::Instruction_SED, this),
+                                         am::IMPLIED_ADDRESSING, 2});
+    m_InstrSet.emplace(0xF9, Instruction{std::bind(&Cpu::Instruction_SBC, this),
+                                         am::INDEXED_ABSOLUTE_ADDRESSING_Y, 4});
+    m_InstrSet.emplace(0xFD, Instruction{std::bind(&Cpu::Instruction_SBC, this),
+                                         am::INDEXED_ABSOLUTE_ADDRESSING_X, 4});
+    m_InstrSet.emplace(0xFE, Instruction{std::bind(&Cpu::Instruction_INC, this),
+                                         am::INDEXED_ABSOLUTE_ADDRESSING_X, 7});
 }
 }  // namespace cpuemulator
 

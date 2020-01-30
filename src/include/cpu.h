@@ -56,7 +56,7 @@ class Cpu {
     AddressingMode m_AddressingMode = AddressingMode::ACCUMMULATOR_ADDRESSING;
 
     struct Instruction;
-    std::unordered_map<uint8_t, Instruction> m_InstructionSet;
+    std::unordered_map<uint8_t, Instruction> m_InstrSet;
 
     uint8_t m_Cycles = 0x00;
     uint8_t m_OpCode = 0x00;
@@ -165,7 +165,6 @@ class Cpu {
 };
 
 struct Cpu::Instruction {
-    std::string m_Name;
     std::function<uint8_t()> m_FuncOperate;
     AddressingMode m_AddressingMode;
     uint8_t m_Cycles = 0;
