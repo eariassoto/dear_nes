@@ -26,7 +26,7 @@ void InstructionDisassembler::DisassembleMemory(uint16_t beginAddress,
     std::unordered_map<uint8_t, std::pair<std::string, uint8_t>>& instrSet =
         GetInstructionSet();
     for (uint16_t currAddr = beginAddress; currAddr < endAddress; ++currAddr) {
-        uint8_t opCode = m_Bus.Read(currAddr);
+        uint8_t opCode = m_Bus.CpuRead(currAddr);
         auto it = instrSet.find(opCode);
         if (it != instrSet.end()) {
             std::pair<std::string, uint8_t>& instr = (*it).second;
@@ -37,12 +37,12 @@ void InstructionDisassembler::DisassembleMemory(uint16_t beginAddress,
                     formattedInstr = fmt::format(instr.first, currAddr);
                     break;
                 case 1: {
-                    uint8_t param1 = m_Bus.Read(currAddr + 1);
+                    uint8_t param1 = m_Bus.CpuRead(currAddr + 1);
                     formattedInstr = fmt::format(instr.first, currAddr, param1);
                 } break;
                 case 2: {
-                    uint8_t param1 = m_Bus.Read(currAddr + 1);
-                    uint8_t param2 = m_Bus.Read(currAddr + 2);
+                    uint8_t param1 = m_Bus.CpuRead(currAddr + 1);
+                    uint8_t param2 = m_Bus.CpuRead(currAddr + 2);
                     formattedInstr =
                         fmt::format(instr.first, currAddr, param2, param1);
                 } break;

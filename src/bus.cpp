@@ -1,26 +1,43 @@
 #include <iostream>
 
 #include "include/bus.h"
+#include "include/cartridge.h"
 
 namespace cpuemulator {
-Bus::Bus() {
-    m_RAM = new uint8_t[0xFFFF];
-    memset(m_RAM, 0, 0xFFFF);
-}
+Bus::Bus() : m_cpuRam{new uint8_t[0x800]} { memset(m_cpuRam, 0, 0x800); }
 
-Bus::~Bus() { delete[] m_RAM; }
+Bus::~Bus() { delete[] m_cpuRam; }
 
-void Bus::Write(uint16_t address, uint8_t data) {
-    if (address >= 0x0000 && address <= 0xFFFF) {
-        m_RAM[address] = data;
+void Bus::CpuWrite(uint16_t address, uint8_t data) {
+    if (m_Cartridge->CpuWrite(address, data)) {
+    } else if (address >= 0x0000 && address <= 0x1FFF) {
+        m_cpuRam[GetRealRamAddress(address)] = data;
+    } else if (address >= 0x2000 && address <= 0x3FFF) {
+        m_Ppu.CpuWrite(GetRealPpuAddress(address), data);
     }
 }
 
-uint8_t Bus::Read(uint16_t address, bool /*isReadOnly*/) {
-    if (address >= 0x0000 && address <= 0xFFFF) {
-        return m_RAM[address];
+uint8_t Bus::CpuRead(uint16_t address, bool isReadOnly) {
+    uint8_t data = 0x00;
+    if (m_Cartridge->CpuRead(address, data)) {
+    } else if (address >= 0x0000 && address <= 0x1FFF) {
+        data = m_cpuRam[GetRealRamAddress(address)];
+    } else if (address >= 0x2000 && address <= 0x3FFF) {
+        data = m_Ppu.CpuRead(GetRealPpuAddress(address), isReadOnly);
     }
 
-    return uint8_t();
+    return data;
 }
+
+void Bus::InsertCatridge(const std::shared_ptr<Cartridge>& cartridge) {
+    m_Cartridge = cartridge;
+
+    m_Ppu.ConnectCatridge(cartridge);
+}
+
+void Bus::Reset() {
+    m_Cpu.Reset();
+    m_SystemClockCounter = 0;
+}
+
 }  // namespace cpuemulator

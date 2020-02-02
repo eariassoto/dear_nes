@@ -1,22 +1,45 @@
 #pragma once
-#include <array>
-#include <cinttypes>
+#include <memory>
+#include <cstdint>
+#include "include/cpu.h"
+#include "include/ppu.h"
 
 namespace cpuemulator {
+
+class Cartridge;
+
+class Cpu;
 
 class Bus {
    public:
     Bus();
     ~Bus();
 
-	inline const uint8_t* GetMemoryPtr(uint16_t b) const { return m_RAM + b; }
+    inline const uint8_t* GetRamPointer() const { return m_cpuRam; }
 
    private:
-    // fake ram
-    uint8_t *m_RAM = nullptr;
+    Cpu m_Cpu;
+    Ppu m_Ppu;
+    uint8_t* m_cpuRam = nullptr;
+
+	uint32_t m_SystemClockCounter = 0;
+
+	std::shared_ptr<Cartridge> m_Cartridge = nullptr;
+
+    inline uint16_t GetRealRamAddress(uint16_t address) const {
+        return address & 0x07FF;
+    }
+    inline uint16_t GetRealPpuAddress(uint16_t address) const {
+        return address & 0x0007;
+    }
 
    public:
-    void Write(uint16_t address, uint8_t data);
-    uint8_t Read(uint16_t address, bool isReadOnly = false);
+    void CpuWrite(uint16_t address, uint8_t data);
+    uint8_t CpuRead(uint16_t address, bool isReadOnly = false);
+
+   public:
+    void InsertCatridge(const std::shared_ptr<Cartridge>& cartridge);
+    void Reset();
+    void Clock();
 };
 }  // namespace cpuemulator

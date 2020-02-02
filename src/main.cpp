@@ -49,12 +49,9 @@ int main(void) {
 
     cpuemulator::CpuWidget cpuWidget{cpu};
 
-    void* ramSection1Ptr = (void*)(bus.GetMemoryPtr(0x0000));
-    void* ramSection2Ptr = (void*)(bus.GetMemoryPtr(0x8000));
-    cpuemulator::RamWidget ramWidget1{"Memory Editor 1", ramSection1Ptr, 0xFF,
+    void* ramSectionPtr = (void*)(bus.GetRamPointer());
+    cpuemulator::RamWidget ramWidget{"RAM Memory", ramSectionPtr, 2 * 1024,
                                       0x0000};
-    cpuemulator::RamWidget ramWidget2{"Memory Editor 2", ramSection2Ptr, 0xFF,
-                                      0x8000};
 
     cpuemulator::InstructionDisassembler instr{bus};
     // Convert hex string into bytes for RAM
@@ -65,14 +62,14 @@ int main(void) {
     while (!ss.eof()) {
         std::string b;
         ss >> b;
-        bus.Write(nOffset++, (uint8_t)std::stoul(b, nullptr, 16));
+        bus.CpuWrite(nOffset++, (uint8_t)std::stoul(b, nullptr, 16));
     }
 
     instr.DisassembleMemory(0x8000, 0x80F0);
 
     // Set Reset Vector
-    bus.Write(0xFFFC, 0x00);
-    bus.Write(0xFFFD, 0x80);
+    bus.CpuWrite(0xFFFC, 0x00);
+    bus.CpuWrite(0xFFFD, 0x80);
 
     cpu.Reset();
     do {
@@ -92,8 +89,7 @@ int main(void) {
 
         // render widgets
         cpuWidget.Render();
-        ramWidget1.Render();
-        ramWidget2.Render();
+        ramWidget.Render();
         instr.Render(cpu.GetProgramCounter());
 
         ImGui::Render();

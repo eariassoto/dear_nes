@@ -117,9 +117,9 @@ void Cpu::SetFlag(FLAGS flag, bool value) {
     }
 }
 
-uint8_t Cpu::Read(uint16_t address) { return m_Bus->Read(address); }
+uint8_t Cpu::Read(uint16_t address) { return m_Bus->CpuRead(address); }
 
-void Cpu::Write(uint16_t address, uint8_t data) { m_Bus->Write(address, data); }
+void Cpu::Write(uint16_t address, uint8_t data) { m_Bus->CpuWrite(address, data); }
 
 #pragma region ADDRESSIN_MODES
 
