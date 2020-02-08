@@ -11,41 +11,42 @@ file(GLOB_RECURSE HEADER_FILES
 	${CMAKE_SOURCE_DIR}/src/*.h
 	${CMAKE_SOURCE_DIR}/src/*.hpp)
 
+# Configure assets header file
+configure_file(src/helpers/RootDir.h.in src/helpers/RootDir.h)
 include_directories(${CMAKE_BINARY_DIR}/src)
 
 add_executable(${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
-
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 # OpenGL
 find_package(OpenGL REQUIRED)
 
 # GLFW
-find_package(GLFW3 REQUIRED)
-message(STATUS "Found GLFW3 in ${GLFW3_INCLUDE_DIR}")
+add_subdirectory("external/glfw")
 
 # GLAD
-add_library(GLAD "thirdparty/glad.c")
+add_library(GLAD "external/glad/glad.c")
 
 add_subdirectory(external/fmt)
 include_directories(${fmt_INCLUDE_DIRS})
 
 # Imgui
 add_library(IMGUI
-	"thirdparty/imgui/imgui.cpp"
-	"thirdparty/imgui/imgui_demo.cpp"
-	"thirdparty/imgui/imgui_draw.cpp"
-	"thirdparty/imgui/imgui_impl_glfw.cpp"
-	"thirdparty/imgui/imgui_impl_opengl3.cpp"
-	"thirdparty/imgui/imgui_widgets.cpp"
+	"external/imgui/imgui.cpp"
+	"external/imgui/imgui_demo.cpp"
+	"external/imgui/imgui_draw.cpp"
+	"external/imgui/examples/imgui_impl_glfw.cpp"
+	"external/imgui/examples/imgui_impl_opengl3.cpp"
+	"external/imgui/imgui_widgets.cpp"
 )
 
-set(LIBS glfw3 opengl32 GLAD IMGUI fmt::fmt)
+set(LIBS glfw opengl32 GLAD IMGUI fmt::fmt)
 
 include_directories(
 	"${CMAKE_SOURCE_DIR}/src"
-	"${CMAKE_SOURCE_DIR}/include"
-	"${CMAKE_SOURCE_DIR}/include/imgui"
+	"${CMAKE_SOURCE_DIR}/external"
+	"${CMAKE_SOURCE_DIR}/external/glfw/include"
+	"${CMAKE_SOURCE_DIR}/external/imgui"
+	"${CMAKE_SOURCE_DIR}/external/imgui/examples"
 )
 
 target_link_libraries(${PROJECT_NAME} ${LIBS})
