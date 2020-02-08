@@ -2,6 +2,7 @@
 #include <functional>
 #include <string>
 #include <unordered_map>
+#include "include/cpu_widget.h"
 
 namespace cpuemulator {
 class Bus;
@@ -37,14 +38,6 @@ class Cpu {
         RELATIVE_ADDRESSING
     };
 
-    uint8_t GetFlag(FLAGS flag) const;
-
-    inline uint16_t GetProgramCounter() const { return m_ProgramCounter; }
-    inline uint16_t GetStackPointer() const { return m_StackPointer; }
-    inline uint8_t GetRegisterA() const { return m_RegisterA; }
-    inline uint8_t GetRegisterX() const { return m_RegisterX; }
-    inline uint8_t GetRegisterY() const { return m_RegisterY; }
-
     void Clock();
     void Reset();
     void InterruptRequest();
@@ -79,6 +72,7 @@ class Cpu {
     Bus* m_Bus = nullptr;
 
    private:
+    uint8_t GetFlag(FLAGS flag) const;
     void SetFlag(FLAGS flag, bool value);
     uint8_t Read(uint16_t address);
     void Write(uint16_t address, uint8_t data);
@@ -162,9 +156,17 @@ class Cpu {
     uint8_t Instruction_TXA();
     uint8_t Instruction_TXS();
     uint8_t Instruction_TYA();
+
+    void AppendAddressingModeString(uint16_t address,
+                                    AddressingMode addressingMode,
+                                    std::string& outStr);
+    std::string GetInstructionString(uint16_t opCodeAddress);
+
+	friend class CpuWidget;
 };
 
 struct Cpu::Instruction {
+    std::string m_Name;
     std::function<uint8_t()> m_FuncOperate;
     AddressingMode m_AddressingMode;
     uint8_t m_Cycles = 0;
