@@ -10,7 +10,7 @@ CpuWidget::CpuWidget(Cpu& cpu)
 
 void CpuWidget::Render() {
     ImGui::Begin("CPU registers");
-    ImGui::SetWindowSize({200, 140});
+    ImGui::SetWindowSize({280, 160});
 
     ImGui::Text("Status: ");
     ImGui::SameLine();
@@ -30,14 +30,15 @@ void CpuWidget::Render() {
     ImGui::SameLine();
     ImGui::TextColored(GetColorForFlag(m_Cpu.GetFlag(Cpu::FLAGS::C)), "C");
 
-    ImGui::Text("PC: $%04x", m_Cpu.GetProgramCounter());
-    uint8_t regA = m_Cpu.GetRegisterA();
-    ImGui::Text("A: $%02x [%d]", regA, regA);
-    uint8_t regX = m_Cpu.GetRegisterX();
-    ImGui::Text("X: $%02x [%d]", regX, regX);
-    uint8_t regY = m_Cpu.GetRegisterY();
-    ImGui::Text("Y: $%02x [%d]", regY, regY);
-    ImGui::Text("Stack Pointer: $%04x", m_Cpu.GetStackPointer());
+    uint8_t regA = m_Cpu.m_RegisterA;
+    ImGui::Text("A: $%02X [%d]", regA, regA);
+    uint8_t regX = m_Cpu.m_RegisterX;
+    ImGui::Text("X: $%02X [%d]", regX, regX);
+    uint8_t regY = m_Cpu.m_RegisterY;
+    ImGui::Text("Y: $%02X [%d]", regY, regY);
+    ImGui::Text("Stack Pointer: $%04X", m_Cpu.m_StackPointer);
+    ImGui::Text("PC: $%04X", m_Cpu.m_ProgramCounter);
+    ImGui::Text("Instruction at PC: %s", m_Cpu.GetInstructionString(m_Cpu.m_ProgramCounter).c_str());
     ImGui::End();
 
     ImGui::Begin("CPU controls");
