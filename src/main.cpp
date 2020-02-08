@@ -4,13 +4,13 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <iostream>
+#include <memory>
 #include <sstream>
 
 #include "include/bus.h"
+#include "include/cartridge.h"
 #include "include/cpu.h"
 #include "include/cpu_widget.h"
-#include "include/instruction_disassembler.h"
-#include "include/ram_widget.h"
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
@@ -43,38 +43,25 @@ int main(void) {
     ImGui_ImplOpenGL3_Init(NULL);
     ImGui::StyleColorsDark();
 
-    cpuemulator::Bus bus;
-    cpuemulator::Cpu cpu;
-    cpu.ConnectBus(&bus);
-
-    cpuemulator::CpuWidget cpuWidget{cpu};
-
-    void* ramSectionPtr = (void*)(bus.GetRamPointer());
-    cpuemulator::RamWidget ramWidget{"RAM Memory", ramSectionPtr, 2 * 1024,
-                                      0x0000};
-
-    cpuemulator::InstructionDisassembler instr{bus};
-    // Convert hex string into bytes for RAM
-    std::stringstream ss;
-    ss << "A2 0A 8E 00 00 A2 03 8E 01 00 AC 00 00 A9 00 18 6D 01 00 88 D0 FA "
-          "8D 02 00 EA EA EA";
-    uint16_t nOffset = 0x8000;
-    while (!ss.eof()) {
-        std::string b;
-        ss >> b;
-        bus.CpuWrite(nOffset++, (uint8_t)std::stoul(b, nullptr, 16));
+    std::shared_ptr<cpuemulator::Cartridge> cartridge =
+        std::make_shared<cpuemulator::Cartridge>("nestest.nes");
+    if (!cartridge->IsLoaded()) {
+        return 1;
     }
 
-    instr.DisassembleMemory(0x8000, 0x80F0);
+    cpuemulator::Bus bus;
+    bus.InsertCatridge(cartridge);
 
-    // Set Reset Vector
+    cpuemulator::CpuWidget cpuWidget{bus.m_Cpu};
+
     bus.CpuWrite(0xFFFC, 0x00);
     bus.CpuWrite(0xFFFD, 0x80);
 
-    cpu.Reset();
-    do {
-        cpu.Clock();
-    } while (!cpu.InstructionComplete());
+    bus.m_Cpu.Reset();
+
+	do {
+        bus.m_Cpu.Clock();
+    } while (!bus.m_Cpu.InstructionComplete());
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -89,8 +76,6 @@ int main(void) {
 
         // render widgets
         cpuWidget.Render();
-        ramWidget.Render();
-        instr.Render(cpu.GetProgramCounter());
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
