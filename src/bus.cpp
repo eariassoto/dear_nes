@@ -2,9 +2,13 @@
 
 #include "include/bus.h"
 #include "include/cartridge.h"
+#include "include/logger.h"
 
 namespace cpuemulator {
-Bus::Bus() : m_cpuRam{new uint8_t[0x800]} { memset(m_cpuRam, 0, 0x800); }
+Bus::Bus() : m_cpuRam{new uint8_t[0x800]} {
+    m_Cpu.ConnectBus(this);
+    memset(m_cpuRam, 0, 0x800);
+}
 
 Bus::~Bus() { delete[] m_cpuRam; }
 
@@ -30,6 +34,7 @@ uint8_t Bus::CpuRead(uint16_t address, bool isReadOnly) {
 }
 
 void Bus::InsertCatridge(const std::shared_ptr<Cartridge>& cartridge) {
+    Logger::Get().Log("BUS", "Inserting cartridge");
     m_Cartridge = cartridge;
 
     m_Ppu.ConnectCatridge(cartridge);

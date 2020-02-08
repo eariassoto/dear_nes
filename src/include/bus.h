@@ -17,8 +17,10 @@ class Bus {
 
     inline const uint8_t* GetRamPointer() const { return m_cpuRam; }
 
-   private:
+	// todo do not expose
     Cpu m_Cpu;
+   private:
+    
     Ppu m_Ppu;
     uint8_t* m_cpuRam = nullptr;
 
