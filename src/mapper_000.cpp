@@ -1,3 +1,4 @@
+// Copyright (c) 2020 Emmanuel Arias
 #include "include/mapper_000.h"
 
 namespace cpuemulator {

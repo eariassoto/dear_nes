@@ -1,3 +1,4 @@
+// Copyright (c) 2020 Emmanuel Arias
 #include <iostream>
 
 #include "include/bus.h"

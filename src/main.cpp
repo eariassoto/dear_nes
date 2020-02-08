@@ -1,3 +1,4 @@
+// Copyright (c) 2020 Emmanuel Arias
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <imgui.h>

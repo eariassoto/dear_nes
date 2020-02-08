@@ -1,3 +1,4 @@
+# Copyright (c) 2020 Emmanuel Arias
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 project(nes-emulator)
 

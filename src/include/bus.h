@@ -1,3 +1,4 @@
+// Copyright (c) 2020 Emmanuel Arias
 #pragma once
 #include <memory>
 #include <cstdint>

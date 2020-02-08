@@ -1,3 +1,4 @@
+// Copyright (c) 2020 Emmanuel Arias
 #include "include/cartridge.h"
 #include <fstream>
 #include "include/logger.h"

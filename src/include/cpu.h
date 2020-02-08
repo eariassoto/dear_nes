@@ -1,3 +1,4 @@
+// Copyright (c) 2020 Emmanuel Arias
 #pragma once
 #include <functional>
 #include <string>

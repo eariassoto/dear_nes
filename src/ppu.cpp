@@ -1,3 +1,4 @@
+// Copyright (c) 2020 Emmanuel Arias
 #include "include/ppu.h"
 #include "include/cartridge.h"
 #include "include/logger.h"
