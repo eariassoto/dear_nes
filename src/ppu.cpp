@@ -1,5 +1,6 @@
 #include "include/ppu.h"
 #include "include/cartridge.h"
+#include "include/logger.h"
 
 namespace cpuemulator {
 uint8_t Ppu::CpuRead(uint16_t address, bool readOnly) {
@@ -70,6 +71,7 @@ void Ppu::PpuWrite(uint16_t address, uint8_t data) {
 }
 
 void Ppu::ConnectCatridge(const std::shared_ptr<Cartridge>& cartridge) {
+    Logger::Get().Log("PPU", "Connecting cartridge");
     m_Cartridge = cartridge;
 }
 
