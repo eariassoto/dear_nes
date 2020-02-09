@@ -7,5 +7,6 @@ This project is an attempt to create a basic NES emulator. It attempts to use fe
 + OpenGL
 + [GLFW](https://github.com/glfw/glfw)
 + [GLAD](https://glad.dav1d.de/)
++ [glm](https://github.com/g-truc/glm)
 + [fmt](https://github.com/fmtlib/fmt)
 + [imgui](https://github.com/ocornut/imgui)
