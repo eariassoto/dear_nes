@@ -7,14 +7,24 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "include/bus.h"
 #include "include/cartridge.h"
 #include "include/cpu.h"
 #include "include/cpu_widget.h"
+#include "include/shader.h"
+#include "include/file_manager.h"
+#include "include/sprite.h"
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
+
+using cpuemulator::FileManager;
+using cpuemulator::Shader;
+using cpuemulator::Sprite;
 
 int main(void) {
     glfwInit();
@@ -38,6 +48,16 @@ int main(void) {
 
     glViewport(0, 0, 1250, 600);
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
+
+	Shader triangleShader;
+    triangleShader.Init(FileManager::ReadShader("simple-shader.vs"),
+                         FileManager::ReadShader("simple-shader.fs"));
+
+	unsigned int VAO = 0;
+	glGenVertexArrays(1, &VAO);
+
+    Sprite sprite{8, 8};
+    sprite.BindToVAO(VAO);
 
     ImGui::CreateContext();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -64,6 +84,9 @@ int main(void) {
         bus.m_Cpu.Clock();
     } while (!bus.m_Cpu.InstructionComplete());
 
+	static glm::mat4 trans = glm::mat4(1.0f);
+    trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5));
+
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
@@ -74,6 +97,11 @@ int main(void) {
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
+
+		// Render sprites
+		triangleShader.Use();
+        triangleShader.SetUniform("transform", glm::value_ptr(trans));
+        sprite.Render();
 
         // render widgets
         cpuWidget.Render();
