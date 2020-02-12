@@ -20,12 +20,12 @@ class Bus {
 
 	// todo do not expose
     Cpu m_Cpu;
-   private:
-    
     Ppu m_Ppu;
-    uint8_t* m_cpuRam = nullptr;
+    uint32_t m_SystemClockCounter = 0;
 
-	uint32_t m_SystemClockCounter = 0;
+   private:
+
+    uint8_t* m_cpuRam = nullptr;
 
 	std::shared_ptr<Cartridge> m_Cartridge = nullptr;
 

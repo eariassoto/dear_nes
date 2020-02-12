@@ -1,24 +1,23 @@
 // Copyright (c) 2020 Emmanuel Arias
 #include <cstring>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "include/sprite.h"
+#include "include/shader.h"
 #include "include/logger.h"
 
 namespace cpuemulator {
-Sprite::Sprite(unsigned int width, unsigned int height)
+Sprite::Sprite(unsigned int width, unsigned int height, float cellSize, float posX, float posY)
     : m_Width{width},
       m_Height{height},
-      m_TriangleVertices{
-          // positions          // texture coords
-          1.0f,  1.0f,  0.0f, 1.0f, 1.0f,  // top right
-          1.0f,  -1.0f, 0.0f, 1.0f, 0.0f,  // bottom right
-          -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,  // bottom left
-          -1.0f, 1.0f,  0.0f, 0.0f, 1.0f   // top left
-      } {
+    m_CellSizeInPixels{cellSize},
+    m_PositionX{posX},
+    m_PositionY{posY},
+    m_ModelMatrix{ glm::mat4(1.0f) } {
     int dataSize = m_Width * m_Height * CHANNEL_COUNT;
     m_TextureData = new GLubyte[dataSize];
     memset(m_TextureData, 0, dataSize);
-    PaintChessBoard();
 
     Logger::Get().Log("SPRITE", "Created {}x{} sprite", m_Width, m_Height);
 
@@ -38,6 +37,11 @@ Sprite::Sprite(unsigned int width, unsigned int height)
 
     glGenBuffers(1, &m_VBO);
     glGenBuffers(1, &m_EBO);
+
+    float spriteWidth = m_Width * m_CellSizeInPixels;
+    float spriteHeight = m_Height * m_CellSizeInPixels;
+    m_ModelMatrix = glm::translate(m_ModelMatrix, glm::vec3(m_PositionX, m_PositionY, 0.0f));
+    m_ModelMatrix = glm::scale(m_ModelMatrix, glm::vec3(spriteWidth, spriteHeight, 1.0f));
 }
 
 Sprite::~Sprite() {
@@ -49,8 +53,8 @@ void Sprite::BindToVAO(unsigned int VAO) {
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(m_TriangleVertices),
-                 m_TriangleVertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(TRIANGLE_VERTICES),
+        TRIANGLE_VERTICES, GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(TRIANGLE_INDEXES),
@@ -70,7 +74,10 @@ void Sprite::BindToVAO(unsigned int VAO) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void Sprite::Render() {
+void Sprite::Render(Shader& shader) {
+    shader.Use();
+    shader.SetUniform("model", glm::value_ptr(m_ModelMatrix));
+
     glBindTexture(GL_TEXTURE_2D, m_textureId);
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_Width, m_Height,
                     PIXEL_FORMAT, GL_UNSIGNED_BYTE, (GLvoid*)m_TextureData);
@@ -85,21 +92,16 @@ void Sprite::Render() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void Sprite::PaintChessBoard()
+void Sprite::SetPixel(int x, int y, int color)
 {
-    if (m_TextureData == nullptr) return;
+    if (x < 0 || x >= m_Width || y < 0 || y >= m_Height)
+    {
+        return;
+    }
 
     int* ptr = reinterpret_cast<int*>(m_TextureData);
-    // copy 4 bytes at once
-    for (int i = 0; i < m_Height; ++i) {
-        for (int j = 0; j < m_Width; ++j, ++ptr) {
-            if (i % 2 == j % 2) {
-                *ptr = 0x005D6D7E;
-            } else {
-                *ptr = 0x00FF5733;
-            }
-        }
-    }
+    const int position = (y * m_Width) + x;
+    ptr[position] = color;
 }
 
 }  // namespace cpuemulator

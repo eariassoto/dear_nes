@@ -10,11 +10,14 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <thread>
+#include <chrono>
 
 #include "include/bus.h"
 #include "include/cartridge.h"
 #include "include/cpu.h"
 #include "include/cpu_widget.h"
+#include "include/nes_widget.h"
 #include "include/shader.h"
 #include "include/file_manager.h"
 #include "include/sprite.h"
@@ -32,8 +35,10 @@ int main(void) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+    int screenWidth = 1250;
+    int screenHeight = 800;
     GLFWwindow* window =
-        glfwCreateWindow(1000, 650, "NES Emulator", NULL, NULL);
+        glfwCreateWindow(screenWidth, screenHeight, "NES Emulator", NULL, NULL);
     if (window == NULL) {
         std::cout << "Failed to create GLFW window" << '\n';
         glfwTerminate();
@@ -46,18 +51,15 @@ int main(void) {
         return -1;
     }
 
-    glViewport(0, 0, 1250, 600);
+    glViewport(0, 0, screenWidth, screenHeight);
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 
-	Shader triangleShader;
-    triangleShader.Init(FileManager::ReadShader("simple-shader.vs"),
-                         FileManager::ReadShader("simple-shader.fs"));
+    Shader spriteShader;
+    spriteShader.Init(FileManager::ReadShader("simple-shader.vs"),
+                      FileManager::ReadShader("simple-shader.fs"));
 
-	unsigned int VAO = 0;
-	glGenVertexArrays(1, &VAO);
-
-    Sprite sprite{8, 8};
-    sprite.BindToVAO(VAO);
+    unsigned int VAO = 0;
+    glGenVertexArrays(1, &VAO);
 
     ImGui::CreateContext();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -74,20 +76,29 @@ int main(void) {
     bus.InsertCatridge(cartridge);
 
     cpuemulator::CpuWidget cpuWidget{bus.m_Cpu};
+    cpuemulator::NesWidget nesWidget{bus};
 
     bus.CpuWrite(0xFFFC, 0x00);
     bus.CpuWrite(0xFFFD, 0x80);
 
+    bus.m_Ppu.m_SpriteScreen.BindToVAO(VAO);
+
     bus.m_Cpu.Reset();
 
-	do {
+    do {
         bus.m_Cpu.Clock();
     } while (!bus.m_Cpu.InstructionComplete());
 
-	static glm::mat4 trans = glm::mat4(1.0f);
-    trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5));
+    glm::mat4 projection = glm::ortho(0.0f, (GLfloat)screenWidth,
+                                      (GLfloat)screenHeight, 0.0f, -1.0f, 1.0f);
+
+    using namespace std::chrono;
+    const milliseconds frameTime{1000 / 60};
 
     while (!glfwWindowShouldClose(window)) {
+        std::chrono::milliseconds startFrameTime =
+            duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+
         glfwPollEvents();
 
         processInput(window);
@@ -98,18 +109,40 @@ int main(void) {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-		// Render sprites
-		triangleShader.Use();
-        triangleShader.SetUniform("transform", glm::value_ptr(trans));
-        sprite.Render();
+        ///
+        if (true) {
+            do {
+                bus.Clock();
+            } while (!bus.m_Ppu.isFrameComplete);
+
+            do {
+                bus.m_Cpu.Clock();
+            } while (bus.m_Cpu.InstructionComplete());
+            bus.m_Ppu.isFrameComplete = false;
+        }
+        ////
+
+        // Render sprites
+        spriteShader.Use();
+
+        spriteShader.SetUniform("projection", glm::value_ptr(projection));
+        bus.m_Ppu.m_SpriteScreen.Render(spriteShader);
 
         // render widgets
         cpuWidget.Render();
+        nesWidget.Render();
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(window);
+
+        std::chrono::milliseconds endFrameTime =
+            duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+
+        milliseconds sleepTime = frameTime - (endFrameTime - startFrameTime);
+
+        std::this_thread::sleep_for(sleepTime);
     }
 
     // Cleanup
