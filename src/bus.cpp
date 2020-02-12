@@ -46,4 +46,14 @@ void Bus::Reset() {
     m_SystemClockCounter = 0;
 }
 
+void Bus::Clock()
+{
+    m_Ppu.Clock();
+    if (m_SystemClockCounter % 3 == 0)
+    {
+        m_Cpu.Clock();
+    }
+    ++m_SystemClockCounter;
+}
+
 }  // namespace cpuemulator
