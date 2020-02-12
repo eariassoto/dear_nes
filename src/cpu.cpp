@@ -21,14 +21,22 @@ void Cpu::Clock() {
         m_ProgramCounter++;
 
         // todo handle illegal ops
-        Instruction& instr = m_InstrSet.at(m_OpCode);
+        Instruction *instr = nullptr;
+        auto it = m_InstrSet.find(m_OpCode);
+        if (it != m_InstrSet.end())
+        {
+            instr = &(it->second);
+        }
+        else {
+            instr = &(m_InstrSet.at(0xEA));
+        }
 
-        uint8_t cycles = instr.m_Cycles;
+        uint8_t cycles = instr->m_Cycles;
 
-        m_AddressingMode = instr.m_AddressingMode;
+        m_AddressingMode = instr->m_AddressingMode;
         uint8_t additionalCycle1 = ExecuteAddressing();
 
-        uint8_t additionalCycle2 = instr.m_FuncOperate();
+        uint8_t additionalCycle2 = instr->m_FuncOperate();
 
         cycles += (additionalCycle1 & additionalCycle2);
 
