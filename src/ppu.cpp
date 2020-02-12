@@ -76,4 +76,22 @@ void Ppu::ConnectCatridge(const std::shared_ptr<Cartridge>& cartridge) {
     m_Cartridge = cartridge;
 }
 
+void Ppu::Clock()
+{
+    int color = (rand() % 2) ? 0x00FFFFFF : 0x00000000;
+    m_SpriteScreen.SetPixel(m_Cycle - 1, m_ScanLine, color);
+
+    ++m_Cycle;
+    if (m_Cycle >= 341)
+    {
+        m_Cycle = 0;
+        ++m_ScanLine;
+        if (m_ScanLine >= 261)
+        {
+            m_ScanLine = -1;
+            isFrameComplete = true;
+        }
+    }
+}
+
 }  // namespace cpuemulator

@@ -2,10 +2,12 @@
 #pragma once
 #include <cstdint>
 #include <memory>
+#include "include/sprite.h"
 
 namespace cpuemulator {
 
 class Cartridge;
+class Sprite;
 
 class Ppu {
    private:
@@ -25,5 +27,16 @@ class Ppu {
    public:
     void ConnectCatridge(const std::shared_ptr<Cartridge>& cartridge);
     void Clock();
+
+public:
+    int palScreen[40];
+    Sprite m_SpriteScreen = Sprite{ 256, 240, 2, 10, 10 };
+    Sprite m_SpriteNameTable[2] = { Sprite{ 256, 240, 2, 10, 10 }, Sprite{ 256, 240, 2, 10, 10 } };
+    Sprite m_SpritePatternTable[2] = { Sprite{ 128, 128, 2, 10, 10 }, Sprite{ 128, 128, 2, 10, 10 } };
+    bool isFrameComplete = false;
+
+private:
+    int16_t m_ScanLine = 0;
+    int16_t m_Cycle = 0;
 };
 }  // namespace cpuemulator
