@@ -31,14 +31,17 @@ void Cpu::Clock() {
             instr = &(m_InstrSet.at(0xEA));
         }
 
-        uint8_t cycles = instr->m_Cycles;
+        m_Cycles = instr->m_Cycles;
 
         m_AddressingMode = instr->m_AddressingMode;
         uint8_t additionalCycle1 = ExecuteAddressing();
 
         uint8_t additionalCycle2 = instr->m_FuncOperate();
 
-        cycles += (additionalCycle1 & additionalCycle2);
+        if (additionalCycle1 & additionalCycle2)
+        {
+            ++m_Cycles;
+        }
 
         SetFlag(U, true);
     }

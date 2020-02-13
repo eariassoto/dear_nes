@@ -12,6 +12,9 @@ class NesWidget {
 
 private:
     Bus& m_Bus;
+
+    bool m_ShouldSimulationRun = false;
+    void DoNesFrame();
 };
 
 }  // namespace cpuemulator

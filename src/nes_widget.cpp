@@ -9,44 +9,53 @@ NesWidget::NesWidget(Bus& bus)
 
 void NesWidget::Render() {
     ImGui::Begin("NES controls");
-    ImGui::SetWindowSize({230, 80});
+    ImGui::SetWindowSize({230, 100});
     ImGui::Text("System Clock: %d", m_Bus.m_SystemClockCounter);
-    bool step = ImGui::Button("Step by Step");
-    if (step) {
-        do {
-            m_Bus.Clock();
-        } while (!m_Bus.m_Cpu.InstructionComplete());
+    ImGui::Checkbox("Run Simulation", &m_ShouldSimulationRun);
+    if (!m_ShouldSimulationRun)
+    {
+        bool step = ImGui::Button("Step by Step");
+        if (step) {
+            do {
+                m_Bus.Clock();
+            } while (!m_Bus.m_Cpu.InstructionComplete());
 
-        do {
-            m_Bus.Clock();
-        } while (m_Bus.m_Cpu.InstructionComplete());
+            do {
+                m_Bus.Clock();
+            } while (m_Bus.m_Cpu.InstructionComplete());
+        }
+        ImGui::SameLine();
+        bool reset = ImGui::Button("Reset");
+        if (reset)
+        {
+            m_Bus.Reset();
+        }
+        ImGui::SameLine();
+        bool frame = ImGui::Button("Frame");
+        if (frame)
+        {
+            DoNesFrame();
+        }
     }
-    ImGui::SameLine();
-    bool reset = ImGui::Button("Reset");
-	if (reset)
-	{
-        m_Bus.Reset();
-	}
-    ImGui::SameLine();
-    bool frame = ImGui::Button("Frame");
-	if (frame)
-	{
-        do {
-            m_Bus.Clock();
-        } while (!m_Bus.m_Ppu.isFrameComplete);
-
-        do {
-            m_Bus.m_Cpu.Clock();
-        } while (m_Bus.m_Cpu.InstructionComplete());
-
-        m_Bus.m_Ppu.isFrameComplete = false;
-	}
-   /* ImGui::SameLine();
-    bool nmi = ImGui::Button("NMI");
-    if (nmi) {
-        m_Cpu.NonMaskableInterrupt();
-    }*/
+    else
+    {
+        DoNesFrame();
+    }
     ImGui::End();
+}
+
+
+void NesWidget::DoNesFrame()
+{
+    do {
+        m_Bus.Clock();
+    } while (!m_Bus.m_Ppu.isFrameComplete);
+
+    do {
+        m_Bus.m_Cpu.Clock();
+    } while (m_Bus.m_Cpu.InstructionComplete());
+
+    m_Bus.m_Ppu.isFrameComplete = false;
 }
 
 }  // namespace cpuemulator
