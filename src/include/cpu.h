@@ -163,7 +163,7 @@ class Cpu {
                                     std::string& outStr);
     std::string GetInstructionString(uint16_t opCodeAddress);
 
-	friend class CpuWidget;
+    friend class CpuWidget;
 };
 
 struct Cpu::Instruction {

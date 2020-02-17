@@ -58,8 +58,8 @@ int main(void) {
     spriteShader.Init(FileManager::ReadShader("simple-shader.vs"),
                       FileManager::ReadShader("simple-shader.fs"));
 
-	unsigned int VAO = 0;
-	glGenVertexArrays(1, &VAO);
+    unsigned int VAO = 0;
+    glGenVertexArrays(1, &VAO);
 
     ImGui::CreateContext();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -91,12 +91,11 @@ int main(void) {
     glm::mat4 projection = glm::ortho(0.0f, (GLfloat)screenWidth,
                                       (GLfloat)screenHeight, 0.0f, -1.0f, 1.0f);
 
-
     Sprite& patternTable1 = bus.m_Ppu.GetPatternTable(0, 2);
     Sprite& patternTable2 = bus.m_Ppu.GetPatternTable(1, 2);
 
     using namespace std::chrono;
-    const milliseconds frameTime{ 1000 / 60 };
+    const milliseconds frameTime{1000 / 60};
     while (!glfwWindowShouldClose(window)) {
         std::chrono::milliseconds startFrameTime =
             duration_cast<milliseconds>(system_clock::now().time_since_epoch());
@@ -111,7 +110,7 @@ int main(void) {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-		// Render sprites
+        // Render sprites
         spriteShader.Use();
         spriteShader.SetUniform("projection", glm::value_ptr(projection));
         bus.m_Ppu.m_SpriteScreen.Render(spriteShader);

@@ -7,10 +7,10 @@ class Bus;
 
 class NesWidget {
    public:
-       NesWidget(Bus& cpu);
+    NesWidget(Bus& cpu);
     void Render();
 
-private:
+   private:
     Bus& m_Bus;
 
     bool m_ShouldSimulationRun = false;

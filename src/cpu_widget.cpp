@@ -11,7 +11,7 @@ CpuWidget::CpuWidget(Cpu& cpu)
 
 void CpuWidget::Render() {
     ImGui::Begin("CPU registers");
-    ImGui::SetWindowSize({ 280, 160 });
+    ImGui::SetWindowSize({280, 160});
 
     ImGui::Text("Status: ");
     ImGui::SameLine();
@@ -39,7 +39,8 @@ void CpuWidget::Render() {
     ImGui::Text("Y: $%02X [%d]", regY, regY);
     ImGui::Text("Stack Pointer: $%04X", m_Cpu.m_StackPointer);
     ImGui::Text("PC: $%04X", m_Cpu.m_ProgramCounter);
-    ImGui::Text("Instruction at PC: %s", m_Cpu.GetInstructionString(m_Cpu.m_ProgramCounter).c_str());
+    ImGui::Text("Instruction at PC: %s",
+                m_Cpu.GetInstructionString(m_Cpu.m_ProgramCounter).c_str());
     ImGui::End();
 }
 }  // namespace cpuemulator

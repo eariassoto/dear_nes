@@ -21,13 +21,11 @@ void Cpu::Clock() {
         m_ProgramCounter++;
 
         // todo handle illegal ops
-        Instruction *instr = nullptr;
+        Instruction* instr = nullptr;
         auto it = m_InstrSet.find(m_OpCode);
-        if (it != m_InstrSet.end())
-        {
+        if (it != m_InstrSet.end()) {
             instr = &(it->second);
-        }
-        else {
+        } else {
             instr = &(m_InstrSet.at(0xEA));
         }
 
@@ -38,8 +36,7 @@ void Cpu::Clock() {
 
         uint8_t additionalCycle2 = instr->m_FuncOperate();
 
-        if (additionalCycle1 & additionalCycle2)
-        {
+        if (additionalCycle1 & additionalCycle2) {
             ++m_Cycles;
         }
 
@@ -114,7 +111,6 @@ void Cpu::NonMaskableInterrupt() {
 }
 
 bool Cpu::InstructionComplete() const { return m_Cycles == 0; }
-
 
 uint8_t Cpu::GetFlag(FLAGS flag) const {
     if ((m_StatusRegister & flag) == 0x00) {
@@ -855,10 +851,12 @@ void Cpu::AppendAddressingModeString(uint16_t opCodeAddress,
             outStr += fmt::format(" ${:02X} [ZPG]", Read(opCodeAddress + 1));
             break;
         case cpuemulator::Cpu::INDEXED_ZERO_PAGE_ADDRESSING_X:
-            outStr += fmt::format(" ${:02X},X [ZPG,X]", Read(opCodeAddress + 1));
+            outStr +=
+                fmt::format(" ${:02X},X [ZPG,X]", Read(opCodeAddress + 1));
             break;
         case cpuemulator::Cpu::INDEXED_ZERO_PAGE_ADDRESSING_Y:
-            outStr += fmt::format(" ${:02X},Y [ZPG,Y]", Read(opCodeAddress + 1));
+            outStr +=
+                fmt::format(" ${:02X},Y [ZPG,Y]", Read(opCodeAddress + 1));
             break;
         case cpuemulator::Cpu::ABSOLUTE_ADDRESSING:
             outStr +=
@@ -900,17 +898,14 @@ void Cpu::AppendAddressingModeString(uint16_t opCodeAddress,
 std::string Cpu::GetInstructionString(uint16_t opCodeAddress) {
     std::string str;
 
-	auto it = m_InstrSet.find(Read(opCodeAddress));
-	if (it != m_InstrSet.end())
-	{
-            str += it->second.m_Name;
-            AppendAddressingModeString(opCodeAddress,
-                                       it->second.m_AddressingMode, str);
-	}
-	else
-	{
-            str = "NOP [IMP]";
-	}
+    auto it = m_InstrSet.find(Read(opCodeAddress));
+    if (it != m_InstrSet.end()) {
+        str += it->second.m_Name;
+        AppendAddressingModeString(opCodeAddress, it->second.m_AddressingMode,
+                                   str);
+    } else {
+        str = "NOP [IMP]";
+    }
     return str;
 }
 

@@ -4,16 +4,14 @@
 
 namespace cpuemulator {
 
-NesWidget::NesWidget(Bus& bus)
-    : m_Bus{bus} {}
+NesWidget::NesWidget(Bus& bus) : m_Bus{bus} {}
 
 void NesWidget::Render() {
     ImGui::Begin("NES controls");
     ImGui::SetWindowSize({230, 100});
     ImGui::Text("System Clock: %d", m_Bus.m_SystemClockCounter);
     ImGui::Checkbox("Run Simulation", &m_ShouldSimulationRun);
-    if (!m_ShouldSimulationRun)
-    {
+    if (!m_ShouldSimulationRun) {
         bool step = ImGui::Button("Step by Step");
         if (step) {
             do {
@@ -26,27 +24,21 @@ void NesWidget::Render() {
         }
         ImGui::SameLine();
         bool reset = ImGui::Button("Reset");
-        if (reset)
-        {
+        if (reset) {
             m_Bus.Reset();
         }
         ImGui::SameLine();
         bool frame = ImGui::Button("Frame");
-        if (frame)
-        {
+        if (frame) {
             DoNesFrame();
         }
-    }
-    else
-    {
+    } else {
         DoNesFrame();
     }
     ImGui::End();
 }
 
-
-void NesWidget::DoNesFrame()
-{
+void NesWidget::DoNesFrame() {
     do {
         m_Bus.Clock();
     } while (!m_Bus.m_Ppu.isFrameComplete);

@@ -46,16 +46,13 @@ void Bus::Reset() {
     m_SystemClockCounter = 0;
 }
 
-void Bus::Clock()
-{
+void Bus::Clock() {
     m_Ppu.Clock();
-    if (m_SystemClockCounter % 3 == 0)
-    {
+    if (m_SystemClockCounter % 3 == 0) {
         m_Cpu.Clock();
     }
 
-    if (m_Ppu.m_DoNMI)
-    {
+    if (m_Ppu.m_DoNMI) {
         m_Ppu.m_DoNMI = false;
         m_Cpu.NonMaskableInterrupt();
     }

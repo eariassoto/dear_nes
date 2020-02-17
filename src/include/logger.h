@@ -17,7 +17,9 @@ class Logger {
 template <typename... Ts>
 inline void Logger::Log(const std::string& module,
                         const std::string& formatString, Ts&&... args) {
-    std::cout << '[' << module << "]: " << fmt::format(formatString, std::forward<Ts>(args)...) << '\n';
+    std::cout << '[' << module
+              << "]: " << fmt::format(formatString, std::forward<Ts>(args)...)
+              << '\n';
 }
 
 }  // namespace cpuemulator

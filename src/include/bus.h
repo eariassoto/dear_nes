@@ -18,16 +18,15 @@ class Bus {
 
     inline const uint8_t* GetRamPointer() const { return m_cpuRam; }
 
-	// todo do not expose
+    // todo do not expose
     Cpu m_Cpu;
     Ppu m_Ppu;
     uint32_t m_SystemClockCounter = 0;
 
    private:
-
     uint8_t* m_cpuRam = nullptr;
 
-	std::shared_ptr<Cartridge> m_Cartridge = nullptr;
+    std::shared_ptr<Cartridge> m_Cartridge = nullptr;
 
     inline uint16_t GetRealRamAddress(uint16_t address) const {
         return address & 0x07FF;

@@ -50,7 +50,8 @@ void Shader::CheckCompileErr() {
     glGetShaderiv(m_VertexId, GL_COMPILE_STATUS, &success);
     if (!success) {
         glGetShaderInfoLog(m_VertexId, 1024, NULL, infoLog);
-        Logger::Get().Log("SHADER", "Error compiling Vertex Shader:\n {}", infoLog);
+        Logger::Get().Log("SHADER", "Error compiling Vertex Shader:\n {}",
+                          infoLog);
     }
     glGetShaderiv(m_FragmentId, GL_COMPILE_STATUS, &success);
     if (!success) {
