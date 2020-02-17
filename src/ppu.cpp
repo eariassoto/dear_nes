@@ -19,6 +19,9 @@ uint8_t Ppu::CpuRead(uint16_t address, bool readOnly) {
         case 0x0001:  // mask
             break;
         case 0x0002:  // Status
+            data = (m_StatusReg.GetRegister() & 0xE0) | (m_PpuDataBuffer & 0x1F);
+            m_StatusReg.SetField(StatusRegisterFields::VERTICAL_BLANK, false);
+            m_AddressLatch = 0x00;
             break;
         case 0x0003:  // OAM address
             break;
@@ -29,6 +32,14 @@ uint8_t Ppu::CpuRead(uint16_t address, bool readOnly) {
         case 0x0006:  // PPU address
             break;
         case 0x0007:  // PPU data
+            data = m_PpuDataBuffer;
+            m_PpuDataBuffer = PpuRead(m_PpuAddress);
+
+            if (m_PpuAddress > 0x3F00)
+            {
+                data = m_PpuDataBuffer;
+            }
+            ++m_PpuAddress;
             break;
         default:
             break;
@@ -39,8 +50,10 @@ uint8_t Ppu::CpuRead(uint16_t address, bool readOnly) {
 void Ppu::CpuWrite(uint16_t address, uint8_t data) {
     switch (address) {
         case 0x0000:  // control
+            m_ControlReg.SetRegister(data);
             break;
         case 0x0001:  // mask
+            m_MaskReg.SetRegister(data);
             break;
         case 0x0002:  // Status
             break;
@@ -51,8 +64,20 @@ void Ppu::CpuWrite(uint16_t address, uint8_t data) {
         case 0x0005:  // Scroll
             break;
         case 0x0006:  // PPU address
+            if (m_AddressLatch == 0x00)
+            {
+                m_PpuAddress = (m_PpuAddress & 0x00FF) | (static_cast<uint16_t>(data) << 8);
+                m_AddressLatch = 0x01;
+            }
+            else
+            {
+                m_PpuAddress = (m_PpuAddress & 0xFF00) | data;
+                m_AddressLatch = 0x00;
+            }
             break;
         case 0x0007:  // PPU data
+            PpuWrite(m_PpuAddress, data);
+            ++m_PpuAddress;
             break;
         default:
             break;
@@ -115,6 +140,19 @@ void Ppu::ConnectCatridge(const std::shared_ptr<Cartridge>& cartridge) {
 
 void Ppu::Clock()
 {
+    if (m_ScanLine == -1 && m_Cycle == 1)
+    {
+        m_StatusReg.SetField(StatusRegisterFields::VERTICAL_BLANK, false);
+    }
+    if (m_ScanLine == 241 && m_Cycle == 1)
+    {
+        m_StatusReg.SetField(StatusRegisterFields::VERTICAL_BLANK, true);
+        if (m_ControlReg.GetField(ControlRegisterFields::ENABLE_NMI))
+        {
+            m_DoNMI = true;
+        }
+    }
+
     int color = (rand() % 2) ? 0xFFFFFFFF : 0xFF000000;
     m_SpriteScreen.SetPixel(m_Cycle - 1, m_ScanLine, color);
 
@@ -145,7 +183,7 @@ Sprite & Ppu::GetPatternTable(unsigned int index, uint8_t palette)
                 uint8_t tileMSB = PpuRead(index * 0x1000 + offset + row + 8);
                 for (uint16_t col = 0; col < 8; ++col)
                 {
-                    uint8_t pixel = (tileLSB & 0x01) + (tileMSB & 0x01);
+                    uint8_t pixel = static_cast<uint8_t>(tileLSB & 0b01) + static_cast<uint8_t>((tileMSB << 1) & 0b10);
                     tileLSB >>= 1;
                     tileMSB >>= 1;
 

@@ -67,7 +67,7 @@ int main(void) {
     ImGui::StyleColorsDark();
 
     std::shared_ptr<cpuemulator::Cartridge> cartridge =
-        std::make_shared<cpuemulator::Cartridge>("nestest.nes");
+        std::make_shared<cpuemulator::Cartridge>("Micro Mages.nes");
     if (!cartridge->IsLoaded()) {
         return 1;
     }
@@ -115,6 +115,9 @@ int main(void) {
         spriteShader.Use();
         spriteShader.SetUniform("projection", glm::value_ptr(projection));
         bus.m_Ppu.m_SpriteScreen.Render(spriteShader);
+
+        patternTable1 = bus.m_Ppu.GetPatternTable(0, 0);
+        patternTable2 = bus.m_Ppu.GetPatternTable(1, 0);
 
         patternTable1.Render(spriteShader);
         patternTable2.Render(spriteShader);

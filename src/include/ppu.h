@@ -9,6 +9,60 @@ namespace cpuemulator {
 class Cartridge;
 class Sprite;
 
+template <typename RegEnumType>
+struct PpuRegister {
+    bool GetField(RegEnumType field) const
+    {
+        const int index = static_cast<int>(field);
+        return (m_Register >> index) & 0x01;
+    }
+
+    void SetField(RegEnumType field, bool value)
+    {
+        uint8_t intValue = value ? 0x01 : 0x00;
+
+        const int index = static_cast<int>(field);
+        intValue <<= index;
+
+        m_Register |= intValue;
+    }
+
+    uint8_t GetRegister() const { return m_Register; }
+    void SetRegister(uint8_t value) { m_Register = value; }
+private:
+    uint8_t m_Register = 0x00;
+};
+
+enum StatusRegisterFields {
+    SPRITE_OVERFLOW = 5,
+    SPRITE_ZERO_HIT = 6,
+    VERTICAL_BLANK = 7
+};
+
+enum MaskRegisterFields
+{
+    GRAYSCALE = 0,
+    RENDER_BACKGROUND_LEFT = 1,
+    RENDER_SPRITES_LEFT = 2,
+    RENDER_BACKGROUND = 3,
+    RENDER_SPRITES = 4,
+    ENHANCE_RED = 5,
+    ENHANCE_GREEN = 6,
+    ENHANCE_BLUE = 7
+};
+
+enum ControlRegisterFields
+{
+    NAMETABLE_X = 0,
+    NAMETABLE_Y = 1,
+    INCREMENT_MODE = 2,
+    PATTERN_SPRITE = 3,
+    PATTERN_BACKGROUND = 4,
+    SPRITE_SIZE = 5,
+    SLAVE_MODE = 6, // unused
+    ENABLE_NMI = 7
+};
+
 class Ppu {
    private:
     uint8_t m_TableName[2][1024] = { 0 };
@@ -39,9 +93,18 @@ public:
 
     Sprite& GetPatternTable(unsigned int index, uint8_t palette);
 
+    bool m_DoNMI = false;
+
 private:
     int16_t m_ScanLine = 0;
     int16_t m_Cycle = 0;
+
+    PpuRegister<StatusRegisterFields> m_StatusReg;
+    PpuRegister<MaskRegisterFields> m_MaskReg;
+    PpuRegister<ControlRegisterFields> m_ControlReg;
+    uint8_t m_AddressLatch = 0x00;
+    uint8_t m_PpuDataBuffer = 0x00;
+    uint16_t m_PpuAddress = 0x0000;
 
     // Colors are in format ARGB
     // Table taken from https://wiki.nesdev.com/w/index.php/PPU_palettes
@@ -52,4 +115,5 @@ private:
         0xFFECEEEC, 0xFFA8CCEC, 0xFFBCBCEC, 0xFFD4B2EC, 0xFFECAEEC, 0xFFECAED4, 0xFFECD4AE, 0xFFE4C490, 0xFFCCD278, 0xFFB4DE78, 0xFFA8E290, 0xFF98E2B4, 0xFFA0D6E4, 0xFFA0A2A0, 0xFF000000, 0xFF000000
     };
 };
+
 }  // namespace cpuemulator

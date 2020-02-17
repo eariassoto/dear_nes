@@ -53,6 +53,13 @@ void Bus::Clock()
     {
         m_Cpu.Clock();
     }
+
+    if (m_Ppu.m_DoNMI)
+    {
+        m_Ppu.m_DoNMI = false;
+        m_Cpu.NonMaskableInterrupt();
+    }
+
     ++m_SystemClockCounter;
 }
 
