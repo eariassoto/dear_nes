@@ -33,6 +33,8 @@ Cartridge::Cartridge(const std::string& fileName) {
     }
     m_MapperId = ((header.mapper2 >> 4) << 4) | (header.mapper1 >> 4);
 
+    mirror = (header.mapper1 & 0x01) ? VERTICAL : HORIZONTAL;
+
     Logger::Get().Log("CART", "Mapper ID: {}", m_MapperId);
 
     // TODO: support file types

@@ -39,7 +39,7 @@ uint8_t Ppu::CpuRead(uint16_t address, bool readOnly) {
             {
                 data = m_PpuDataBuffer;
             }
-            ++m_PpuAddress;
+            m_PpuAddress += m_ControlReg.GetField(INCREMENT_MODE) ? 32 : 1;
             break;
         default:
             break;
@@ -77,7 +77,7 @@ void Ppu::CpuWrite(uint16_t address, uint8_t data) {
             break;
         case 0x0007:  // PPU data
             PpuWrite(m_PpuAddress, data);
-            ++m_PpuAddress;
+            m_PpuAddress += m_ControlReg.GetField(INCREMENT_MODE) ? 32 : 1;
             break;
         default:
             break;
@@ -97,6 +97,31 @@ uint8_t Ppu::PpuRead(uint16_t address, bool readOnly) {
     }
     else if (address >= 0x2000 && address <= 0x3EFF)
     {
+        address &= 0x0FFF;
+        if (m_Cartridge->mirror == Cartridge::MIRROR::VERTICAL)
+        {
+            // Vertical
+            if (address >= 0x0000 && address <= 0x03FF)
+                data = m_TableName[0][address & 0x03FF];
+            if (address >= 0x0400 && address <= 0x07FF)
+                address = m_TableName[1][address & 0x03FF];
+            if (address >= 0x0800 && address <= 0x0BFF)
+                data = m_TableName[0][address & 0x03FF];
+            if (address >= 0x0C00 && address <= 0x0FFF)
+                data = m_TableName[1][address & 0x03FF];
+        }
+        else if (m_Cartridge->mirror == Cartridge::MIRROR::HORIZONTAL)
+        {
+            // Horizontal
+            if (address >= 0x0000 && address <= 0x03FF)
+                data = m_TableName[0][address & 0x03FF];
+            if (address >= 0x0400 && address <= 0x07FF)
+                data = m_TableName[0][address & 0x03FF];
+            if (address >= 0x0800 && address <= 0x0BFF)
+                data = m_TableName[1][address & 0x03FF];
+            if (address >= 0x0C00 && address <= 0x0FFF)
+                data = m_TableName[1][address & 0x03FF];
+        }
     }
     else if (address >= 0x3F00 && address <= 0x3FFF)
     {
@@ -121,6 +146,31 @@ void Ppu::PpuWrite(uint16_t address, uint8_t data) {
     }
     else if (address >= 0x2000 && address <= 0x3EFF)
     {
+        address &= 0x0FFF;
+        if (m_Cartridge->mirror == Cartridge::MIRROR::VERTICAL)
+        {
+            // Vertical
+            if (address >= 0x0000 && address <= 0x03FF)
+                m_TableName[0][address & 0x03FF] = data;
+            if (address >= 0x0400 && address <= 0x07FF)
+                m_TableName[1][address & 0x03FF] = data;
+            if (address >= 0x0800 && address <= 0x0BFF)
+                m_TableName[0][address & 0x03FF] = data;
+            if (address >= 0x0C00 && address <= 0x0FFF)
+                m_TableName[1][address & 0x03FF] = data;
+        }
+        else if (m_Cartridge->mirror == Cartridge::MIRROR::HORIZONTAL)
+        {
+            // Horizontal
+            if (address >= 0x0000 && address <= 0x03FF)
+                m_TableName[0][address & 0x03FF] = data;
+            if (address >= 0x0400 && address <= 0x07FF)
+                m_TableName[0][address & 0x03FF] = data;
+            if (address >= 0x0800 && address <= 0x0BFF)
+                m_TableName[1][address & 0x03FF] = data;
+            if (address >= 0x0C00 && address <= 0x0FFF)
+                m_TableName[1][address & 0x03FF] = data;
+        }
     }
     else if (address >= 0x3F00 && address <= 0x3FFF)
     {
