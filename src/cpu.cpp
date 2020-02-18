@@ -1307,7 +1307,7 @@ void Cpu::RegisterAllInstructionSet() {
         0xDD, Instruction{"CMP", std::bind(&Cpu::Instruction_CMP, this),
                           am::INDEXED_ABSOLUTE_ADDRESSING_X, 4});
     m_InstrSet.emplace(
-        0xDF, Instruction{"DEC", std::bind(&Cpu::Instruction_DEC, this),
+        0xDE, Instruction{"DEC", std::bind(&Cpu::Instruction_DEC, this),
                           am::INDEXED_ABSOLUTE_ADDRESSING_X, 7});
     m_InstrSet.emplace(
         0xE0, Instruction{"CPX", std::bind(&Cpu::Instruction_CPX, this),
