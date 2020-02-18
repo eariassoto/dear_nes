@@ -39,9 +39,13 @@ class Bus {
     void CpuWrite(uint16_t address, uint8_t data);
     uint8_t CpuRead(uint16_t address, bool isReadOnly = false);
 
-   public:
-    void InsertCatridge(const std::shared_ptr<Cartridge>& cartridge);
+    uint8_t m_Controllers[2] = {0};
+
+    public : void
+             InsertCatridge(const std::shared_ptr<Cartridge>& cartridge);
     void Reset();
     void Clock();
+
+    uint8_t m_ControllerState[2] = {0};
 };
 }  // namespace cpuemulator

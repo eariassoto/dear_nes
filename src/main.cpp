@@ -23,7 +23,7 @@
 #include "include/sprite.h"
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow* window);
+void processInput(GLFWwindow* window, cpuemulator::Bus& bus);
 
 using cpuemulator::FileManager;
 using cpuemulator::Shader;
@@ -102,7 +102,7 @@ int main(void) {
 
         glfwPollEvents();
 
-        processInput(window);
+        processInput(window, bus);
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -149,7 +149,33 @@ void framebufferSizeCallback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-void processInput(GLFWwindow* window) {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+void processInput(GLFWwindow* window, cpuemulator::Bus& bus) {
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
+    }
+    bus.m_Controllers[0] = 0x00;
+    if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) {
+        bus.m_Controllers[0] |= 0x80;
+    }
+    if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
+        bus.m_Controllers[0] |= 0x40;
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        bus.m_Controllers[0] |= 0x20;
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        bus.m_Controllers[0] |= 0x10;
+    }
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+        bus.m_Controllers[0] |= 0x08;
+    }
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+        bus.m_Controllers[0] |= 0x04;
+    }
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+        bus.m_Controllers[0] |= 0x02;
+    }
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+        bus.m_Controllers[0] |= 0x01;
+    }
 }

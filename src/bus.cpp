@@ -19,6 +19,8 @@ void Bus::CpuWrite(uint16_t address, uint8_t data) {
         m_cpuRam[GetRealRamAddress(address)] = data;
     } else if (address >= 0x2000 && address <= 0x3FFF) {
         m_Ppu.CpuWrite(GetRealPpuAddress(address), data);
+    } else if (address >= 0x4016 && address <= 0x4017) {
+        m_ControllerState[address & 0x0001] = m_Controllers[address & 0x0001];
     }
 }
 
@@ -29,6 +31,9 @@ uint8_t Bus::CpuRead(uint16_t address, bool isReadOnly) {
         data = m_cpuRam[GetRealRamAddress(address)];
     } else if (address >= 0x2000 && address <= 0x3FFF) {
         data = m_Ppu.CpuRead(GetRealPpuAddress(address), isReadOnly);
+    } else if (address >= 0x4016 && address <= 0x4017) {
+        data = (m_ControllerState[address & 0x0001] & 0x80) > 0;
+        m_ControllerState[address & 0x0001] <<= 1;
     }
 
     return data;
