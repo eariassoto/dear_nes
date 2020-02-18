@@ -80,9 +80,8 @@ class Ppu {
     uint8_t m_TablePalette[32] = {0};
     uint8_t m_TablePattern[2][4096] = {0};
 
+public:
     int GetColorFromPalette(uint8_t palette, uint8_t pixel);
-
-   public:
     uint8_t CpuRead(uint16_t address, bool readOnly = false);
     void CpuWrite(uint16_t address, uint8_t data);
 

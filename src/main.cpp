@@ -94,6 +94,9 @@ int main(void) {
     Sprite& patternTable1 = bus.m_Ppu.GetPatternTable(0, 2);
     Sprite& patternTable2 = bus.m_Ppu.GetPatternTable(1, 2);
 
+    Sprite palette{ 39, 1, 10, 532, 300 };
+    palette.BindToVAO(VAO);
+
     using namespace std::chrono;
     const milliseconds frameTime{1000 / 60};
     while (!glfwWindowShouldClose(window)) {
@@ -121,6 +124,16 @@ int main(void) {
         patternTable1.Render(spriteShader);
         patternTable2.Render(spriteShader);
 
+        for (int p = 0; p < 8; ++p) // For each palette
+        {
+            for (int s = 0; s < 4; ++s) // For each index
+            {
+                const int coordX = (p * 4) + p + s;
+                palette.SetPixel(coordX, 0, bus.m_Ppu.GetColorFromPalette(p, s));
+            }
+        }
+        palette.Render(spriteShader);
+            
         // render widgets
         cpuWidget.Render();
         nesWidget.Render();
