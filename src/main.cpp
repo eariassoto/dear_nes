@@ -67,7 +67,7 @@ int main(void) {
     ImGui::StyleColorsDark();
 
     std::shared_ptr<cpuemulator::Cartridge> cartridge =
-        std::make_shared<cpuemulator::Cartridge>("Micro Mages.nes");
+        std::make_shared<cpuemulator::Cartridge>("nestest.nes");
     if (!cartridge->IsLoaded()) {
         return 1;
     }

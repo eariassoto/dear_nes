@@ -60,7 +60,7 @@ enum ControlRegisterFields {
     ENABLE_NMI = 7
 };
 
-union loopy_register {
+union LoopyRegister {
     // Credit to Loopy for working this out :D
     struct {
         uint16_t coarse_x : 5;
@@ -117,7 +117,23 @@ class Ppu {
     PpuRegister<ControlRegisterFields> m_ControlReg;
     uint8_t m_AddressLatch = 0x00;
     uint8_t m_PpuDataBuffer = 0x00;
-    uint16_t m_PpuAddress = 0x0000;
+
+    LoopyRegister m_VramAddress;
+    LoopyRegister m_TramAddress;
+
+	uint8_t fine_x = 0x00;
+
+    uint8_t bgNextTileId = 0x00;
+    uint8_t bgNextTileAttribute = 0x00;
+    uint8_t bgNextTileLsb = 0x00;
+    uint8_t bgNextTileMsb = 0x00;
+
+	uint16_t bgShifterPatternLo = 0x0000;
+    uint16_t bgShifterPatternHi = 0x0000;
+    uint16_t bgShifterAttribLo = 0x0000;
+    uint16_t bgShifterAttribHi = 0x0000;
+        
+    // uint16_t m_PpuAddress = 0x0000;
 
     // Colors are in format ARGB
     // Table taken from https://wiki.nesdev.com/w/index.php/PPU_palettes

@@ -33,12 +33,12 @@ uint8_t Ppu::CpuRead(uint16_t address, bool readOnly) {
             break;
         case 0x0007:  // PPU data
             data = m_PpuDataBuffer;
-            m_PpuDataBuffer = PpuRead(m_PpuAddress);
+            m_PpuDataBuffer = PpuRead(m_VramAddress.reg);
 
-            if (m_PpuAddress > 0x3F00) {
+            if (m_VramAddress.reg > 0x3F00) {
                 data = m_PpuDataBuffer;
             }
-            m_PpuAddress += m_ControlReg.GetField(INCREMENT_MODE) ? 32 : 1;
+            m_VramAddress.reg += m_ControlReg.GetField(INCREMENT_MODE) ? 32 : 1;
             break;
         default:
             break;
@@ -50,6 +50,10 @@ void Ppu::CpuWrite(uint16_t address, uint8_t data) {
     switch (address) {
         case 0x0000:  // control
             m_ControlReg.SetRegister(data);
+            m_TramAddress.nametable_x =
+                m_ControlReg.GetField(ControlRegisterFields::NAMETABLE_X);
+            m_TramAddress.nametable_y =
+                m_ControlReg.GetField(ControlRegisterFields::NAMETABLE_Y);
             break;
         case 0x0001:  // mask
             m_MaskReg.SetRegister(data);
@@ -61,20 +65,31 @@ void Ppu::CpuWrite(uint16_t address, uint8_t data) {
         case 0x0004:  // OAM data
             break;
         case 0x0005:  // Scroll
+            if (m_AddressLatch == 0x00) {
+                fine_x = data & 0x07;
+                m_TramAddress.coarse_x = data >> 3;
+                m_AddressLatch = 0x01;
+            } else {
+                m_TramAddress.fine_y = data & 0x07;
+                m_TramAddress.coarse_y = data >> 3;
+
+                m_AddressLatch = 0x00;
+            }
             break;
         case 0x0006:  // PPU address
             if (m_AddressLatch == 0x00) {
-                m_PpuAddress = (m_PpuAddress & 0x00FF) |
-                               (static_cast<uint16_t>(data) << 8);
+                m_TramAddress.reg = (m_TramAddress.reg & 0x00FF) |
+                                    (static_cast<uint16_t>(data) << 8);
                 m_AddressLatch = 0x01;
             } else {
-                m_PpuAddress = (m_PpuAddress & 0xFF00) | data;
+                m_TramAddress.reg = (m_TramAddress.reg & 0xFF00) | data;
+                m_VramAddress = m_TramAddress;
                 m_AddressLatch = 0x00;
             }
             break;
         case 0x0007:  // PPU data
-            PpuWrite(m_PpuAddress, data);
-            m_PpuAddress += m_ControlReg.GetField(INCREMENT_MODE) ? 32 : 1;
+            PpuWrite(m_TramAddress.reg, data);
+            m_TramAddress.reg += m_ControlReg.GetField(INCREMENT_MODE) ? 32 : 1;
             break;
         default:
             break;
@@ -166,9 +181,146 @@ void Ppu::ConnectCatridge(const std::shared_ptr<Cartridge>& cartridge) {
 }
 
 void Ppu::Clock() {
-    if (m_ScanLine == -1 && m_Cycle == 1) {
-        m_StatusReg.SetField(StatusRegisterFields::VERTICAL_BLANK, false);
+    auto IncrementScrollX = [&]() {
+        if (m_MaskReg.GetField(MaskRegisterFields::RENDER_BACKGROUND) ||
+            m_MaskReg.GetField(MaskRegisterFields::RENDER_SPRITES)) {
+            if (m_VramAddress.coarse_x == 31) {
+                m_VramAddress.coarse_x = 0;
+                m_VramAddress.nametable_x = ~m_VramAddress.nametable_x;
+            } else {
+                m_VramAddress.coarse_x++;
+            }
+        }
+    };
+
+    auto IncrementScrollY = [&]() {
+        if (m_MaskReg.GetField(MaskRegisterFields::RENDER_BACKGROUND) ||
+            m_MaskReg.GetField(MaskRegisterFields::RENDER_SPRITES)) {
+            if (m_VramAddress.fine_y < 7) {
+                m_VramAddress.fine_y++;
+            } else {
+                m_VramAddress.fine_y = 0;
+
+                if (m_VramAddress.coarse_y == 29) {
+                    m_VramAddress.coarse_y = 0;
+                    m_VramAddress.nametable_y = ~m_VramAddress.nametable_y;
+                } else if (m_VramAddress.coarse_y == 31) {
+                    m_VramAddress.coarse_y = 0;
+                } else {
+                    m_VramAddress.coarse_y++;
+                }
+            }
+        }
+    };
+
+    auto TransferAddressX = [&]() {
+        if (m_MaskReg.GetField(MaskRegisterFields::RENDER_BACKGROUND) ||
+            m_MaskReg.GetField(MaskRegisterFields::RENDER_SPRITES)) {
+            m_VramAddress.nametable_x = m_TramAddress.nametable_x;
+            m_VramAddress.coarse_x = m_TramAddress.coarse_x;
+        }
+    };
+
+    auto TransferAddressY = [&]() {
+        if (m_MaskReg.GetField(MaskRegisterFields::RENDER_BACKGROUND) ||
+            m_MaskReg.GetField(MaskRegisterFields::RENDER_SPRITES)) {
+            m_VramAddress.fine_y = m_TramAddress.fine_y;
+            m_VramAddress.nametable_y = m_TramAddress.nametable_y;
+            m_VramAddress.coarse_y = m_TramAddress.coarse_y;
+        }
+    };
+
+    auto LoadBackgroundShifters = [&]() {
+        bgShifterPatternLo = (bgShifterPatternLo & 0xFF00) | bgNextTileLsb;
+        bgShifterPatternHi = (bgShifterPatternHi & 0xFF00) | bgNextTileMsb;
+
+        bgShifterAttribLo = (bgShifterAttribLo & 0xFF00) |
+                            ((bgNextTileAttribute & 0b01) ? 0xFF : 0x00);
+        bgShifterAttribHi = (bgShifterAttribHi & 0xFF00) |
+                            ((bgNextTileAttribute & 0b10) ? 0xFF : 0x00);
+    };
+
+    auto UpdateShifters = [&]() {
+        if (m_MaskReg.GetField(MaskRegisterFields::RENDER_BACKGROUND)) {
+            bgShifterPatternLo <<= 1;
+            bgShifterPatternHi <<= 1;
+
+            bgShifterAttribLo <<= 1;
+            bgShifterAttribHi <<= 1;
+        }
+    };
+
+    if (m_ScanLine >= -1 && m_ScanLine < 240) {
+        if (m_ScanLine == 0 && m_Cycle == 0) {
+            // "Odd Frame" cycle skip
+            m_Cycle = 1;
+        }
+
+        if (m_ScanLine == -1 && m_Cycle == 1) {
+            m_StatusReg.SetField(StatusRegisterFields::VERTICAL_BLANK, false);
+        }
+
+        if ((m_Cycle >= 2 && m_Cycle < 258) ||
+            (m_Cycle >= 321 && m_Cycle < 338)) {
+            UpdateShifters();
+
+            switch ((m_Cycle - 1) % 8) {
+                case 0:
+                    LoadBackgroundShifters();
+                    bgNextTileId =
+                        PpuRead(0x2000 | (m_VramAddress.reg & 0x0FFF));
+                    break;
+                case 2:
+                    bgNextTileAttribute =
+                        PpuRead(0x23C0 | (m_VramAddress.nametable_y << 11) |
+                                (m_VramAddress.nametable_x << 10) |
+                                ((m_VramAddress.coarse_y >> 2) << 3) |
+                                (m_VramAddress.coarse_x >> 2));
+                    if (m_VramAddress.coarse_y & 0x02)
+                        bgNextTileAttribute >>= 4;
+                    if (m_VramAddress.coarse_x & 0x02)
+                        bgNextTileAttribute >>= 2;
+                    bgNextTileAttribute &= 0x03;
+                    break;
+                case 4:
+                    bgNextTileLsb =
+                        PpuRead((m_ControlReg.GetField(
+                                     ControlRegisterFields::PATTERN_BACKGROUND)
+                                 << 12) +
+                                ((uint16_t)bgNextTileId << 4) +
+                                (m_VramAddress.fine_y + 0));
+                    break;
+                case 6:
+                    bgNextTileMsb =
+                        PpuRead((m_ControlReg.GetField(
+                                     ControlRegisterFields::PATTERN_BACKGROUND)
+                                 << 12) +
+                                ((uint16_t)bgNextTileId << 4) +
+                                (m_VramAddress.fine_y + 8));
+                    break;
+                case 7:
+                    IncrementScrollX();
+                    break;
+            }
+        }
+
+        if (m_Cycle == 256) {
+            IncrementScrollY();
+        }
+        if (m_Cycle == 257) {
+            LoadBackgroundShifters();
+            TransferAddressX();
+        }
+
+		if (m_Cycle == 338 || m_Cycle == 340) {
+            bgNextTileId = PpuRead(0x2000 | (m_VramAddress.reg & 0x0FFF));
+        }
+
+        if (m_ScanLine == -1 && m_Cycle >= 280 && m_Cycle < 305) {
+            TransferAddressY();
+        }
     }
+
     if (m_ScanLine == 241 && m_Cycle == 1) {
         m_StatusReg.SetField(StatusRegisterFields::VERTICAL_BLANK, true);
         if (m_ControlReg.GetField(ControlRegisterFields::ENABLE_NMI)) {
@@ -176,8 +328,24 @@ void Ppu::Clock() {
         }
     }
 
-    int color = (rand() % 2) ? 0xFFFFFFFF : 0xFF000000;
-    m_SpriteScreen.SetPixel(m_Cycle - 1, m_ScanLine, color);
+    if (m_MaskReg.GetField(MaskRegisterFields::RENDER_BACKGROUND)) {
+        uint16_t bitMux = 0x8000 >> fine_x;
+
+        uint8_t p0_pixel = (bgShifterPatternLo & bitMux) > 0;
+        uint8_t p1_pixel = (bgShifterPatternHi & bitMux) > 0;
+
+        uint8_t bgPixel = (p1_pixel << 1) | p0_pixel;
+
+        uint8_t bg_pal0 = (bgShifterAttribLo & bitMux) > 0;
+        uint8_t bg_pal1 = (bgShifterAttribHi & bitMux) > 0;
+        uint8_t bgPalette = (bg_pal1 << 1) | bg_pal0;
+
+		m_SpriteScreen.SetPixel(m_Cycle - 1, m_ScanLine,
+                           GetColorFromPalette(bgPalette, bgPixel));
+    }
+
+    // int color = (rand() % 2) ? 0xFFFFFFFF : 0xFF000000;
+    // m_SpriteScreen.SetPixel(m_Cycle - 1, m_ScanLine, color);
 
     ++m_Cycle;
     if (m_Cycle >= 341) {
