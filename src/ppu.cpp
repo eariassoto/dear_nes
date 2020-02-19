@@ -90,8 +90,8 @@ void Ppu::CpuWrite(uint16_t address, uint8_t data) {
             }
             break;
         case 0x0007:  // PPU data
-            PpuWrite(m_TramAddress.reg, data);
-            m_TramAddress.reg += m_ControlReg.GetField(INCREMENT_MODE) ? 32 : 1;
+            PpuWrite(m_VramAddress.reg, data);
+            m_VramAddress.reg += m_ControlReg.GetField(INCREMENT_MODE) ? 32 : 1;
             break;
         default:
             break;
