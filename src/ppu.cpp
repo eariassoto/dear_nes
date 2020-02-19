@@ -6,7 +6,9 @@
 namespace cpuemulator {
 
 int Ppu::GetColorFromPalette(uint8_t palette, uint8_t pixel) {
-    uint8_t data = PpuRead(0x3F00 + (palette << 4) + pixel);
+    assert(pixel <= 3);
+    uint8_t data = PpuRead(0x3F00 + (palette << 2) + pixel) & 0x3F;
+                   
     return m_PalScreen[data];
 }
 

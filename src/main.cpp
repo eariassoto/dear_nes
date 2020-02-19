@@ -67,7 +67,7 @@ int main(void) {
     ImGui::StyleColorsDark();
 
     std::shared_ptr<cpuemulator::Cartridge> cartridge =
-        std::make_shared<cpuemulator::Cartridge>("nestest.nes");
+        std::make_shared<cpuemulator::Cartridge>("palette.nes");
     if (!cartridge->IsLoaded()) {
         return 1;
     }
@@ -94,7 +94,7 @@ int main(void) {
     Sprite& patternTable1 = bus.m_Ppu.GetPatternTable(0, 2);
     Sprite& patternTable2 = bus.m_Ppu.GetPatternTable(1, 2);
 
-    Sprite palette{ 39, 1, 10, 532, 300 };
+    Sprite palette{ 9, 4, 30, 532, 300 };
     palette.BindToVAO(VAO);
 
     using namespace std::chrono;
@@ -128,8 +128,9 @@ int main(void) {
         {
             for (int s = 0; s < 4; ++s) // For each index
             {
-                const int coordX = (p * 4) + p + s;
-                palette.SetPixel(coordX, 0, bus.m_Ppu.GetColorFromPalette(p, s));
+                const int coordX = (p > 3) ? s + 5: s;
+                const int coordY = p % 4;
+                palette.SetPixel(coordX, coordY, bus.m_Ppu.GetColorFromPalette(p, s));
             }
         }
         palette.Render(spriteShader);
