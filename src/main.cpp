@@ -21,6 +21,7 @@
 #include "include/shader.h"
 #include "include/file_manager.h"
 #include "include/sprite.h"
+#include "include/logger.h"
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window, std::shared_ptr<cpuemulator::Bus>& nes);
@@ -67,7 +68,7 @@ int main(void) {
     ImGui::StyleColorsDark();
 
     std::shared_ptr<cpuemulator::Cartridge> cartridge =
-        std::make_shared<cpuemulator::Cartridge>("palette.nes");
+        std::make_shared<cpuemulator::Cartridge>("Micro Mages.nes");
     if (!cartridge->IsLoaded()) {
         return 1;
     }
@@ -100,6 +101,9 @@ int main(void) {
 
     Sprite palette{9, 4, 30, 532, 300};
     palette.BindToVAO(VAO);
+
+	cpuemulator::Logger& logger = cpuemulator::Logger::Get();
+    logger.Start();
 
     using namespace std::chrono;
     const milliseconds frameTime{1000 / 60};
@@ -193,6 +197,7 @@ int main(void) {
         std::this_thread::sleep_for(sleepTime);
     }
 
+	logger.Stop();
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();

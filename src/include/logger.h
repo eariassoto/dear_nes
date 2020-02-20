@@ -3,6 +3,8 @@
 #include <fmt/core.h>
 #include <iostream>
 #include <string>
+#include <queue>
+#include <mutex>
 
 namespace cpuemulator {
 
@@ -13,13 +15,26 @@ class Logger {
              Ts&&... args);
 
     static Logger& Get();
+
+    void Start();
+    void Stop();
+
+   private:
+    std::mutex m_QueueMutex;
+    std::queue<std::string> m_EventQueue;
+    bool m_StopSignal = false;
+
+    static constexpr char MSG_FMT[] = "[{}]: ";
+
+    void ProcessorThread();
 };
 template <typename... Ts>
 inline void Logger::Log(const std::string& module,
                         const std::string& formatString, Ts&&... args) {
-    std::cout << '[' << module
-              << "]: " << fmt::format(formatString, std::forward<Ts>(args)...)
-              << '\n';
+    std::string message =
+        fmt::format(MSG_FMT + formatString, module, std::forward<Ts>(args)...);
+    std::lock_guard<std::mutex> guard(m_QueueMutex);
+    m_EventQueue.emplace(std::move(message));
 }
 
 }  // namespace cpuemulator
