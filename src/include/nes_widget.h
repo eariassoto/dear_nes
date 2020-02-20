@@ -1,20 +1,28 @@
 // Copyright (c) 2020 Emmanuel Arias
 #pragma once
-#include <imgui.h>
+#include <memory>
 
 namespace cpuemulator {
 class Bus;
 
 class NesWidget {
    public:
-    NesWidget(Bus& cpu);
+    NesWidget(std::shared_ptr<Bus>& nes);
     void Render();
 
+	bool IsDoResetButtonClicked();
+	bool IsDoFrameButtonClicked();
+	bool IsDoStepButtonClicked();
+
+	bool IsSimulationRunChecked();
+
    private:
-    Bus& m_Bus;
+    std::shared_ptr<Bus> m_Nes;
 
     bool m_ShouldSimulationRun = false;
-    void DoNesFrame();
+    bool m_DoResetBtn = false;
+    bool m_DoStepBtn = false;
+    bool m_DoFrameBtn = false;
 };
 
 }  // namespace cpuemulator

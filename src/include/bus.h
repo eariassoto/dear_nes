@@ -18,16 +18,23 @@ class Bus {
 
     inline const uint8_t* GetRamPointer() const { return m_cpuRam; }
 
-    // todo do not expose
-    Cpu m_Cpu;
-    Ppu m_Ppu;
-    uint32_t m_SystemClockCounter = 0;
+   public:
+    std::shared_ptr<Cpu> GetCpuReference();
+    std::shared_ptr<Ppu> GetPpuReference();
+    uint64_t GetSystemClockCounter() const;
 
    private:
-    uint8_t* m_cpuRam = nullptr;
+    uint8_t* m_cpuRam = new uint8_t[0x800];
 
     std::shared_ptr<Cartridge> m_Cartridge = nullptr;
 
+    std::shared_ptr<Cpu> m_Cpu = std::make_shared<Cpu>();
+
+    std::shared_ptr<Ppu> m_Ppu = std::make_shared<Ppu>();
+
+    uint32_t m_SystemClockCounter = 0;
+
+   private:
     inline uint16_t GetRealRamAddress(uint16_t address) const {
         return address & 0x07FF;
     }
@@ -41,8 +48,8 @@ class Bus {
 
     uint8_t m_Controllers[2] = {0};
 
-    public : void
-             InsertCatridge(const std::shared_ptr<Cartridge>& cartridge);
+   public:
+    void InsertCatridge(const std::shared_ptr<Cartridge>& cartridge);
     void Reset();
     void Clock();
 

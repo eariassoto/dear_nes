@@ -23,7 +23,7 @@
 #include "include/sprite.h"
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow* window, cpuemulator::Bus& bus);
+void processInput(GLFWwindow* window, std::shared_ptr<cpuemulator::Bus>& nes);
 
 using cpuemulator::FileManager;
 using cpuemulator::Shader;
@@ -72,29 +72,33 @@ int main(void) {
         return 1;
     }
 
-    cpuemulator::Bus bus;
-    bus.InsertCatridge(cartridge);
+    std::shared_ptr<cpuemulator::Bus> nesEmulator =
+        std::make_shared<cpuemulator::Bus>();
+    std::shared_ptr<cpuemulator::Cpu> cpu = nesEmulator->GetCpuReference();
+    std::shared_ptr<cpuemulator::Ppu> ppu = nesEmulator->GetPpuReference();
 
-    cpuemulator::CpuWidget cpuWidget{bus.m_Cpu};
-    cpuemulator::NesWidget nesWidget{bus};
+    nesEmulator->InsertCatridge(cartridge);
 
-    bus.m_Ppu.m_SpriteScreen.BindToVAO(VAO);
-    bus.m_Ppu.m_SpritePatternTable[0].BindToVAO(VAO);
-    bus.m_Ppu.m_SpritePatternTable[1].BindToVAO(VAO);
+    cpuemulator::CpuWidget cpuWidget{cpu};
+    cpuemulator::NesWidget nesWidget{nesEmulator};
 
-    bus.m_Cpu.Reset();
+    ppu->m_SpriteScreen.BindToVAO(VAO);
+    ppu->m_SpritePatternTable[0].BindToVAO(VAO);
+    ppu->m_SpritePatternTable[1].BindToVAO(VAO);
+
+    cpu->Reset();
 
     do {
-        bus.Clock();
-    } while (!bus.m_Cpu.InstructionComplete());
+        nesEmulator->Clock();
+    } while (!cpu->InstructionComplete());
 
     glm::mat4 projection = glm::ortho(0.0f, (GLfloat)screenWidth,
                                       (GLfloat)screenHeight, 0.0f, -1.0f, 1.0f);
 
-    Sprite& patternTable1 = bus.m_Ppu.GetPatternTable(0, 2);
-    Sprite& patternTable2 = bus.m_Ppu.GetPatternTable(1, 2);
+    Sprite& patternTable1 = ppu->GetPatternTable(0, 2);
+    Sprite& patternTable2 = ppu->GetPatternTable(1, 2);
 
-    Sprite palette{ 9, 4, 30, 532, 300 };
+    Sprite palette{9, 4, 30, 532, 300};
     palette.BindToVAO(VAO);
 
     using namespace std::chrono;
@@ -105,7 +109,7 @@ int main(void) {
 
         glfwPollEvents();
 
-        processInput(window, bus);
+        processInput(window, nesEmulator);
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -116,28 +120,66 @@ int main(void) {
         // Render sprites
         spriteShader.Use();
         spriteShader.SetUniform("projection", glm::value_ptr(projection));
-        bus.m_Ppu.m_SpriteScreen.Render(spriteShader);
+        ppu->m_SpriteScreen.Render(spriteShader);
 
-        patternTable1 = bus.m_Ppu.GetPatternTable(0, 0);
-        patternTable2 = bus.m_Ppu.GetPatternTable(1, 0);
+        patternTable1 = ppu->GetPatternTable(0, 0);
+        patternTable2 = ppu->GetPatternTable(1, 0);
 
         patternTable1.Render(spriteShader);
         patternTable2.Render(spriteShader);
 
-        for (int p = 0; p < 8; ++p) // For each palette
+        for (int p = 0; p < 8; ++p)  // For each palette
         {
-            for (int s = 0; s < 4; ++s) // For each index
+            for (int s = 0; s < 4; ++s)  // For each index
             {
-                const int coordX = (p > 3) ? s + 5: s;
+                const int coordX = (p > 3) ? s + 5 : s;
                 const int coordY = p % 4;
-                palette.SetPixel(coordX, coordY, bus.m_Ppu.GetColorFromPalette(p, s));
+                palette.SetPixel(coordX, coordY,
+                                 ppu->GetColorFromPalette(p, s));
             }
         }
         palette.Render(spriteShader);
-            
+
         // render widgets
         cpuWidget.Render();
         nesWidget.Render();
+
+        if (nesWidget.IsSimulationRunChecked()) {
+            do {
+                nesEmulator->Clock();
+            } while (!nesEmulator->GetPpuReference()->isFrameComplete);
+
+            do {
+                nesEmulator->GetCpuReference()->Clock();
+            } while (nesEmulator->GetCpuReference()->InstructionComplete());
+
+            nesEmulator->GetPpuReference()->isFrameComplete = false;
+        } else {
+            if (nesWidget.IsDoResetButtonClicked()) {
+                nesEmulator->Reset();
+            }
+            if (nesWidget.IsDoFrameButtonClicked()) {
+                do {
+                    nesEmulator->Clock();
+                } while (!nesEmulator->GetPpuReference()->isFrameComplete);
+
+                do {
+                    nesEmulator->GetCpuReference()->Clock();
+                } while (nesEmulator->GetCpuReference()->InstructionComplete());
+
+                nesEmulator->GetPpuReference()->isFrameComplete = false;
+            }
+            if (nesWidget.IsDoStepButtonClicked()) {
+                do {
+                    nesEmulator->Clock();
+                } while (
+                    !nesEmulator->GetCpuReference()->InstructionComplete());
+
+                do {
+                    nesEmulator->Clock();
+                } while (nesEmulator->GetCpuReference()->InstructionComplete());
+            }
+        }
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -163,33 +205,34 @@ void framebufferSizeCallback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-void processInput(GLFWwindow* window, cpuemulator::Bus& bus) {
+void processInput(GLFWwindow* window,
+                  std::shared_ptr<cpuemulator::Bus>& nesEmulator) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }
-    bus.m_Controllers[0] = 0x00;
+    nesEmulator->m_Controllers[0] = 0x00;
     if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) {
-        bus.m_Controllers[0] |= 0x80;
+        nesEmulator->m_Controllers[0] |= 0x80;
     }
     if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
-        bus.m_Controllers[0] |= 0x40;
+        nesEmulator->m_Controllers[0] |= 0x40;
     }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        bus.m_Controllers[0] |= 0x20;
+        nesEmulator->m_Controllers[0] |= 0x20;
     }
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        bus.m_Controllers[0] |= 0x10;
+        nesEmulator->m_Controllers[0] |= 0x10;
     }
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-        bus.m_Controllers[0] |= 0x08;
+        nesEmulator->m_Controllers[0] |= 0x08;
     }
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-        bus.m_Controllers[0] |= 0x04;
+        nesEmulator->m_Controllers[0] |= 0x04;
     }
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-        bus.m_Controllers[0] |= 0x02;
+        nesEmulator->m_Controllers[0] |= 0x02;
     }
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-        bus.m_Controllers[0] |= 0x01;
+        nesEmulator->m_Controllers[0] |= 0x01;
     }
 }
