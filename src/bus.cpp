@@ -25,6 +25,10 @@ void Bus::CpuWrite(uint16_t address, uint8_t data) {
         m_cpuRam[GetRealRamAddress(address)] = data;
     } else if (address >= 0x2000 && address <= 0x3FFF) {
         m_Ppu->CpuWrite(GetRealPpuAddress(address), data);
+    } else if (address == 0x4014) {
+        m_DMAPage = data;
+        m_DMAAddress = 0x00;
+        m_DMATransfer = true;
     } else if (address >= 0x4016 && address <= 0x4017) {
         m_ControllerState[address & 0x0001] = m_Controllers[address & 0x0001];
     }
@@ -60,7 +64,28 @@ void Bus::Reset() {
 void Bus::Clock() {
     m_Ppu->Clock();
     if (m_SystemClockCounter % 3 == 0) {
-        m_Cpu->Clock();
+        if (m_DMATransfer) {
+            if (m_DMADummy) {
+                if (m_SystemClockCounter % 2 == 1) {
+                    m_DMADummy = false;
+                }
+            } else {
+                if (m_SystemClockCounter % 2 == 0) {
+                    m_DMAData = CpuRead(m_DMAPage << 8 | m_DMAAddress);
+                } else {
+                    // todo offer api function
+                    m_Ppu->m_OAMPtr[m_DMAAddress] = m_DMAData;
+                    ++m_DMAAddress;
+
+                    if (m_DMAAddress == 0) {
+                        m_DMATransfer = false;
+                        m_DMADummy = true;
+                    }
+                }
+            }
+        } else {
+            m_Cpu->Clock();
+        }
     }
 
     if (m_Ppu->m_DoNMI) {

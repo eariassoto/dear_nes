@@ -80,7 +80,7 @@ class Ppu {
     uint8_t m_TablePalette[32] = {0};
     uint8_t m_TablePattern[2][4096] = {0};
 
-public:
+   public:
     int GetColorFromPalette(uint8_t palette, uint8_t pixel);
     uint8_t CpuRead(uint16_t address, bool readOnly = false);
     void CpuWrite(uint16_t address, uint8_t data);
@@ -107,6 +107,10 @@ public:
 
     bool m_DoNMI = false;
 
+	uint8_t* m_OAMPtr = (uint8_t*)m_OAM;
+
+	uint8_t m_OAMAddress = 0x00;
+
    private:
     int16_t m_ScanLine = 0;
     int16_t m_Cycle = 0;
@@ -120,19 +124,33 @@ public:
     LoopyRegister m_VramAddress;
     LoopyRegister m_TramAddress;
 
-	uint8_t fine_x = 0x00;
+    uint8_t fine_x = 0x00;
 
     uint8_t bgNextTileId = 0x00;
     uint8_t bgNextTileAttribute = 0x00;
     uint8_t bgNextTileLsb = 0x00;
     uint8_t bgNextTileMsb = 0x00;
 
-	uint16_t bgShifterPatternLo = 0x0000;
+    uint16_t bgShifterPatternLo = 0x0000;
     uint16_t bgShifterPatternHi = 0x0000;
     uint16_t bgShifterAttribLo = 0x0000;
     uint16_t bgShifterAttribHi = 0x0000;
-        
+
     // uint16_t m_PpuAddress = 0x0000;
+
+    struct ObjectAttributeEntry {
+        uint8_t y;
+        uint8_t id;
+        uint8_t attribute;
+        uint8_t x;
+    };
+    ObjectAttributeEntry m_OAM[64];
+
+	ObjectAttributeEntry m_SpriteScanLine[8];
+    uint8_t m_SpriteCount = 0;
+
+	uint8_t m_SpriteShifterPatternLo[8];
+	uint8_t m_SpriteShifterPatternHi[8];
 
     // Colors are in format ARGB
     // Table taken from https://wiki.nesdev.com/w/index.php/PPU_palettes
