@@ -80,8 +80,8 @@ void Ppu::CpuWrite(uint16_t address, uint8_t data) {
             break;
         case 0x0006:  // PPU address
             if (m_AddressLatch == 0x00) {
-                m_TramAddress.reg = (m_TramAddress.reg & 0x00FF) |
-                                    (static_cast<uint16_t>(data) << 8);
+                m_TramAddress.reg = (uint16_t)((data & 0x3F) << 8) |
+                                    (m_TramAddress.reg & 0x00FF);
                 m_AddressLatch = 0x01;
             } else {
                 m_TramAddress.reg = (m_TramAddress.reg & 0xFF00) | data;
