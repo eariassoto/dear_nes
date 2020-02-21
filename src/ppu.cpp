@@ -20,9 +20,9 @@ uint8_t Ppu::CpuRead(uint16_t address, bool readOnly) {
         case 0x0001:  // mask
             break;
         case 0x0002:  // Status
-            data =
-                (m_StatusReg.GetRegister() & 0xE0) | (m_PpuDataBuffer & 0x1F);
-            m_StatusReg.SetField(StatusRegisterFields::VERTICAL_BLANK, false);
+            data = static_cast<uint8_t>(m_StatusReg.GetRegister() & 0xE0) |
+                   static_cast<uint8_t>(m_PpuDataBuffer & 0x1F);
+            m_StatusReg.SetField(VERTICAL_BLANK, false);
             m_AddressLatch = 0x00;
             break;
         case 0x0003:  // OAM address
@@ -277,6 +277,8 @@ void Ppu::Clock() {
 
             m_StatusReg.SetField(SPRITE_OVERFLOW, false);
 
+            m_StatusReg.SetField(SPRITE_ZERO_HIT, false);
+
             for (int i = 0; i < 8; ++i) {
                 m_SpriteShifterPatternLo[i] = 0;
                 m_SpriteShifterPatternHi[i] = 0;
@@ -346,6 +348,7 @@ void Ppu::Clock() {
             m_SpriteCount = 0;
 
             uint8_t nOAMEntry = 0;
+            m_SpriteZeroHitPossible = false;
             while (nOAMEntry < 64 && m_SpriteCount < 9) {
                 int16_t diff =
                     ((int16_t)m_ScanLine - (int16_t)m_OAM[nOAMEntry].y);
@@ -354,6 +357,10 @@ void Ppu::Clock() {
                                              ? 16
                                              : 8)) {
                     if (m_SpriteCount < 8) {
+						if (nOAMEntry == 0)
+						{
+                            m_SpriteZeroHitPossible = true;
+						}
                         memcpy(&m_SpriteScanLine[m_SpriteCount],
                                &m_OAM[nOAMEntry], sizeof(ObjectAttributeEntry));
                         ++m_SpriteCount;
@@ -361,7 +368,7 @@ void Ppu::Clock() {
                 }
                 ++nOAMEntry;
             }
-            m_StatusReg.SetField(StatusRegisterFields::SPRITE_OVERFLOW,
+            m_StatusReg.SetField(SPRITE_OVERFLOW,
                                  (m_SpriteCount > 8));
         }
 
@@ -491,6 +498,7 @@ void Ppu::Clock() {
     uint8_t fg_priority = 0x00;
 
     if (m_MaskReg.GetField(RENDER_SPRITES)) {
+		m_SpriteZeroBeingRendered = false;
         for (uint8_t i = 0; i < m_SpriteCount; ++i) {
             if (m_SpriteScanLine[i].x == 0) {
                 uint8_t pixelLo = (m_SpriteShifterPatternLo[i] & 0x80) > 0;
@@ -501,6 +509,10 @@ void Ppu::Clock() {
                 fg_priority = (m_SpriteScanLine[i].attribute & 0x20) == 0;
 
                 if (fg_pixel != 0) {
+					if (i == 0)
+					{
+                        m_SpriteZeroBeingRendered = true;
+					}
                     break;
                 }
             }
@@ -525,6 +537,24 @@ void Ppu::Clock() {
         } else {
             pixel = bgPixel;
             palette = bgPalette;
+        }
+
+		if (m_SpriteZeroHitPossible && m_SpriteZeroBeingRendered) {
+            if (m_MaskReg.GetField(RENDER_BACKGROUND) & m_MaskReg.GetField(RENDER_SPRITES)) {
+                // The left edge of the screen has specific switches to control
+                // its appearance. This is used to smooth inconsistencies when
+                // scrolling (since sprites x coord must be >= 0)
+                if (~(m_MaskReg.GetField(RENDER_BACKGROUND_LEFT) |
+                      m_MaskReg.GetField(RENDER_SPRITES_LEFT))) {
+                    if (m_Cycle >= 9 && m_Cycle < 258) {
+                        m_StatusReg.SetField(SPRITE_ZERO_HIT, true);
+                    }
+                } else {
+                    if (m_Cycle >= 1 && m_Cycle < 258) {
+                        m_StatusReg.SetField(SPRITE_ZERO_HIT, true);
+                    }
+                }
+            }
         }
     }
 

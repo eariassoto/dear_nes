@@ -17,12 +17,12 @@ struct PpuRegister {
     }
 
     void SetField(RegEnumType field, bool value) {
-        uint8_t intValue = value ? 0x01 : 0x00;
-
         const int index = static_cast<int>(field);
-        intValue <<= index;
-
-        m_Register |= intValue;
+        if (value) {
+            m_Register |= 0x01 << index;
+        } else {
+            m_Register &= ~(0x01 << index);
+        }
     }
 
     uint8_t GetRegister() const { return m_Register; }
@@ -107,9 +107,9 @@ class Ppu {
 
     bool m_DoNMI = false;
 
-	uint8_t* m_OAMPtr = (uint8_t*)m_OAM;
+    uint8_t* m_OAMPtr = (uint8_t*)m_OAM;
 
-	uint8_t m_OAMAddress = 0x00;
+    uint8_t m_OAMAddress = 0x00;
 
    private:
     int16_t m_ScanLine = 0;
@@ -146,11 +146,14 @@ class Ppu {
     };
     ObjectAttributeEntry m_OAM[64];
 
-	ObjectAttributeEntry m_SpriteScanLine[8];
+    ObjectAttributeEntry m_SpriteScanLine[8];
     uint8_t m_SpriteCount = 0;
 
-	uint8_t m_SpriteShifterPatternLo[8];
-	uint8_t m_SpriteShifterPatternHi[8];
+    uint8_t m_SpriteShifterPatternLo[8];
+    uint8_t m_SpriteShifterPatternHi[8];
+
+    bool m_SpriteZeroHitPossible = false;
+    bool m_SpriteZeroBeingRendered = false;
 
     // Colors are in format ARGB
     // Table taken from https://wiki.nesdev.com/w/index.php/PPU_palettes
