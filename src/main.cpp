@@ -68,7 +68,7 @@ int main(void) {
     ImGui::StyleColorsDark();
 
     std::shared_ptr<cpuemulator::Cartridge> cartridge =
-        std::make_shared<cpuemulator::Cartridge>("Micro Mages.nes");
+        std::make_shared<cpuemulator::Cartridge>("smb.nes");
     if (!cartridge->IsLoaded()) {
         return 1;
     }
@@ -121,29 +121,6 @@ int main(void) {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // Render sprites
-        spriteShader.Use();
-        spriteShader.SetUniform("projection", glm::value_ptr(projection));
-        ppu->m_SpriteScreen.Render(spriteShader);
-
-        patternTable1 = ppu->GetPatternTable(0, 0);
-        patternTable2 = ppu->GetPatternTable(1, 0);
-
-        patternTable1.Render(spriteShader);
-        patternTable2.Render(spriteShader);
-
-        for (int p = 0; p < 8; ++p)  // For each palette
-        {
-            for (int s = 0; s < 4; ++s)  // For each index
-            {
-                const int coordX = (p > 3) ? s + 5 : s;
-                const int coordY = p % 4;
-                palette.SetPixel(coordX, coordY,
-                                 ppu->GetColorFromPalette(p, s));
-            }
-        }
-        palette.Render(spriteShader);
-
         // render widgets
         cpuWidget.Render();
         nesWidget.Render();
@@ -184,6 +161,29 @@ int main(void) {
                 } while (nesEmulator->GetCpuReference()->InstructionComplete());
             }
         }
+
+		// Render sprites
+        spriteShader.Use();
+        spriteShader.SetUniform("projection", glm::value_ptr(projection));
+        ppu->m_SpriteScreen.Render(spriteShader);
+
+        patternTable1 = ppu->GetPatternTable(0, 0);
+        patternTable2 = ppu->GetPatternTable(1, 0);
+
+        patternTable1.Render(spriteShader);
+        patternTable2.Render(spriteShader);
+
+        for (int p = 0; p < 8; ++p)  // For each palette
+        {
+            for (int s = 0; s < 4; ++s)  // For each index
+            {
+                const int coordX = (p > 3) ? s + 5 : s;
+                const int coordY = p % 4;
+                palette.SetPixel(coordX, coordY,
+                                 ppu->GetColorFromPalette(p, s));
+            }
+        }
+        palette.Render(spriteShader);
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
