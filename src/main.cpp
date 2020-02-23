@@ -68,7 +68,7 @@ int main(void) {
     ImGui::StyleColorsDark();
 
     std::shared_ptr<cpuemulator::Cartridge> cartridge =
-        std::make_shared<cpuemulator::Cartridge>("smb.nes");
+        std::make_shared<cpuemulator::Cartridge>("dk.nes");
     if (!cartridge->IsLoaded()) {
         return 1;
     }
@@ -78,14 +78,14 @@ int main(void) {
     std::shared_ptr<cpuemulator::Cpu> cpu = nesEmulator->GetCpuReference();
     std::shared_ptr<cpuemulator::Ppu> ppu = nesEmulator->GetPpuReference();
 
+	// todo this will be not needed
+    ppu->SetShader(&spriteShader);
+    ppu->SetVAO(VAO);
+
     nesEmulator->InsertCatridge(cartridge);
 
     cpuemulator::CpuWidget cpuWidget{cpu};
     cpuemulator::NesWidget nesWidget{nesEmulator};
-
-    ppu->m_SpriteScreen.BindToVAO(VAO);
-    ppu->m_SpritePatternTable[0].BindToVAO(VAO);
-    ppu->m_SpritePatternTable[1].BindToVAO(VAO);
 
     cpu->Reset();
 
@@ -95,9 +95,6 @@ int main(void) {
 
     glm::mat4 projection = glm::ortho(0.0f, (GLfloat)screenWidth,
                                       (GLfloat)screenHeight, 0.0f, -1.0f, 1.0f);
-
-    Sprite& patternTable1 = ppu->GetPatternTable(0, 2);
-    Sprite& patternTable2 = ppu->GetPatternTable(1, 2);
 
     Sprite palette{9, 4, 30, 532, 300};
     palette.BindToVAO(VAO);
@@ -162,16 +159,13 @@ int main(void) {
             }
         }
 
+		ppu->Update();
+
 		// Render sprites
         spriteShader.Use();
         spriteShader.SetUniform("projection", glm::value_ptr(projection));
-        ppu->m_SpriteScreen.Render(spriteShader);
+        ppu->Render();
 
-        patternTable1 = ppu->GetPatternTable(0, 0);
-        patternTable2 = ppu->GetPatternTable(1, 0);
-
-        patternTable1.Render(spriteShader);
-        patternTable2.Render(spriteShader);
 
         for (int p = 0; p < 8; ++p)  // For each palette
         {

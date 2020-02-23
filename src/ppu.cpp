@@ -5,6 +5,25 @@
 
 namespace cpuemulator {
 
+void Ppu::SetVAO(unsigned int VAO) {
+    m_SpriteOutputScreen.BindToVAO(VAO);
+    m_SpritePatternTables[0].BindToVAO(VAO);
+    m_SpritePatternTables[1].BindToVAO(VAO);
+}
+
+void Ppu::SetShader(Shader* spriteShader) { m_SpriteShader = spriteShader; }
+
+void Ppu::Update() {
+    UpdatePatternTableSprite(m_SpritePatternTables[0], 0, 0);
+    UpdatePatternTableSprite(m_SpritePatternTables[1], 1, 0);
+}
+
+void Ppu::Render() {
+    m_SpriteOutputScreen.Render(*m_SpriteShader);
+    m_SpritePatternTables[0].Render(*m_SpriteShader);
+    m_SpritePatternTables[1].Render(*m_SpriteShader);
+}
+
 int Ppu::GetColorFromPalette(uint8_t palette, uint8_t pixel) {
     assert(pixel <= 3);
     uint8_t data = PpuRead(0x3F00 + (palette << 2) + pixel) & 0x3F;
@@ -107,29 +126,29 @@ uint8_t Ppu::PpuRead(uint16_t address, bool readOnly) {
 
     if (m_Cartridge->PpuRead(address, data)) {
     } else if (address >= 0x0000 && address <= 0x1FFF) {
-        data = m_TablePattern[(address & 0x1000) >> 12][address & 0x0FFF];
+        data = m_PatternTables[(address & 0x1000) >> 12][address & 0x0FFF];
     } else if (address >= 0x2000 && address <= 0x3EFF) {
         address &= 0x0FFF;
         if (m_Cartridge->mirror == Cartridge::MIRROR::VERTICAL) {
             // Vertical
             if (address >= 0x0000 && address <= 0x03FF)
-                data = m_TableName[0][address & 0x03FF];
+                data = m_Nametables[0][address & 0x03FF];
             if (address >= 0x0400 && address <= 0x07FF)
-                address = m_TableName[1][address & 0x03FF];
+                address = m_Nametables[1][address & 0x03FF];
             if (address >= 0x0800 && address <= 0x0BFF)
-                data = m_TableName[0][address & 0x03FF];
+                data = m_Nametables[0][address & 0x03FF];
             if (address >= 0x0C00 && address <= 0x0FFF)
-                data = m_TableName[1][address & 0x03FF];
+                data = m_Nametables[1][address & 0x03FF];
         } else if (m_Cartridge->mirror == Cartridge::MIRROR::HORIZONTAL) {
             // Horizontal
             if (address >= 0x0000 && address <= 0x03FF)
-                data = m_TableName[0][address & 0x03FF];
+                data = m_Nametables[0][address & 0x03FF];
             if (address >= 0x0400 && address <= 0x07FF)
-                data = m_TableName[0][address & 0x03FF];
+                data = m_Nametables[0][address & 0x03FF];
             if (address >= 0x0800 && address <= 0x0BFF)
-                data = m_TableName[1][address & 0x03FF];
+                data = m_Nametables[1][address & 0x03FF];
             if (address >= 0x0C00 && address <= 0x0FFF)
-                data = m_TableName[1][address & 0x03FF];
+                data = m_Nametables[1][address & 0x03FF];
         }
     } else if (address >= 0x3F00 && address <= 0x3FFF) {
         address &= 0x001F;
@@ -137,7 +156,7 @@ uint8_t Ppu::PpuRead(uint16_t address, bool readOnly) {
         if (address == 0x0014) address = 0x0004;
         if (address == 0x0018) address = 0x0008;
         if (address == 0x001C) address = 0x000C;
-        data = m_TablePalette[address];
+        data = m_PaletteTable[address];
     }
     return data;
 }
@@ -146,29 +165,29 @@ void Ppu::PpuWrite(uint16_t address, uint8_t data) {
     address &= 0x3FFF;
     if (m_Cartridge->PpuWrite(address, data)) {
     } else if (address >= 0x0000 && address <= 0x1FFF) {
-        m_TablePattern[(address & 0x1000) >> 12][address & 0x0FFF] = data;
+        m_PatternTables[(address & 0x1000) >> 12][address & 0x0FFF] = data;
     } else if (address >= 0x2000 && address <= 0x3EFF) {
         address &= 0x0FFF;
         if (m_Cartridge->mirror == Cartridge::MIRROR::VERTICAL) {
             // Vertical
             if (address >= 0x0000 && address <= 0x03FF)
-                m_TableName[0][address & 0x03FF] = data;
+                m_Nametables[0][address & 0x03FF] = data;
             if (address >= 0x0400 && address <= 0x07FF)
-                m_TableName[1][address & 0x03FF] = data;
+                m_Nametables[1][address & 0x03FF] = data;
             if (address >= 0x0800 && address <= 0x0BFF)
-                m_TableName[0][address & 0x03FF] = data;
+                m_Nametables[0][address & 0x03FF] = data;
             if (address >= 0x0C00 && address <= 0x0FFF)
-                m_TableName[1][address & 0x03FF] = data;
+                m_Nametables[1][address & 0x03FF] = data;
         } else if (m_Cartridge->mirror == Cartridge::MIRROR::HORIZONTAL) {
             // Horizontal
             if (address >= 0x0000 && address <= 0x03FF)
-                m_TableName[0][address & 0x03FF] = data;
+                m_Nametables[0][address & 0x03FF] = data;
             if (address >= 0x0400 && address <= 0x07FF)
-                m_TableName[0][address & 0x03FF] = data;
+                m_Nametables[0][address & 0x03FF] = data;
             if (address >= 0x0800 && address <= 0x0BFF)
-                m_TableName[1][address & 0x03FF] = data;
+                m_Nametables[1][address & 0x03FF] = data;
             if (address >= 0x0C00 && address <= 0x0FFF)
-                m_TableName[1][address & 0x03FF] = data;
+                m_Nametables[1][address & 0x03FF] = data;
         }
     } else if (address >= 0x3F00 && address <= 0x3FFF) {
         address &= 0x001F;
@@ -176,7 +195,7 @@ void Ppu::PpuWrite(uint16_t address, uint8_t data) {
         if (address == 0x0014) address = 0x0004;
         if (address == 0x0018) address = 0x0008;
         if (address == 0x001C) address = 0x000C;
-        m_TablePalette[address] = data;
+        m_PaletteTable[address] = data;
     }
 }
 
@@ -357,10 +376,9 @@ void Ppu::Clock() {
                                              ? 16
                                              : 8)) {
                     if (m_SpriteCount < 8) {
-						if (nOAMEntry == 0)
-						{
+                        if (nOAMEntry == 0) {
                             m_SpriteZeroHitPossible = true;
-						}
+                        }
                         memcpy(&m_SpriteScanLine[m_SpriteCount],
                                &m_OAM[nOAMEntry], sizeof(ObjectAttributeEntry));
                         ++m_SpriteCount;
@@ -368,8 +386,7 @@ void Ppu::Clock() {
                 }
                 ++nOAMEntry;
             }
-            m_StatusReg.SetField(SPRITE_OVERFLOW,
-                                 (m_SpriteCount > 8));
+            m_StatusReg.SetField(SPRITE_OVERFLOW, (m_SpriteCount > 8));
         }
 
         if (m_Cycle == 340) {
@@ -498,7 +515,7 @@ void Ppu::Clock() {
     uint8_t fg_priority = 0x00;
 
     if (m_MaskReg.GetField(RENDER_SPRITES)) {
-		m_SpriteZeroBeingRendered = false;
+        m_SpriteZeroBeingRendered = false;
         for (uint8_t i = 0; i < m_SpriteCount; ++i) {
             if (m_SpriteScanLine[i].x == 0) {
                 uint8_t pixelLo = (m_SpriteShifterPatternLo[i] & 0x80) > 0;
@@ -509,10 +526,9 @@ void Ppu::Clock() {
                 fg_priority = (m_SpriteScanLine[i].attribute & 0x20) == 0;
 
                 if (fg_pixel != 0) {
-					if (i == 0)
-					{
+                    if (i == 0) {
                         m_SpriteZeroBeingRendered = true;
-					}
+                    }
                     break;
                 }
             }
@@ -539,8 +555,9 @@ void Ppu::Clock() {
             palette = bgPalette;
         }
 
-		if (m_SpriteZeroHitPossible && m_SpriteZeroBeingRendered) {
-            if (m_MaskReg.GetField(RENDER_BACKGROUND) & m_MaskReg.GetField(RENDER_SPRITES)) {
+        if (m_SpriteZeroHitPossible && m_SpriteZeroBeingRendered) {
+            if (m_MaskReg.GetField(RENDER_BACKGROUND) &
+                m_MaskReg.GetField(RENDER_SPRITES)) {
                 // The left edge of the screen has specific switches to control
                 // its appearance. This is used to smooth inconsistencies when
                 // scrolling (since sprites x coord must be >= 0)
@@ -558,8 +575,8 @@ void Ppu::Clock() {
         }
     }
 
-    m_SpriteScreen.SetPixel(m_Cycle - 1, m_ScanLine,
-                            GetColorFromPalette(palette, pixel));
+    m_SpriteOutputScreen.SetPixel(m_Cycle - 1, m_ScanLine,
+                                  GetColorFromPalette(palette, pixel));
 
     ++m_Cycle;
     if (m_Cycle >= 341) {
@@ -572,7 +589,8 @@ void Ppu::Clock() {
     }
 }  // namespace cpuemulator
 
-Sprite& Ppu::GetPatternTable(unsigned int index, uint8_t palette) {
+void Ppu::UpdatePatternTableSprite(Sprite& sprite, unsigned int index,
+                                   uint8_t palette) {
     for (uint16_t nTileX = 0; nTileX < 16; ++nTileX) {
         for (uint16_t nTileY = 0; nTileY < 16; ++nTileY) {
             uint16_t offset = nTileY * 256 + nTileX * 16;
@@ -586,15 +604,12 @@ Sprite& Ppu::GetPatternTable(unsigned int index, uint8_t palette) {
                     tileLSB >>= 1;
                     tileMSB >>= 1;
 
-                    m_SpritePatternTable[index].SetPixel(
-                        nTileX * 8 + (7 - col), nTileY * 8 + row,
-                        GetColorFromPalette(palette, pixel));
+                    sprite.SetPixel(nTileX * 8 + (7 - col), nTileY * 8 + row,
+                                    GetColorFromPalette(palette, pixel));
                 }
             }
         }
     }
-    // todo check bounds error
-    return m_SpritePatternTable[index];
 }
 
 }  // namespace cpuemulator

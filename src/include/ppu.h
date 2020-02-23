@@ -75,12 +75,46 @@ union LoopyRegister {
 };
 
 class Ppu {
+   public:
+    void SetVAO(unsigned int VAO);
+    void SetShader(Shader* spriteShader);
+
    private:
-    uint8_t m_TableName[2][1024] = {0};
-    uint8_t m_TablePalette[32] = {0};
-    uint8_t m_TablePattern[2][4096] = {0};
+    // todo: this should be removed
+    unsigned int m_VAO = 0;
+    Shader* m_SpriteShader = nullptr;
+
+    /// PPU Nametables
+    /// A nametable is a 1024 byte area of memory used by the PPU
+    /// to lay out backgrounds. Each byte in the nametable controls
+    /// one 8x8 pixel character cell, and each nametable has 30 rows of 32 tiles
+    /// each, for 960 ($3C0) bytes; the rest is used by each nametable's
+    /// attribute table. With each tile being 8x8 pixels, this makes a total of
+    /// 256x240 pixels in one map, the same size as one full screen.
+    /// https://wiki.nesdev.com/w/index.php/PPU_nametables
+    uint8_t m_Nametables[2][1024] = {0};
+
+    /// The palette for the background runs from VRAM $3F00 to $3F0F; the
+    /// palette for the sprites runs from $3F10 to $3F1F. Each color takes up
+    /// one byte. https://wiki.nesdev.com/w/index.php/PPU_palettes
+    uint8_t m_PaletteTable[32] = {0};
+
+    /// The pattern table is an area of memory connected to the PPU that defines
+    /// the shapes of tiles that make up backgrounds and sprites. Each tile in
+    /// the pattern table is 16 bytes, made of two planes. The first plane
+    /// controls bit 0 of the color; the second plane controls bit 1.
+    /// https://wiki.nesdev.com/w/index.php/PPU_pattern_tables
+    uint8_t m_PatternTables[2][4096] = {0};
+
+    Sprite m_SpriteOutputScreen = Sprite{256, 240, 2, 10, 10};
+
+    Sprite m_SpritePatternTables[2] = {Sprite{128, 128, 2, 532, 10},
+                                       Sprite{128, 128, 2, 798, 10}};
 
    public:
+    void Update();
+    void Render();
+
     int GetColorFromPalette(uint8_t palette, uint8_t pixel);
     uint8_t CpuRead(uint16_t address, bool readOnly = false);
     void CpuWrite(uint16_t address, uint8_t data);
@@ -96,14 +130,10 @@ class Ppu {
     void Clock();
 
    public:
-    Sprite m_SpriteScreen = Sprite{256, 240, 2, 10, 10};
-    Sprite m_SpriteNameTable[2] = {Sprite{256, 240, 2, 10, 10},
-                                   Sprite{256, 240, 2, 10, 10}};
-    Sprite m_SpritePatternTable[2] = {Sprite{128, 128, 2, 532, 10},
-                                      Sprite{128, 128, 2, 798, 10}};
     bool isFrameComplete = false;
 
-    Sprite& GetPatternTable(unsigned int index, uint8_t palette);
+    void UpdatePatternTableSprite(Sprite& sprite, unsigned int index,
+                                  uint8_t palette);
 
     bool m_DoNMI = false;
 
