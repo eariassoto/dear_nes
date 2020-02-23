@@ -56,12 +56,12 @@ class Bus {
     uint8_t m_ControllerState[2] = {0};
 
 	private:
-    uint8_t m_DMAPage = 0x00;
-    uint8_t m_DMAAddress = 0x00;
-    uint8_t m_DMAData = 0x00;
+    uint8_t m_DmaPage = 0x00;
+    uint8_t m_DmaAddress = 0x00;
+    uint8_t m_DmaData = 0x00;
 
-	bool m_DMATransfer = false;
-	bool m_DMADummy = true;
+	bool m_DmaTransfer = false;
+	bool m_DmaWait = true;
 
 };
 }  // namespace cpuemulator
