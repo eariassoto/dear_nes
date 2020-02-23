@@ -9,6 +9,7 @@ void Ppu::SetVAO(unsigned int VAO) {
     m_SpriteOutputScreen.BindToVAO(VAO);
     m_SpritePatternTables[0].BindToVAO(VAO);
     m_SpritePatternTables[1].BindToVAO(VAO);
+    m_SpritePalette.BindToVAO(VAO);
 }
 
 void Ppu::SetShader(Shader* spriteShader) { m_SpriteShader = spriteShader; }
@@ -16,12 +17,23 @@ void Ppu::SetShader(Shader* spriteShader) { m_SpriteShader = spriteShader; }
 void Ppu::Update() {
     UpdatePatternTableSprite(m_SpritePatternTables[0], 0, 0);
     UpdatePatternTableSprite(m_SpritePatternTables[1], 1, 0);
+
+    for (int p = 0; p < 8; ++p)  // For each palette
+    {
+        for (int s = 0; s < 4; ++s)  // For each index
+        {
+            const int coordX = (p > 3) ? s + 5 : s;
+            const int coordY = p % 4;
+            m_SpritePalette.SetPixel(coordX, coordY, GetColorFromPalette(p, s));
+        }
+    }
 }
 
 void Ppu::Render() {
     m_SpriteOutputScreen.Render(*m_SpriteShader);
     m_SpritePatternTables[0].Render(*m_SpriteShader);
     m_SpritePatternTables[1].Render(*m_SpriteShader);
+    m_SpritePalette.Render(*m_SpriteShader);
 }
 
 int Ppu::GetColorFromPalette(uint8_t palette, uint8_t pixel) {

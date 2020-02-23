@@ -111,6 +111,8 @@ class Ppu {
     Sprite m_SpritePatternTables[2] = {Sprite{128, 128, 2, 532, 10},
                                        Sprite{128, 128, 2, 798, 10}};
 
+	Sprite m_SpritePalette{9, 4, 30, 532, 300};
+
    public:
     void Update();
     void Render();

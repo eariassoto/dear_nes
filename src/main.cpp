@@ -96,9 +96,6 @@ int main(void) {
     glm::mat4 projection = glm::ortho(0.0f, (GLfloat)screenWidth,
                                       (GLfloat)screenHeight, 0.0f, -1.0f, 1.0f);
 
-    Sprite palette{9, 4, 30, 532, 300};
-    palette.BindToVAO(VAO);
-
 	cpuemulator::Logger& logger = cpuemulator::Logger::Get();
     logger.Start();
 
@@ -158,26 +155,12 @@ int main(void) {
                 } while (nesEmulator->GetCpuReference()->InstructionComplete());
             }
         }
-
 		ppu->Update();
 
 		// Render sprites
         spriteShader.Use();
         spriteShader.SetUniform("projection", glm::value_ptr(projection));
         ppu->Render();
-
-
-        for (int p = 0; p < 8; ++p)  // For each palette
-        {
-            for (int s = 0; s < 4; ++s)  // For each index
-            {
-                const int coordX = (p > 3) ? s + 5 : s;
-                const int coordY = p % 4;
-                palette.SetPixel(coordX, coordY,
-                                 ppu->GetColorFromPalette(p, s));
-            }
-        }
-        palette.Render(spriteShader);
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
