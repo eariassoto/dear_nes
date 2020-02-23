@@ -51,6 +51,7 @@ include_directories(
 	"${CMAKE_SOURCE_DIR}/external/glm"
 	"${CMAKE_SOURCE_DIR}/external/imgui"
 	"${CMAKE_SOURCE_DIR}/external/imgui/examples"
+	"${CMAKE_SOURCE_DIR}/external/tinyfsm"
 )
 
 target_link_libraries(${PROJECT_NAME} ${LIBS})

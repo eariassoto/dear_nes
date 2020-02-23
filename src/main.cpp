@@ -22,13 +22,22 @@
 #include "include/file_manager.h"
 #include "include/sprite.h"
 #include "include/logger.h"
+#include "include/nes.h"
+
+using Bus = cpuemulator::Bus;
+using Shader = cpuemulator::Shader;
+using FileManager = cpuemulator::FileManager;
+using Cartridge = cpuemulator::Cartridge;
+using Ppu = cpuemulator::Ppu;
+using Cpu = cpuemulator::Cpu;
+using CpuWidget = cpuemulator::CpuWidget;
+using NesWidget = cpuemulator::NesWidget;
+using Logger = cpuemulator::Logger;
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow* window, std::shared_ptr<cpuemulator::Bus>& nes);
+void processInput(GLFWwindow* window, std::shared_ptr<Bus>& nes);
 
-using cpuemulator::FileManager;
-using cpuemulator::Shader;
-using cpuemulator::Sprite;
+using fsm_handle = Switch;
 
 int main(void) {
     glfwInit();
@@ -67,16 +76,16 @@ int main(void) {
     ImGui_ImplOpenGL3_Init(NULL);
     ImGui::StyleColorsDark();
 
-    std::shared_ptr<cpuemulator::Cartridge> cartridge =
-        std::make_shared<cpuemulator::Cartridge>("dk.nes");
+    std::shared_ptr<Cartridge> cartridge =
+        std::make_shared<Cartridge>("dk.nes");
     if (!cartridge->IsLoaded()) {
         return 1;
     }
 
-    std::shared_ptr<cpuemulator::Bus> nesEmulator =
-        std::make_shared<cpuemulator::Bus>();
-    std::shared_ptr<cpuemulator::Cpu> cpu = nesEmulator->GetCpuReference();
-    std::shared_ptr<cpuemulator::Ppu> ppu = nesEmulator->GetPpuReference();
+    std::shared_ptr<Bus> nesEmulator =
+        std::make_shared<Bus>();
+    std::shared_ptr<Cpu> cpu = nesEmulator->GetCpuReference();
+    std::shared_ptr<Ppu> ppu = nesEmulator->GetPpuReference();
 
 	// todo this will be not needed
     ppu->SetShader(&spriteShader);
@@ -84,8 +93,8 @@ int main(void) {
 
     nesEmulator->InsertCatridge(cartridge);
 
-    cpuemulator::CpuWidget cpuWidget{cpu};
-    cpuemulator::NesWidget nesWidget{nesEmulator};
+    CpuWidget cpuWidget{cpu};
+    NesWidget nesWidget{nesEmulator};
 
     cpu->Reset();
 
@@ -96,8 +105,12 @@ int main(void) {
     glm::mat4 projection = glm::ortho(0.0f, (GLfloat)screenWidth,
                                       (GLfloat)screenHeight, 0.0f, -1.0f, 1.0f);
 
-	cpuemulator::Logger& logger = cpuemulator::Logger::Get();
+	Logger& logger = Logger::Get();
     logger.Start();
+
+	Toggle toggle;
+
+    fsm_handle::start();
 
     using namespace std::chrono;
     const milliseconds frameTime{1000 / 60};
@@ -120,6 +133,7 @@ int main(void) {
         nesWidget.Render();
 
         if (nesWidget.IsSimulationRunChecked()) {
+            //fsm_handle::dispatch(toggle);
             do {
                 nesEmulator->Clock();
             } while (!nesEmulator->GetPpuReference()->isFrameComplete);
@@ -188,7 +202,7 @@ void framebufferSizeCallback(GLFWwindow* window, int width, int height) {
 }
 
 void processInput(GLFWwindow* window,
-                  std::shared_ptr<cpuemulator::Bus>& nesEmulator) {
+                  std::shared_ptr<Bus>& nesEmulator) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }
