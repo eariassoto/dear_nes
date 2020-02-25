@@ -9,3 +9,7 @@
 	path = external/glfw
 	url = https://github.com/glfw/glfw
 	branch = master
+[submodule "external/sml"]
+	path = external/sml
+	url = https://github.com/boost-experimental/sml
+	branch = master
