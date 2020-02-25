@@ -22,7 +22,6 @@
 #include "include/file_manager.h"
 #include "include/sprite.h"
 #include "include/logger.h"
-#include "include/nes.h"
 
 using Bus = cpuemulator::Bus;
 using Shader = cpuemulator::Shader;
@@ -37,7 +36,6 @@ using Logger = cpuemulator::Logger;
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window, std::shared_ptr<Bus>& nes);
 
-using fsm_handle = Switch;
 
 int main(void) {
     glfwInit();
@@ -108,10 +106,6 @@ int main(void) {
 	Logger& logger = Logger::Get();
     logger.Start();
 
-	Toggle toggle;
-
-    fsm_handle::start();
-
     using namespace std::chrono;
     const milliseconds frameTime{1000 / 60};
     while (!glfwWindowShouldClose(window)) {
@@ -133,7 +127,6 @@ int main(void) {
         nesWidget.Render();
 
         if (nesWidget.IsSimulationRunChecked()) {
-            //fsm_handle::dispatch(toggle);
             do {
                 nesEmulator->Clock();
             } while (!nesEmulator->GetPpuReference()->isFrameComplete);
