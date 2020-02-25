@@ -1,18 +1,12 @@
 // Copyright (c) 2020 Emmanuel Arias
 #include "include/ppu.h"
+
+#include <cassert>
+
 #include "include/cartridge.h"
 #include "include/logger.h"
 
 namespace cpuemulator {
-
-void Ppu::SetVAO(unsigned int VAO) {
-    m_SpriteOutputScreen.BindToVAO(VAO);
-    m_SpritePatternTables[0].BindToVAO(VAO);
-    m_SpritePatternTables[1].BindToVAO(VAO);
-    m_SpritePalette.BindToVAO(VAO);
-}
-
-void Ppu::SetShader(Shader* spriteShader) { m_SpriteShader = spriteShader; }
 
 void Ppu::Update() {
     UpdatePatternTableSprite(m_SpritePatternTables[0], 0, 0);
@@ -30,10 +24,10 @@ void Ppu::Update() {
 }
 
 void Ppu::Render() {
-    m_SpriteOutputScreen.Render(*m_SpriteShader);
-    m_SpritePatternTables[0].Render(*m_SpriteShader);
-    m_SpritePatternTables[1].Render(*m_SpriteShader);
-    m_SpritePalette.Render(*m_SpriteShader);
+    m_SpriteOutputScreen.Render();
+    m_SpritePatternTables[0].Render();
+    m_SpritePatternTables[1].Render();
+    m_SpritePalette.Render();
 }
 
 int Ppu::GetColorFromPalette(uint8_t palette, uint8_t pixel) {

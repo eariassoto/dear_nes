@@ -7,9 +7,6 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include <chrono>
 #include <thread>
 
@@ -18,13 +15,11 @@
 #include "include/cpu.h"
 #include "include/cpu_widget.h"
 #include "include/nes_widget.h"
-#include "include/shader.h"
 #include "include/file_manager.h"
 #include "include/sprite.h"
 #include "include/logger.h"
 
 using Bus = cpuemulator::Bus;
-using Shader = cpuemulator::Shader;
 using FileManager = cpuemulator::FileManager;
 using Cartridge = cpuemulator::Cartridge;
 using Ppu = cpuemulator::Ppu;
@@ -62,20 +57,13 @@ int main(void) {
     glViewport(0, 0, screenWidth, screenHeight);
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 
-    Shader spriteShader;
-    spriteShader.Init(FileManager::ReadShader("simple-shader.vs"),
-                      FileManager::ReadShader("simple-shader.fs"));
-
-    unsigned int VAO = 0;
-    glGenVertexArrays(1, &VAO);
-
     ImGui::CreateContext();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(NULL);
     ImGui::StyleColorsDark();
 
     std::shared_ptr<Cartridge> cartridge =
-        std::make_shared<Cartridge>("dk.nes");
+        std::make_shared<Cartridge>("Micro Mages.nes");
     if (!cartridge->IsLoaded()) {
         return 1;
     }
@@ -84,10 +72,6 @@ int main(void) {
         std::make_shared<Bus>();
     std::shared_ptr<Cpu> cpu = nesEmulator->GetCpuReference();
     std::shared_ptr<Ppu> ppu = nesEmulator->GetPpuReference();
-
-	// todo this will be not needed
-    ppu->SetShader(&spriteShader);
-    ppu->SetVAO(VAO);
 
     nesEmulator->InsertCatridge(cartridge);
 
@@ -99,9 +83,6 @@ int main(void) {
     do {
         nesEmulator->Clock();
     } while (!cpu->InstructionComplete());
-
-    glm::mat4 projection = glm::ortho(0.0f, (GLfloat)screenWidth,
-                                      (GLfloat)screenHeight, 0.0f, -1.0f, 1.0f);
 
 	Logger& logger = Logger::Get();
     logger.Start();
@@ -164,9 +145,6 @@ int main(void) {
         }
 		ppu->Update();
 
-		// Render sprites
-        spriteShader.Use();
-        spriteShader.SetUniform("projection", glm::value_ptr(projection));
         ppu->Render();
 
         ImGui::Render();

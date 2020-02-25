@@ -75,15 +75,7 @@ union LoopyRegister {
 };
 
 class Ppu {
-   public:
-    void SetVAO(unsigned int VAO);
-    void SetShader(Shader* spriteShader);
-
    private:
-    // todo: this should be removed
-    unsigned int m_VAO = 0;
-    Shader* m_SpriteShader = nullptr;
-
     /// PPU Nametables
     /// A nametable is a 1024 byte area of memory used by the PPU
     /// to lay out backgrounds. Each byte in the nametable controls
@@ -106,12 +98,13 @@ class Ppu {
     /// https://wiki.nesdev.com/w/index.php/PPU_pattern_tables
     uint8_t m_PatternTables[2][4096] = {0};
 
-    Sprite m_SpriteOutputScreen = Sprite{256, 240, 2, 10, 10};
+    Sprite m_SpriteOutputScreen = Sprite{"NES Screen", 256, 240, 2, 10, 10};
 
-    Sprite m_SpritePatternTables[2] = {Sprite{128, 128, 2, 532, 10},
-                                       Sprite{128, 128, 2, 798, 10}};
+    Sprite m_SpritePatternTables[2] = {
+        Sprite{"Pattern Table #0", 128, 128, 2, 542, 10},
+        Sprite{"Pattern Table #1", 128, 128, 2, 818, 10}};
 
-	Sprite m_SpritePalette{9, 4, 30, 532, 300};
+    Sprite m_SpritePalette{"Color Palettes", 9, 4, 30, 542, 310};
 
    public:
     void Update();

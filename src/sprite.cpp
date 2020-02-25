@@ -1,21 +1,24 @@
 // Copyright (c) 2020 Emmanuel Arias
-#include <cstring>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include <string>
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
 
 #include "include/sprite.h"
-#include "include/shader.h"
 #include "include/logger.h"
 
 namespace cpuemulator {
-Sprite::Sprite(unsigned int width, unsigned int height, float cellSize,
-               float posX, float posY)
-    : m_Width{width},
+Sprite::Sprite(const std::string& spriteName, unsigned int width,
+               unsigned int height, unsigned int cellSize, float posX,
+               float posY)
+    : m_Name{spriteName},
+      m_Width{width},
       m_Height{height},
       m_CellSizeInPixels{cellSize},
+      m_TextureWidth{(float)width * cellSize},
+      m_TextureHeight{(float)height * cellSize},
       m_PositionX{posX},
-      m_PositionY{posY},
-      m_ModelMatrix{glm::mat4(1.0f)} {
+      m_PositionY{posY} {	
     int dataSize = m_Width * m_Height * CHANNEL_COUNT;
     m_TextureData = new GLubyte[dataSize];
     memset(m_TextureData, 0, dataSize);
@@ -35,64 +38,24 @@ Sprite::Sprite(unsigned int width, unsigned int height, float cellSize,
     // Unbind texture
     glBindTexture(GL_TEXTURE_2D, 0);
     Logger::Get().Log("SPRITE", "Sprite binded to texture id {}", m_textureId);
-
-    glGenBuffers(1, &m_VBO);
-    glGenBuffers(1, &m_EBO);
-
-    float spriteWidth = m_Width * m_CellSizeInPixels;
-    float spriteHeight = m_Height * m_CellSizeInPixels;
-    m_ModelMatrix = glm::translate(m_ModelMatrix,
-                                   glm::vec3(m_PositionX, m_PositionY, 0.0f));
-    m_ModelMatrix =
-        glm::scale(m_ModelMatrix, glm::vec3(spriteWidth, spriteHeight, 1.0f));
 }
 
 Sprite::~Sprite() {
     delete[] m_TextureData;
     glDeleteTextures(1, &m_textureId);
 }
-void Sprite::BindToVAO(unsigned int VAO) {
-    m_VAO = VAO;
-    glBindVertexArray(VAO);
 
-    glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(TRIANGLE_VERTICES), TRIANGLE_VERTICES,
-                 GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(TRIANGLE_INDEXES),
-                 TRIANGLE_INDEXES, GL_STATIC_DRAW);
-
-    // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                          (void*)0);
-    glEnableVertexAttribArray(0);
-    // texture coord attribute
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                          (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    glBindVertexArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-}
-
-void Sprite::Render(Shader& shader) {
-    shader.Use();
-    shader.SetUniform("model", glm::value_ptr(m_ModelMatrix));
-
+void Sprite::Render() {
+    // TODO: mode this to update
     glBindTexture(GL_TEXTURE_2D, m_textureId);
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_Width, m_Height, PIXEL_FORMAT,
                     GL_UNSIGNED_BYTE, (GLvoid*)m_TextureData);
 
-    glBindVertexArray(m_VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-    glBindVertexArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	ImGui::SetNextWindowPos(ImVec2(m_PositionX, m_PositionY), ImGuiCond_Always);
+    ImGui::Begin(m_Name.c_str());
+    ImGui::Image((void*)(intptr_t)m_textureId,
+                 ImVec2(m_TextureWidth, m_TextureHeight));
+    ImGui::End();
 }
 
 void Sprite::SetPixel(int x, int y, int color) {

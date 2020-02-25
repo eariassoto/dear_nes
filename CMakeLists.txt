@@ -40,15 +40,12 @@ add_library(IMGUI
 	"external/imgui/imgui_widgets.cpp"
 )
 
-add_subdirectory("external/glm")
-
-set(LIBS glfw opengl32 GLAD IMGUI fmt::fmt glm)
+set(LIBS glfw opengl32 GLAD IMGUI fmt::fmt)
 
 include_directories(
 	"${CMAKE_SOURCE_DIR}/src"
 	"${CMAKE_SOURCE_DIR}/external"
 	"${CMAKE_SOURCE_DIR}/external/glfw/include"
-	"${CMAKE_SOURCE_DIR}/external/glm"
 	"${CMAKE_SOURCE_DIR}/external/imgui"
 	"${CMAKE_SOURCE_DIR}/external/imgui/examples"
 	"${CMAKE_SOURCE_DIR}/external/tinyfsm"
