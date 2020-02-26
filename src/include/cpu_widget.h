@@ -1,18 +1,17 @@
 // Copyright (c) 2020 Emmanuel Arias
 #pragma once
 #include <imgui.h>
-#include <memory>
 
 namespace cpuemulator {
 class Cpu;
 
 class CpuWidget {
    public:
-    CpuWidget(const std::shared_ptr<Cpu> cpu);
+    CpuWidget(Cpu* cpu);
     void Render();
 
    private:
-    const std::shared_ptr<Cpu> m_Cpu;
+    Cpu* m_Cpu = nullptr;
     ImVec4 m_ColorFlagSet;
     ImVec4 m_ColorFlagReset;
 

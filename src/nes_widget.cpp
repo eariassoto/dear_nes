@@ -6,7 +6,7 @@
 
 namespace cpuemulator {
 
-NesWidget::NesWidget(std::shared_ptr<Bus>& nes) : m_Nes{nes} {}
+NesWidget::NesWidget(Bus* nes) : m_Nes{nes} {}
 
 void NesWidget::Render() {
     ImGui::Begin("NES controls");

@@ -4,7 +4,7 @@
 
 namespace cpuemulator {
 
-CpuWidget::CpuWidget(const std::shared_ptr<Cpu> cpu)
+CpuWidget::CpuWidget(Cpu* cpu)
     : m_Cpu{cpu},
       m_ColorFlagSet{.0f, 1.f, .0f, 1.f},
       m_ColorFlagReset{1.f, .0f, .0f, 1.f} {}

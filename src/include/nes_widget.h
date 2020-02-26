@@ -1,13 +1,12 @@
 // Copyright (c) 2020 Emmanuel Arias
 #pragma once
-#include <memory>
 
 namespace cpuemulator {
 class Bus;
 
 class NesWidget {
    public:
-    NesWidget(std::shared_ptr<Bus>& nes);
+    NesWidget(Bus* nes);
     void Render();
 
 	bool IsDoResetButtonClicked();
@@ -17,7 +16,7 @@ class NesWidget {
 	bool IsSimulationRunChecked();
 
    private:
-    std::shared_ptr<Bus> m_Nes;
+    Bus* m_Nes = nullptr;
 
     bool m_ShouldSimulationRun = false;
     bool m_DoResetBtn = false;

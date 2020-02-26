@@ -10,6 +10,7 @@ class Bus;
 
 class Cpu {
    public:
+       Cpu();
     void ConnectBus(Bus* bus);
 
     enum FLAGS {
@@ -39,6 +40,7 @@ class Cpu {
         RELATIVE_ADDRESSING
     };
 
+    void RenderWidgets();
     void Clock();
     void Reset();
     void InterruptRequest();
@@ -71,6 +73,8 @@ class Cpu {
     uint16_t m_AddressRelative = 0x0000;
 
     Bus* m_Bus = nullptr;
+
+    CpuWidget m_CpuWidget;
 
    private:
     uint8_t GetFlag(FLAGS flag) const;

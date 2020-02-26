@@ -12,7 +12,6 @@
 
 #include "include/bus.h"
 #include "include/cartridge.h"
-#include "include/cpu.h"
 #include "include/cpu_widget.h"
 #include "include/nes_widget.h"
 #include "include/file_manager.h"
@@ -70,19 +69,10 @@ int main(void) {
 
     std::shared_ptr<Bus> nesEmulator =
         std::make_shared<Bus>();
-    std::shared_ptr<Cpu> cpu = nesEmulator->GetCpuReference();
-    std::shared_ptr<Ppu> ppu = nesEmulator->GetPpuReference();
 
     nesEmulator->InsertCatridge(cartridge);
 
-    CpuWidget cpuWidget{cpu};
-    NesWidget nesWidget{nesEmulator};
-
-    cpu->Reset();
-
-    do {
-        nesEmulator->Clock();
-    } while (!cpu->InstructionComplete());
+    nesEmulator->Reset();
 
 	Logger& logger = Logger::Get();
     logger.Start();
@@ -104,48 +94,11 @@ int main(void) {
         ImGui::NewFrame();
 
         // render widgets
-        cpuWidget.Render();
-        nesWidget.Render();
+        nesEmulator->RenderWidgets();
 
-        if (nesWidget.IsSimulationRunChecked()) {
-            do {
-                nesEmulator->Clock();
-            } while (!nesEmulator->GetPpuReference()->isFrameComplete);
+        nesEmulator->Update();
 
-            do {
-                nesEmulator->GetCpuReference()->Clock();
-            } while (nesEmulator->GetCpuReference()->InstructionComplete());
-
-            nesEmulator->GetPpuReference()->isFrameComplete = false;
-        } else {
-            if (nesWidget.IsDoResetButtonClicked()) {
-                nesEmulator->Reset();
-            }
-            if (nesWidget.IsDoFrameButtonClicked()) {
-                do {
-                    nesEmulator->Clock();
-                } while (!nesEmulator->GetPpuReference()->isFrameComplete);
-
-                do {
-                    nesEmulator->GetCpuReference()->Clock();
-                } while (nesEmulator->GetCpuReference()->InstructionComplete());
-
-                nesEmulator->GetPpuReference()->isFrameComplete = false;
-            }
-            if (nesWidget.IsDoStepButtonClicked()) {
-                do {
-                    nesEmulator->Clock();
-                } while (
-                    !nesEmulator->GetCpuReference()->InstructionComplete());
-
-                do {
-                    nesEmulator->Clock();
-                } while (nesEmulator->GetCpuReference()->InstructionComplete());
-            }
-        }
-		ppu->Update();
-
-        ppu->Render();
+        nesEmulator->Render();
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

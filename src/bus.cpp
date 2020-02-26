@@ -6,16 +6,13 @@
 #include "include/logger.h"
 
 namespace cpuemulator {
-Bus::Bus() {
+Bus::Bus():
+    m_NesWidget{this} {
     m_Cpu->ConnectBus(this);
     memset(m_cpuRam, 0, 0x800);
 }
 
 Bus::~Bus() { delete[] m_cpuRam; }
-
-std::shared_ptr<Cpu> Bus::GetCpuReference() { return m_Cpu; }
-
-std::shared_ptr<Ppu> Bus::GetPpuReference() { return m_Ppu; }
 
 uint64_t Bus::GetSystemClockCounter() const { return m_SystemClockCounter; }
 
@@ -59,6 +56,11 @@ void Bus::InsertCatridge(const std::shared_ptr<Cartridge>& cartridge) {
 void Bus::Reset() {
     m_Cpu->Reset();
     m_SystemClockCounter = 0;
+    m_DmaPage = 0x00;
+    m_DmaAddress = 0x00;
+    m_DmaData = 0x00;
+    m_DmaWait = true;
+    m_DmaTransfer = false;
 }
 
 void Bus::Clock() {
@@ -94,6 +96,59 @@ void Bus::Clock() {
     }
 
     ++m_SystemClockCounter;
+}
+
+void Bus::RenderWidgets()
+{
+    m_NesWidget.Render();
+    m_Cpu->RenderWidgets();
+}
+
+void Bus::Update()
+{
+    if (m_NesWidget.IsSimulationRunChecked()) {
+        do {
+            Clock();
+        } while (!m_Ppu->isFrameComplete);
+
+        do {
+            m_Cpu->Clock();
+        } while (m_Cpu->InstructionComplete());
+
+        m_Ppu->isFrameComplete = false;
+    }
+    else {
+        if (m_NesWidget.IsDoResetButtonClicked()) {
+            Reset();
+        }
+        if (m_NesWidget.IsDoFrameButtonClicked()) {
+            do {
+                Clock();
+            } while (!m_Ppu->isFrameComplete);
+
+            do {
+                m_Cpu->Clock();
+            } while (m_Cpu->InstructionComplete());
+
+            m_Ppu->isFrameComplete = false;
+        }
+        if (m_NesWidget.IsDoStepButtonClicked()) {
+            do {
+                Clock();
+            } while (
+                !m_Cpu->InstructionComplete());
+
+            do {
+                Clock();
+            } while (m_Cpu->InstructionComplete());
+        }
+    }
+    m_Ppu->Update();
+}
+
+void Bus::Render()
+{
+    m_Ppu->Render();
 }
 
 }  // namespace cpuemulator

@@ -7,9 +7,21 @@
 
 namespace cpuemulator {
 
+
+    Cpu::Cpu() : m_CpuWidget{ this }
+    {
+
+    }
+
 void Cpu::ConnectBus(Bus* bus) {
     m_Bus = bus;
     RegisterAllInstructionSet();
+}
+
+
+void Cpu::RenderWidgets()
+{
+    m_CpuWidget.Render();
 }
 
 void Cpu::Clock() {
