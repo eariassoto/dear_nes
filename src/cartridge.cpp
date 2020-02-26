@@ -57,9 +57,15 @@ Cartridge::Cartridge(const std::string& fileName) {
             m_Mapper =
                 std::make_unique<Mapper_000>(m_NumPrgBanks, m_NumChrBanks);
             break;
+        default:
+            Logger::Get().Log("CART", "Mapper ID {} not supported yet", m_MapperId);
+            break;
     }
-    m_IsLoaded = true;
-    Logger::Get().Log("CART", "Cartridge {} intialized successfully", fileName);
+    if (m_Mapper != nullptr)
+    {
+        m_IsLoaded = true;
+        Logger::Get().Log("CART", "Cartridge {} intialized successfully", fileName);
+    }
 }
 
 bool Cartridge::CpuRead(uint16_t address, uint8_t& data) {
