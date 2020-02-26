@@ -1,10 +1,11 @@
 // Copyright (c) 2020 Emmanuel Arias
 #pragma once
 #include <fmt/core.h>
+
 #include <iostream>
-#include <string>
-#include <queue>
 #include <mutex>
+#include <queue>
+#include <string>
 
 namespace cpuemulator {
 

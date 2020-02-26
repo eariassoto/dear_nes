@@ -1,12 +1,13 @@
 // Copyright (c) 2020 Emmanuel Arias
+#include "include/nes_widget.h"
+
 #include <imgui.h>
 
-#include "include/nes_widget.h"
-#include "include/bus.h"
+#include "include/nes.h"
 
 namespace cpuemulator {
 
-NesWidget::NesWidget(Bus* nes) : m_Nes{nes} {}
+NesWidget::NesWidget(Nes* nes) : m_Nes{nes} {}
 
 void NesWidget::Render() {
     ImGui::Begin("NES controls");

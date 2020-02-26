@@ -1,28 +1,21 @@
 // Copyright (c) 2020 Emmanuel Arias
+#include "include/cpu.h"
+
 #include <fmt/core.h>
 #include <iostream>
 
-#include "include/bus.h"
-#include "include/cpu.h"
+#include "include/nes.h"
 
 namespace cpuemulator {
 
+Cpu::Cpu() : m_CpuWidget{this} {}
 
-    Cpu::Cpu() : m_CpuWidget{ this }
-    {
-
-    }
-
-void Cpu::ConnectBus(Bus* bus) {
-    m_Bus = bus;
+void Cpu::RegisterNesPointer(Nes* nes) {
+    m_NesPtr = nes;
     RegisterAllInstructionSet();
 }
 
-
-void Cpu::RenderWidgets()
-{
-    m_CpuWidget.Render();
-}
+void Cpu::RenderWidgets() { m_CpuWidget.Render(); }
 
 void Cpu::Clock() {
     if (m_Cycles == 0) {
@@ -139,10 +132,10 @@ void Cpu::SetFlag(FLAGS flag, bool value) {
     }
 }
 
-uint8_t Cpu::Read(uint16_t address) { return m_Bus->CpuRead(address); }
+uint8_t Cpu::Read(uint16_t address) { return m_NesPtr->CpuRead(address); }
 
 void Cpu::Write(uint16_t address, uint8_t data) {
-    m_Bus->CpuWrite(address, data);
+    m_NesPtr->CpuWrite(address, data);
 }
 
 #pragma region ADDRESSIN_MODES

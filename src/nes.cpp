@@ -1,22 +1,22 @@
 // Copyright (c) 2020 Emmanuel Arias
+#include "include/nes.h"
+
 #include <iostream>
 
-#include "include/bus.h"
 #include "include/cartridge.h"
 #include "include/logger.h"
 
 namespace cpuemulator {
-Bus::Bus():
-    m_NesWidget{this} {
-    m_Cpu->ConnectBus(this);
+Nes::Nes() : m_NesWidget{this} {
+    m_Cpu->RegisterNesPointer(this);
     memset(m_cpuRam, 0, 0x800);
 }
 
-Bus::~Bus() { delete[] m_cpuRam; }
+Nes::~Nes() { delete[] m_cpuRam; }
 
-uint64_t Bus::GetSystemClockCounter() const { return m_SystemClockCounter; }
+uint64_t Nes::GetSystemClockCounter() const { return m_SystemClockCounter; }
 
-void Bus::CpuWrite(uint16_t address, uint8_t data) {
+void Nes::CpuWrite(uint16_t address, uint8_t data) {
     if (m_Cartridge->CpuWrite(address, data)) {
     } else if (address >= 0x0000 && address <= 0x1FFF) {
         m_cpuRam[GetRealRamAddress(address)] = data;
@@ -31,7 +31,7 @@ void Bus::CpuWrite(uint16_t address, uint8_t data) {
     }
 }
 
-uint8_t Bus::CpuRead(uint16_t address, bool isReadOnly) {
+uint8_t Nes::CpuRead(uint16_t address, bool isReadOnly) {
     uint8_t data = 0x00;
     if (m_Cartridge->CpuRead(address, data)) {
     } else if (address >= 0x0000 && address <= 0x1FFF) {
@@ -46,14 +46,14 @@ uint8_t Bus::CpuRead(uint16_t address, bool isReadOnly) {
     return data;
 }
 
-void Bus::InsertCatridge(const std::shared_ptr<Cartridge>& cartridge) {
+void Nes::InsertCatridge(const std::shared_ptr<Cartridge>& cartridge) {
     Logger::Get().Log("BUS", "Inserting cartridge");
     m_Cartridge = cartridge;
 
     m_Ppu->ConnectCatridge(cartridge);
 }
 
-void Bus::Reset() {
+void Nes::Reset() {
     m_Cpu->Reset();
     m_SystemClockCounter = 0;
     m_DmaPage = 0x00;
@@ -63,7 +63,7 @@ void Bus::Reset() {
     m_DmaTransfer = false;
 }
 
-void Bus::Clock() {
+void Nes::Clock() {
     m_Ppu->Clock();
     if (m_SystemClockCounter % 3 == 0) {
         if (m_DmaTransfer) {
@@ -98,14 +98,12 @@ void Bus::Clock() {
     ++m_SystemClockCounter;
 }
 
-void Bus::RenderWidgets()
-{
+void Nes::RenderWidgets() {
     m_NesWidget.Render();
     m_Cpu->RenderWidgets();
 }
 
-void Bus::Update()
-{
+void Nes::Update() {
     if (m_NesWidget.IsSimulationRunChecked()) {
         do {
             Clock();
@@ -116,8 +114,7 @@ void Bus::Update()
         } while (m_Cpu->InstructionComplete());
 
         m_Ppu->isFrameComplete = false;
-    }
-    else {
+    } else {
         if (m_NesWidget.IsDoResetButtonClicked()) {
             Reset();
         }
@@ -135,8 +132,7 @@ void Bus::Update()
         if (m_NesWidget.IsDoStepButtonClicked()) {
             do {
                 Clock();
-            } while (
-                !m_Cpu->InstructionComplete());
+            } while (!m_Cpu->InstructionComplete());
 
             do {
                 Clock();
@@ -146,9 +142,6 @@ void Bus::Update()
     m_Ppu->Update();
 }
 
-void Bus::Render()
-{
-    m_Ppu->Render();
-}
+void Nes::Render() { m_Ppu->Render(); }
 
 }  // namespace cpuemulator

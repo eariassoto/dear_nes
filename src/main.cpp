@@ -1,16 +1,18 @@
 // Copyright (c) 2020 Emmanuel Arias
+// clang-format off
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+// clang-format on
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <chrono>
 #include <thread>
 
-#include "include/bus.h"
+#include "include/nes.h"
 #include "include/cartridge.h"
 #include "include/cpu_widget.h"
 #include "include/nes_widget.h"
@@ -18,7 +20,7 @@
 #include "include/sprite.h"
 #include "include/logger.h"
 
-using Bus = cpuemulator::Bus;
+using Nes = cpuemulator::Nes;
 using FileManager = cpuemulator::FileManager;
 using Cartridge = cpuemulator::Cartridge;
 using Ppu = cpuemulator::Ppu;
@@ -28,8 +30,7 @@ using NesWidget = cpuemulator::NesWidget;
 using Logger = cpuemulator::Logger;
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow* window, std::shared_ptr<Bus>& nes);
-
+void processInput(GLFWwindow* window, std::shared_ptr<Nes>& nes);
 
 int main(void) {
     glfwInit();
@@ -67,14 +68,13 @@ int main(void) {
         return 1;
     }
 
-    std::shared_ptr<Bus> nesEmulator =
-        std::make_shared<Bus>();
+    std::shared_ptr<Nes> nesEmulator = std::make_shared<Nes>();
 
     nesEmulator->InsertCatridge(cartridge);
 
     nesEmulator->Reset();
 
-	Logger& logger = Logger::Get();
+    Logger& logger = Logger::Get();
     logger.Start();
 
     using namespace std::chrono;
@@ -112,7 +112,7 @@ int main(void) {
         std::this_thread::sleep_for(sleepTime);
     }
 
-	logger.Stop();
+    logger.Stop();
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
@@ -125,8 +125,7 @@ void framebufferSizeCallback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-void processInput(GLFWwindow* window,
-                  std::shared_ptr<Bus>& nesEmulator) {
+void processInput(GLFWwindow* window, std::shared_ptr<Nes>& nesEmulator) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }

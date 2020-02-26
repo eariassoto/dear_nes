@@ -2,21 +2,21 @@
 #pragma once
 
 namespace cpuemulator {
-class Bus;
+class Nes;
 
 class NesWidget {
    public:
-    NesWidget(Bus* nes);
+    NesWidget(Nes* nes);
     void Render();
 
-	bool IsDoResetButtonClicked();
-	bool IsDoFrameButtonClicked();
-	bool IsDoStepButtonClicked();
+    bool IsDoResetButtonClicked();
+    bool IsDoFrameButtonClicked();
+    bool IsDoStepButtonClicked();
 
-	bool IsSimulationRunChecked();
+    bool IsSimulationRunChecked();
 
    private:
-    Bus* m_Nes = nullptr;
+    Nes* m_Nes = nullptr;
 
     bool m_ShouldSimulationRun = false;
     bool m_DoResetBtn = false;

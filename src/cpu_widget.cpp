@@ -1,5 +1,6 @@
 // Copyright (c) 2020 Emmanuel Arias
 #include "include/cpu_widget.h"
+
 #include "include/cpu.h"
 
 namespace cpuemulator {

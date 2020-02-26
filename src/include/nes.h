@@ -1,7 +1,8 @@
 // Copyright (c) 2020 Emmanuel Arias
 #pragma once
-#include <memory>
 #include <cstdint>
+#include <memory>
+
 #include "include/cpu.h"
 #include "include/nes_widget.h"
 #include "include/ppu.h"
@@ -12,15 +13,15 @@ class Cartridge;
 
 class Cpu;
 
-class Bus {
+class Nes {
    public:
-    Bus();
-    ~Bus();
+    Nes();
+    ~Nes();
 
-    //inline const uint8_t* GetRamPointer() const { return m_cpuRam; }
-    uint8_t m_Controllers[2] = { 0 };
-    //std::shared_ptr<Cpu> GetCpuReference();
-    //std::shared_ptr<Ppu> GetPpuReference();
+    // inline const uint8_t* GetRamPointer() const { return m_cpuRam; }
+    uint8_t m_Controllers[2] = {0};
+    // std::shared_ptr<Cpu> GetCpuReference();
+    // std::shared_ptr<Ppu> GetPpuReference();
     uint64_t GetSystemClockCounter() const;
 
     void CpuWrite(uint16_t address, uint8_t data);
@@ -52,7 +53,7 @@ class Bus {
     bool m_DmaTransfer = false;
     bool m_DmaWait = true;
 
-    uint8_t m_ControllerState[2] = { 0 };
+    uint8_t m_ControllerState[2] = {0};
 
     NesWidget m_NesWidget;
 
@@ -62,6 +63,5 @@ class Bus {
     inline uint16_t GetRealPpuAddress(uint16_t address) const {
         return address & 0x0007;
     }
-   
 };
 }  // namespace cpuemulator

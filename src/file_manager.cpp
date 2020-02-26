@@ -1,8 +1,10 @@
-#include <fstream>
-#include <sstream>
+#include "include/file_manager.h"
+
 #include <helpers/RootDir.h>
 
-#include "include/file_manager.h"
+#include <fstream>
+#include <sstream>
+
 #include "include/logger.h"
 
 namespace cpuemulator {

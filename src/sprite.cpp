@@ -1,10 +1,12 @@
 // Copyright (c) 2020 Emmanuel Arias
-#include <string>
+#include "include/sprite.h"
+
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
-#include "include/sprite.h"
+#include <string>
+
 #include "include/logger.h"
 
 namespace cpuemulator {
@@ -18,7 +20,7 @@ Sprite::Sprite(const std::string& spriteName, unsigned int width,
       m_TextureWidth{(float)width * cellSize},
       m_TextureHeight{(float)height * cellSize},
       m_PositionX{posX},
-      m_PositionY{posY} {	
+      m_PositionY{posY} {
     int dataSize = m_Width * m_Height * CHANNEL_COUNT;
     m_TextureData = new GLubyte[dataSize];
     memset(m_TextureData, 0, dataSize);
@@ -51,7 +53,7 @@ void Sprite::Render() {
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_Width, m_Height, PIXEL_FORMAT,
                     GL_UNSIGNED_BYTE, (GLvoid*)m_TextureData);
 
-	ImGui::SetNextWindowPos(ImVec2(m_PositionX, m_PositionY), ImGuiCond_Always);
+    ImGui::SetNextWindowPos(ImVec2(m_PositionX, m_PositionY), ImGuiCond_Always);
     ImGui::Begin(m_Name.c_str());
     ImGui::Image((void*)(intptr_t)m_textureId,
                  ImVec2(m_TextureWidth, m_TextureHeight));

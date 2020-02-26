@@ -1,14 +1,16 @@
 // Copyright (c) 2020 Emmanuel Arias
 #pragma once
-#include <string>
 #include <glad/glad.h>
+
+#include <string>
 
 namespace cpuemulator {
 
 class Sprite {
    public:
     Sprite(const std::string& spriteName, unsigned int width,
-           unsigned int height, unsigned int cellSize, float posX = 0, float posY = 0);
+           unsigned int height, unsigned int cellSize, float posX = 0,
+           float posY = 0);
     ~Sprite();
 
     void Render();

@@ -2,6 +2,7 @@
 #pragma once
 #include <cstdint>
 #include <memory>
+
 #include "include/sprite.h"
 
 namespace cpuemulator {

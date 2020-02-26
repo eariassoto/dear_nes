@@ -3,15 +3,16 @@
 #include <functional>
 #include <string>
 #include <unordered_map>
+
 #include "include/cpu_widget.h"
 
 namespace cpuemulator {
-class Bus;
+class Nes;
 
 class Cpu {
    public:
-       Cpu();
-    void ConnectBus(Bus* bus);
+    Cpu();
+    void RegisterNesPointer(Nes* nes);
 
     enum FLAGS {
         C = (1 << 0),  // Carry Bit
@@ -72,7 +73,7 @@ class Cpu {
     uint16_t m_AddressAbsolute = 0x0000;
     uint16_t m_AddressRelative = 0x0000;
 
-    Bus* m_Bus = nullptr;
+    Nes* m_NesPtr = nullptr;
 
     CpuWidget m_CpuWidget;
 

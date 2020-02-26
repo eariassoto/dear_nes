@@ -1,9 +1,11 @@
 // Copyright (c) 2020 Emmanuel Arias
 #include "include/cartridge.h"
+
 #include <fstream>
+
+#include "helpers/RootDir.h"
 #include "include/logger.h"
 #include "include/mapper_000.h"
-#include "helpers/RootDir.h"
 
 namespace cpuemulator {
 Cartridge::Cartridge(const std::string& fileName) {
@@ -58,13 +60,14 @@ Cartridge::Cartridge(const std::string& fileName) {
                 std::make_unique<Mapper_000>(m_NumPrgBanks, m_NumChrBanks);
             break;
         default:
-            Logger::Get().Log("CART", "Mapper ID {} not supported yet", m_MapperId);
+            Logger::Get().Log("CART", "Mapper ID {} not supported yet",
+                              m_MapperId);
             break;
     }
-    if (m_Mapper != nullptr)
-    {
+    if (m_Mapper != nullptr) {
         m_IsLoaded = true;
-        Logger::Get().Log("CART", "Cartridge {} intialized successfully", fileName);
+        Logger::Get().Log("CART", "Cartridge {} intialized successfully",
+                          fileName);
     }
 }
 
