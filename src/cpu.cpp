@@ -122,7 +122,7 @@ void Cpu::NonMaskableInterrupt() {
     m_Cycles = 8;
 }
 
-bool Cpu::InstructionComplete() const { return m_Cycles == 0; }
+bool Cpu::IsCurrentInstructionComplete() const { return m_Cycles == 0; }
 
 uint8_t Cpu::GetFlag(FLAGS flag) const {
     if ((m_StatusRegister & flag) == 0x00) {

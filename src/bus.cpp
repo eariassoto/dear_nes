@@ -113,7 +113,7 @@ void Bus::Update()
 
         do {
             m_Cpu->Clock();
-        } while (m_Cpu->InstructionComplete());
+        } while (m_Cpu->IsCurrentInstructionComplete());
 
         m_Ppu->isFrameComplete = false;
     }
@@ -128,7 +128,7 @@ void Bus::Update()
 
             do {
                 m_Cpu->Clock();
-            } while (m_Cpu->InstructionComplete());
+            } while (m_Cpu->IsCurrentInstructionComplete());
 
             m_Ppu->isFrameComplete = false;
         }
@@ -136,11 +136,11 @@ void Bus::Update()
             do {
                 Clock();
             } while (
-                !m_Cpu->InstructionComplete());
+                !m_Cpu->IsCurrentInstructionComplete());
 
             do {
                 Clock();
-            } while (m_Cpu->InstructionComplete());
+            } while (m_Cpu->IsCurrentInstructionComplete());
         }
     }
     m_Ppu->Update();
