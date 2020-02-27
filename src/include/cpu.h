@@ -12,8 +12,17 @@ class Nes;
 class Cpu {
    public:
     Cpu();
-    void RegisterNesPointer(Nes* nes);
+    void RegisterNesPointer(Nes* bus);
 
+    void RenderWidgets();
+    void Clock();
+    void Reset();
+    void InterruptRequest();
+    void NonMaskableInterrupt();
+
+    bool IsCurrentInstructionComplete() const;
+
+   private:
     enum FLAGS {
         C = (1 << 0),  // Carry Bit
         Z = (1 << 1),  // Zero
@@ -41,15 +50,6 @@ class Cpu {
         RELATIVE_ADDRESSING
     };
 
-    void RenderWidgets();
-    void Clock();
-    void Reset();
-    void InterruptRequest();
-    void NonMaskableInterrupt();
-
-    bool InstructionComplete() const;
-
-   private:
     AddressingMode m_AddressingMode = AddressingMode::ACCUMMULATOR_ADDRESSING;
 
     struct Instruction;

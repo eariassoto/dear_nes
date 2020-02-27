@@ -111,7 +111,7 @@ void Nes::Update() {
 
         do {
             m_Cpu->Clock();
-        } while (m_Cpu->InstructionComplete());
+        } while (m_Cpu->IsCurrentInstructionComplete());
 
         m_Ppu->isFrameComplete = false;
     } else {
@@ -125,18 +125,18 @@ void Nes::Update() {
 
             do {
                 m_Cpu->Clock();
-            } while (m_Cpu->InstructionComplete());
+            } while (m_Cpu->IsCurrentInstructionComplete());
 
             m_Ppu->isFrameComplete = false;
         }
         if (m_NesWidget.IsDoStepButtonClicked()) {
             do {
                 Clock();
-            } while (!m_Cpu->InstructionComplete());
-
+            } while (
+                !m_Cpu->IsCurrentInstructionComplete());
             do {
                 Clock();
-            } while (m_Cpu->InstructionComplete());
+            } while (m_Cpu->IsCurrentInstructionComplete());
         }
     }
     m_Ppu->Update();
