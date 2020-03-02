@@ -15,7 +15,11 @@ class Sprite {
 
     void Render();
 
+    void Update();
+
     void SetPixel(int x, int y, int color);
+
+    void MarkAsDirty();
 
    private:
     std::string m_Name;
@@ -31,6 +35,8 @@ class Sprite {
     float m_PositionY = 0;
     GLubyte* m_TextureData = nullptr;
     GLuint m_textureId = 0;
+
+    bool m_IsDirty = false;
 
     static constexpr GLenum PIXEL_FORMAT = GL_BGRA;
     static constexpr int CHANNEL_COUNT = 4;
