@@ -21,7 +21,8 @@ void Ppu::Update() {
             m_SpritePalette.SetPixel(coordX, coordY, GetColorFromPalette(p, s));
         }
     }
-    m_SpriteOutputScreen.Update();
+
+	m_SpriteOutputScreen.Update();
     m_SpritePatternTables[0].Update();
     m_SpritePatternTables[1].Update();
     m_SpritePalette.Update();
@@ -594,10 +595,6 @@ void Ppu::Clock() {
         ++m_ScanLine;
         if (m_ScanLine >= 261) {
             m_ScanLine = -1;
-            m_SpriteOutputScreen.MarkAsDirty();
-            m_SpritePatternTables[0].MarkAsDirty();
-            m_SpritePatternTables[1].MarkAsDirty();
-            m_SpritePalette.MarkAsDirty();
             isFrameComplete = true;
         }
     }

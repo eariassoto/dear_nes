@@ -103,7 +103,7 @@ void Nes::RenderWidgets() {
     m_Cpu->RenderWidgets();
 }
 
-void Nes::Update() {
+void Nes::DoFrame() {
     if (m_NesWidget.IsSimulationRunChecked()) {
         do {
             Clock();
@@ -132,15 +132,15 @@ void Nes::Update() {
         if (m_NesWidget.IsDoStepButtonClicked()) {
             do {
                 Clock();
-            } while (
-                !m_Cpu->IsCurrentInstructionComplete());
+            } while (!m_Cpu->IsCurrentInstructionComplete());
             do {
                 Clock();
             } while (m_Cpu->IsCurrentInstructionComplete());
         }
     }
-    m_Ppu->Update();
 }
+
+void Nes::Update() { m_Ppu->Update(); }
 
 void Nes::Render() { m_Ppu->Render(); }
 

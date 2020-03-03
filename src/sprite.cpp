@@ -47,24 +47,18 @@ Sprite::~Sprite() {
     glDeleteTextures(1, &m_textureId);
 }
 
+void Sprite::Update() {
+    glBindTexture(GL_TEXTURE_2D, m_textureId);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_Width, m_Height, PIXEL_FORMAT,
+                    GL_UNSIGNED_BYTE, (GLvoid*)m_TextureData);
+}
+
 void Sprite::Render() {
-	ImGui::SetNextWindowPos(ImVec2(m_PositionX, m_PositionY), ImGuiCond_Always);
+    ImGui::SetNextWindowPos(ImVec2(m_PositionX, m_PositionY), ImGuiCond_Always);
     ImGui::Begin(m_Name.c_str());
     ImGui::Image((void*)(intptr_t)m_textureId,
                  ImVec2(m_TextureWidth, m_TextureHeight));
     ImGui::End();
-}
-
-void Sprite::Update()
-{
-    if (m_IsDirty)
-    {
-        // TODO: mode this to update
-        glBindTexture(GL_TEXTURE_2D, m_textureId);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_Width, m_Height, PIXEL_FORMAT,
-            GL_UNSIGNED_BYTE, (GLvoid*)m_TextureData);
-        m_IsDirty = false;
-    }
 }
 
 void Sprite::SetPixel(int x, int y, int color) {
@@ -75,11 +69,6 @@ void Sprite::SetPixel(int x, int y, int color) {
     int* ptr = reinterpret_cast<int*>(m_TextureData);
     const int position = (y * m_Width) + x;
     ptr[position] = color;
-}
-
-void Sprite::MarkAsDirty()
-{
-    m_IsDirty = true;
 }
 
 }  // namespace cpuemulator

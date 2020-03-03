@@ -18,10 +18,7 @@ class Nes {
     Nes();
     ~Nes();
 
-    // inline const uint8_t* GetRamPointer() const { return m_cpuRam; }
     uint8_t m_Controllers[2] = {0};
-    // std::shared_ptr<Cpu> GetCpuReference();
-    // std::shared_ptr<Ppu> GetPpuReference();
     uint64_t GetSystemClockCounter() const;
 
     void CpuWrite(uint16_t address, uint8_t data);
@@ -33,6 +30,7 @@ class Nes {
 
     void RenderWidgets();
     void Update();
+    void DoFrame();
     void Render();
 
    private:

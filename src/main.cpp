@@ -96,6 +96,8 @@ int main(void) {
         // render widgets
         nesEmulator->RenderWidgets();
 
+        nesEmulator->DoFrame();
+
         nesEmulator->Update();
 
         nesEmulator->Render();
