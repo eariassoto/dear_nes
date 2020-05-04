@@ -3,6 +3,7 @@
 #include <functional>
 #include <string>
 #include <unordered_map>
+#include <optional>
 
 #include "include/cpu_widget.h"
 
@@ -53,7 +54,7 @@ class Cpu {
     AddressingMode m_AddressingMode = AddressingMode::ACCUMMULATOR_ADDRESSING;
 
     struct Instruction;
-    std::vector<Instruction*> m_InstrSet;
+    std::vector<std::optional<Instruction>> m_InstrTable;
 
     uint8_t m_Cycles = 0x00;
     uint8_t m_OpCode = 0x00;
