@@ -173,7 +173,7 @@ class Cpu {
 };
 
 struct Cpu::Instruction {
-    Instruction(const char name[4], std::function<uint8_t()> funcOperate,
+    Instruction(const char name[4], std::function<uint8_t(Cpu*)> funcOperate,
                 AddressingMode addressingMode, uint8_t cycles)
         : m_Name{name},
           m_FuncOperate{funcOperate},
@@ -181,7 +181,7 @@ struct Cpu::Instruction {
 	m_Cycles{cycles} {}
 
     std::string m_Name;
-    std::function<uint8_t()> m_FuncOperate;
+    std::function<uint8_t(Cpu*)> m_FuncOperate;
     AddressingMode m_AddressingMode;
     uint8_t m_Cycles = 0;
 };
