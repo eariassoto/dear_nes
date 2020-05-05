@@ -63,7 +63,7 @@ int main(void) {
     ImGui::StyleColorsDark();
 
     std::shared_ptr<Cartridge> cartridge =
-        std::make_shared<Cartridge>("Micro Mages.nes");
+        std::make_shared<Cartridge>("nestest.nes");
     if (!cartridge->IsLoaded()) {
         return 1;
     }

@@ -35,24 +35,6 @@ class Cpu {
         N = (1 << 7),  // Negative
     };
 
-    enum AddressingMode {
-        ACCUMMULATOR_ADDRESSING = 0,
-        IMPLIED_ADDRESSING,
-        IMMEDIATE_ADDRESSING,
-        ZERO_PAGE_ADDRESSING,
-        INDEXED_ZERO_PAGE_ADDRESSING_X,
-        INDEXED_ZERO_PAGE_ADDRESSING_Y,
-        ABSOLUTE_ADDRESSING,
-        INDEXED_ABSOLUTE_ADDRESSING_X,
-        INDEXED_ABSOLUTE_ADDRESSING_Y,
-        ABSOLUTE_INDIRECT_ADDRESSING,
-        INDEXED_INDIRECT_ADDRESSING_X,
-        INDIRECT_INDEXED_ADDRESSING_Y,
-        RELATIVE_ADDRESSING
-    };
-
-    AddressingMode m_AddressingMode = AddressingMode::ACCUMMULATOR_ADDRESSING;
-
     struct Instruction;
     std::vector<std::optional<Instruction>> m_InstrTable;
 
@@ -68,8 +50,6 @@ class Cpu {
     uint8_t m_StatusRegister = 0x00;
 
     uint16_t m_ProgramCounter = 0x00;
-
-    uint8_t m_ValueFetched = 0x00;
 
     uint16_t m_AddressAbsolute = 0x0000;
     uint16_t m_AddressRelative = 0x0000;
@@ -87,9 +67,6 @@ class Cpu {
     void RegisterAllInstructionSet();
 
     // Addressing modes
-
-    bool ExecuteAddressing();
-    bool AccumulatorAddressing();
     bool ImmediateAddressing();
     bool ZeroPageAddressing();
     bool IndexedZeroPageAddressingX();
@@ -103,11 +80,10 @@ class Cpu {
     bool RelativeAddressing();
 
     // Instructions
-    uint8_t Fetch();
-
     bool Instruction_ADC();
     bool Instruction_AND();
     bool Instruction_ASL();
+    bool Instruction_ASL_AcummAddr();
     void Instruction_ExecuteBranch();
     bool Instruction_BCC();
     bool Instruction_BCS();
@@ -139,6 +115,7 @@ class Cpu {
     bool Instruction_LDX();
     bool Instruction_LDY();
     bool Instruction_LSR();
+    bool Instruction_LSR_AcummAddr();
     bool Instruction_NOP();
     bool Instruction_ORA();
     bool Instruction_PHA();
@@ -146,7 +123,9 @@ class Cpu {
     bool Instruction_PLA();
     bool Instruction_PLP();
     bool Instruction_ROL();
+    bool Instruction_ROL_AcummAddr();
     bool Instruction_ROR();
+    bool Instruction_ROR_AcummAddr();
     bool Instruction_RTI();
     bool Instruction_RTS();
     bool Instruction_SBC();
@@ -163,17 +142,17 @@ class Cpu {
     bool Instruction_TXS();
     bool Instruction_TYA();
 
-    void AppendAddressingModeString(uint16_t address,
-                                    AddressingMode addressingMode,
-                                    std::string& outStr);
+    //void AppendAddressingModeString(uint16_t address,
+    //                                AddressingMode addressingMode,
+    //                                std::string& outStr);
     std::string GetInstructionString(uint16_t opCodeAddress);
 
     friend class CpuWidget;
 };
 
 struct Cpu::Instruction {
-    Instruction(const char name[4], std::function<uint8_t(Cpu*)> funcOperate,
-                AddressingMode addressingMode, uint8_t cycles)
+    Instruction(const char name[4], std::function<bool(Cpu*)> funcOperate,
+                std::function<bool(Cpu*)> addressingMode, uint8_t cycles)
         : m_Name{name},
           m_FuncOperate{funcOperate},
           m_AddressingMode{addressingMode},
@@ -181,7 +160,7 @@ struct Cpu::Instruction {
 
     std::string m_Name;
     std::function<bool(Cpu*)> m_FuncOperate;
-    AddressingMode m_AddressingMode;
+    std::function<bool(Cpu*)> m_AddressingMode;
     uint8_t m_Cycles = 0;
 };
 }  // namespace cpuemulator
