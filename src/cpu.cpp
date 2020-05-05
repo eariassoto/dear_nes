@@ -142,7 +142,7 @@ uint8_t Cpu::ExecuteAddressing() {
         case ACCUMMULATOR_ADDRESSING:
             return AccumulatorAddressing();
         case IMPLIED_ADDRESSING:
-            return ImpliedAddressing();
+            return 0x00;
         case IMMEDIATE_ADDRESSING:
             return ImmediateAddressing();
         case ZERO_PAGE_ADDRESSING:
@@ -170,24 +170,16 @@ uint8_t Cpu::ExecuteAddressing() {
 }
 
 uint8_t Cpu::AccumulatorAddressing() {
-    m_AddressingMode = AddressingMode::ACCUMMULATOR_ADDRESSING;
     m_ValueFetched = m_RegisterA;
     return 0;
 }
 
-uint8_t Cpu::ImpliedAddressing() {
-    m_AddressingMode = AddressingMode::IMPLIED_ADDRESSING;
-    return 0;
-}
-
 uint8_t Cpu::ImmediateAddressing() {
-    m_AddressingMode = AddressingMode::IMMEDIATE_ADDRESSING;
     m_AddressAbsolute = m_ProgramCounter++;
     return 0;
 }
 
 uint8_t Cpu::ZeroPageAddressing() {
-    m_AddressingMode = AddressingMode::ZERO_PAGE_ADDRESSING;
     m_AddressAbsolute = Read(m_ProgramCounter);
     m_ProgramCounter++;
 
@@ -196,7 +188,6 @@ uint8_t Cpu::ZeroPageAddressing() {
 }
 
 uint8_t Cpu::IndexedZeroPageAddressingX() {
-    m_AddressingMode = AddressingMode::INDEXED_ZERO_PAGE_ADDRESSING_X;
     m_AddressAbsolute = Read(m_ProgramCounter) + m_RegisterX;
     m_ProgramCounter++;
 
@@ -205,7 +196,6 @@ uint8_t Cpu::IndexedZeroPageAddressingX() {
 }
 
 uint8_t Cpu::IndexedZeroPageAddressingY() {
-    m_AddressingMode = AddressingMode::INDEXED_ZERO_PAGE_ADDRESSING_Y;
     m_AddressAbsolute = Read(m_ProgramCounter) + m_RegisterY;
     m_ProgramCounter++;
 
@@ -214,7 +204,6 @@ uint8_t Cpu::IndexedZeroPageAddressingY() {
 }
 
 uint8_t Cpu::AbsoluteAddressing() {
-    m_AddressingMode = AddressingMode::ABSOLUTE_ADDRESSING;
     uint16_t lowNibble = Read(m_ProgramCounter);
     m_ProgramCounter++;
 
@@ -227,7 +216,6 @@ uint8_t Cpu::AbsoluteAddressing() {
 }
 
 uint8_t Cpu::IndexedAbsoluteAddressingX() {
-    m_AddressingMode = AddressingMode::INDEXED_ABSOLUTE_ADDRESSING_X;
     uint16_t lowNibble = Read(m_ProgramCounter);
     m_ProgramCounter++;
 
@@ -246,7 +234,6 @@ uint8_t Cpu::IndexedAbsoluteAddressingX() {
 }
 
 uint8_t Cpu::IndexedAbsoluteAddressingY() {
-    m_AddressingMode = AddressingMode::INDEXED_ABSOLUTE_ADDRESSING_Y;
     uint16_t lowNibble = Read(m_ProgramCounter);
     m_ProgramCounter++;
 
@@ -265,7 +252,6 @@ uint8_t Cpu::IndexedAbsoluteAddressingY() {
 }
 
 uint8_t Cpu::AbsoluteIndirectAddressing() {
-    m_AddressingMode = AddressingMode::ABSOLUTE_INDIRECT_ADDRESSING;
     uint16_t lowNibble = Read(m_ProgramCounter);
     m_ProgramCounter++;
 
@@ -284,7 +270,6 @@ uint8_t Cpu::AbsoluteIndirectAddressing() {
 }
 
 uint8_t Cpu::IndexedIndirectAddressingX() {
-    m_AddressingMode = AddressingMode::INDEXED_INDIRECT_ADDRESSING_X;
     uint16_t t = Read(m_ProgramCounter);
     m_ProgramCounter++;
 
@@ -302,7 +287,6 @@ uint8_t Cpu::IndexedIndirectAddressingX() {
 }
 
 uint8_t Cpu::IndirectIndexedAddressingY() {
-    m_AddressingMode = AddressingMode::INDIRECT_INDEXED_ADDRESSING_Y;
     uint16_t t = Read(m_ProgramCounter);
     m_ProgramCounter++;
 
@@ -320,7 +304,6 @@ uint8_t Cpu::IndirectIndexedAddressingY() {
 }
 
 uint8_t Cpu::RelativeAddressing() {
-    m_AddressingMode = AddressingMode::RELATIVE_ADDRESSING;
     m_AddressRelative = Read(m_ProgramCounter);
     m_ProgramCounter++;
 

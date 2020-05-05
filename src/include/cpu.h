@@ -90,7 +90,6 @@ class Cpu {
 
     uint8_t ExecuteAddressing();
     uint8_t AccumulatorAddressing();
-    uint8_t ImpliedAddressing();
     uint8_t ImmediateAddressing();
     uint8_t ZeroPageAddressing();
     uint8_t IndexedZeroPageAddressingX();
