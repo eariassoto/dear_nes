@@ -34,11 +34,11 @@ void Cpu::Clock() {
         m_Cycles = instr->m_Cycles;
 
         m_AddressingMode = instr->m_AddressingMode;
-        uint8_t additionalCycle1 = ExecuteAddressing();
+        bool addrRequiresAdditionalCycle = ExecuteAddressing();
 
-        uint8_t additionalCycle2 = instr->m_FuncOperate(this);
+        bool instrRequiresAdditionalCycle = instr->m_FuncOperate(this);
 
-        if (additionalCycle1 & additionalCycle2) {
+        if (addrRequiresAdditionalCycle && instrRequiresAdditionalCycle) {
             ++m_Cycles;
         }
 
@@ -137,12 +137,12 @@ void Cpu::Write(uint16_t address, uint8_t data) {
 
 #pragma region ADDRESSIN_MODES
 
-uint8_t Cpu::ExecuteAddressing() {
+bool Cpu::ExecuteAddressing() {
     switch (m_AddressingMode) {
         case ACCUMMULATOR_ADDRESSING:
             return AccumulatorAddressing();
         case IMPLIED_ADDRESSING:
-            return 0x00;
+            return false;
         case IMMEDIATE_ADDRESSING:
             return ImmediateAddressing();
         case ZERO_PAGE_ADDRESSING:
@@ -166,44 +166,44 @@ uint8_t Cpu::ExecuteAddressing() {
         case RELATIVE_ADDRESSING:
             return RelativeAddressing();
     }
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::AccumulatorAddressing() {
+bool Cpu::AccumulatorAddressing() {
     m_ValueFetched = m_RegisterA;
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::ImmediateAddressing() {
+bool Cpu::ImmediateAddressing() {
     m_AddressAbsolute = m_ProgramCounter++;
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::ZeroPageAddressing() {
+bool Cpu::ZeroPageAddressing() {
     m_AddressAbsolute = Read(m_ProgramCounter);
     m_ProgramCounter++;
 
     m_AddressAbsolute &= 0x00FF;
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::IndexedZeroPageAddressingX() {
+bool Cpu::IndexedZeroPageAddressingX() {
     m_AddressAbsolute = Read(m_ProgramCounter) + m_RegisterX;
     m_ProgramCounter++;
 
     m_AddressAbsolute &= 0x00FF;
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::IndexedZeroPageAddressingY() {
+bool Cpu::IndexedZeroPageAddressingY() {
     m_AddressAbsolute = Read(m_ProgramCounter) + m_RegisterY;
     m_ProgramCounter++;
 
     m_AddressAbsolute &= 0x00FF;
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::AbsoluteAddressing() {
+bool Cpu::AbsoluteAddressing() {
     uint16_t lowNibble = Read(m_ProgramCounter);
     m_ProgramCounter++;
 
@@ -212,10 +212,10 @@ uint8_t Cpu::AbsoluteAddressing() {
 
     m_AddressAbsolute = (highNibble << 8) | lowNibble;
 
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::IndexedAbsoluteAddressingX() {
+bool Cpu::IndexedAbsoluteAddressingX() {
     uint16_t lowNibble = Read(m_ProgramCounter);
     m_ProgramCounter++;
 
@@ -227,13 +227,13 @@ uint8_t Cpu::IndexedAbsoluteAddressingX() {
 
     // todo make constexpr function
     if ((m_AddressAbsolute & 0xFF00) != (highNibble << 8)) {
-        return 1;
+        return true;
     } else {
-        return 0;
+        return false;
     }
 }
 
-uint8_t Cpu::IndexedAbsoluteAddressingY() {
+bool Cpu::IndexedAbsoluteAddressingY() {
     uint16_t lowNibble = Read(m_ProgramCounter);
     m_ProgramCounter++;
 
@@ -245,13 +245,13 @@ uint8_t Cpu::IndexedAbsoluteAddressingY() {
 
     // todo make constexpr function
     if ((m_AddressAbsolute & 0xFF00) != (highNibble << 8)) {
-        return 1;
+        return true;
     } else {
-        return 0;
+        return false;
     }
 }
 
-uint8_t Cpu::AbsoluteIndirectAddressing() {
+bool Cpu::AbsoluteIndirectAddressing() {
     uint16_t lowNibble = Read(m_ProgramCounter);
     m_ProgramCounter++;
 
@@ -266,10 +266,10 @@ uint8_t Cpu::AbsoluteIndirectAddressing() {
     } else {
         m_AddressAbsolute = (Read(pointer + 1) << 8) | Read(pointer);
     }
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::IndexedIndirectAddressingX() {
+bool Cpu::IndexedIndirectAddressingX() {
     uint16_t t = Read(m_ProgramCounter);
     m_ProgramCounter++;
 
@@ -283,10 +283,10 @@ uint8_t Cpu::IndexedIndirectAddressingX() {
 
     m_AddressAbsolute = (highNibble << 8) | lowNibble;
 
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::IndirectIndexedAddressingY() {
+bool Cpu::IndirectIndexedAddressingY() {
     uint16_t t = Read(m_ProgramCounter);
     m_ProgramCounter++;
 
@@ -297,13 +297,13 @@ uint8_t Cpu::IndirectIndexedAddressingY() {
     m_AddressAbsolute += m_RegisterY;
 
     if ((m_AddressAbsolute & 0xFF00) != (highNibble << 8)) {
-        return 1;
+        return true;
     } else {
-        return 0;
+        return false;
     }
 }
 
-uint8_t Cpu::RelativeAddressing() {
+bool Cpu::RelativeAddressing() {
     m_AddressRelative = Read(m_ProgramCounter);
     m_ProgramCounter++;
 
@@ -312,7 +312,7 @@ uint8_t Cpu::RelativeAddressing() {
         m_AddressRelative |= 0xFF00;
     }
 
-    return 0;
+    return false;
 }
 
 uint8_t Cpu::Fetch() {
@@ -326,7 +326,7 @@ uint8_t Cpu::Fetch() {
 
 #pragma region INSTRUCTIONS
 
-uint8_t Cpu::Instruction_ADC() {
+bool Cpu::Instruction_ADC() {
     Fetch();
 
     uint16_t castedFetched = static_cast<uint16_t>(m_ValueFetched);
@@ -342,20 +342,20 @@ uint8_t Cpu::Instruction_ADC() {
 
     m_RegisterA = temp & 0x00FF;
 
-    return 1;
+    return true;
 }
 
-uint8_t Cpu::Instruction_AND() {
+bool Cpu::Instruction_AND() {
     Fetch();
 
     m_RegisterA &= m_ValueFetched;
     SetFlag(FLAGS::Z, m_RegisterA == 0x00);
     SetFlag(FLAGS::N, m_RegisterA & 0x80);
 
-    return 1;
+    return true;
 }
 
-uint8_t Cpu::Instruction_ASL() {
+bool Cpu::Instruction_ASL() {
     Fetch();
 
     uint16_t temp = static_cast<uint16_t>(m_ValueFetched) << 1;
@@ -368,7 +368,7 @@ uint8_t Cpu::Instruction_ASL() {
     } else {
         Write(m_AddressAbsolute, temp & 0x00FF);
     }
-    return 0;
+    return false;
 }
 
 void Cpu::Instruction_ExecuteBranch() {
@@ -381,59 +381,59 @@ void Cpu::Instruction_ExecuteBranch() {
     m_ProgramCounter = m_AddressAbsolute;
 }
 
-uint8_t Cpu::Instruction_BCC() {
+bool Cpu::Instruction_BCC() {
     if (GetFlag(FLAGS::C) == 0) {
         Instruction_ExecuteBranch();
     }
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_BCS() {
+bool Cpu::Instruction_BCS() {
     if (GetFlag(FLAGS::C) == 1) {
         Instruction_ExecuteBranch();
     }
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_BEQ() {
+bool Cpu::Instruction_BEQ() {
     if (GetFlag(FLAGS::Z) == 1) {
         Instruction_ExecuteBranch();
     }
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_BIT() {
+bool Cpu::Instruction_BIT() {
     Fetch();
 
     uint16_t temp = m_RegisterA & m_ValueFetched;
     SetFlag(Z, (temp & 0x00FF) == 0x00);
     SetFlag(N, m_ValueFetched & (1 << 7));
     SetFlag(V, m_ValueFetched & (1 << 6));
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_BMI() {
+bool Cpu::Instruction_BMI() {
     if (GetFlag(FLAGS::N) == 1) {
         Instruction_ExecuteBranch();
     }
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_BNE() {
+bool Cpu::Instruction_BNE() {
     if (GetFlag(FLAGS::Z) == 0) {
         Instruction_ExecuteBranch();
     }
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_BPL() {
+bool Cpu::Instruction_BPL() {
     if (GetFlag(FLAGS::N) == 0) {
         Instruction_ExecuteBranch();
     }
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_BRK() {
+bool Cpu::Instruction_BRK() {
     m_ProgramCounter++;
 
     SetFlag(I, 1);
@@ -449,133 +449,133 @@ uint8_t Cpu::Instruction_BRK() {
 
     m_ProgramCounter = static_cast<uint16_t>(Read(0xFFFE)) |
                        (static_cast<uint16_t>(Read(0xFFFF)) << 8);
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_BVC() {
+bool Cpu::Instruction_BVC() {
     if (GetFlag(FLAGS::V) == 0) {
         Instruction_ExecuteBranch();
     }
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_BVS() {
+bool Cpu::Instruction_BVS() {
     if (GetFlag(FLAGS::V) == 1) {
         Instruction_ExecuteBranch();
     }
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_CLC() {
+bool Cpu::Instruction_CLC() {
     SetFlag(FLAGS::C, false);
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_CLD() {
+bool Cpu::Instruction_CLD() {
     SetFlag(FLAGS::D, false);
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_CLI() {
+bool Cpu::Instruction_CLI() {
     SetFlag(FLAGS::I, false);
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_CLV() {
+bool Cpu::Instruction_CLV() {
     SetFlag(FLAGS::V, false);
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_CMP() {
+bool Cpu::Instruction_CMP() {
     Fetch();
     uint16_t temp = static_cast<uint16_t>(m_RegisterA) -
                     static_cast<uint16_t>(m_ValueFetched);
     SetFlag(C, m_RegisterA >= m_ValueFetched);
     SetFlag(Z, (temp & 0x00FF) == 0x0000);
     SetFlag(N, temp & 0x0080);
-    return 1;
+    return true;
 }
 
-uint8_t Cpu::Instruction_CPX() {
+bool Cpu::Instruction_CPX() {
     Fetch();
     uint16_t temp = static_cast<uint16_t>(m_RegisterX) -
                     static_cast<uint16_t>(m_ValueFetched);
     SetFlag(C, m_RegisterX >= m_ValueFetched);
     SetFlag(Z, (temp & 0x00FF) == 0x0000);
     SetFlag(N, temp & 0x0080);
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_CPY() {
+bool Cpu::Instruction_CPY() {
     Fetch();
     uint16_t temp = static_cast<uint16_t>(m_RegisterY) -
                     static_cast<uint16_t>(m_ValueFetched);
     SetFlag(C, m_RegisterY >= m_ValueFetched);
     SetFlag(Z, (temp & 0x00FF) == 0x0000);
     SetFlag(N, temp & 0x0080);
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_DEC() {
+bool Cpu::Instruction_DEC() {
     Fetch();
     uint16_t temp = m_ValueFetched - 1;
     Write(m_AddressAbsolute, temp & 0x00FF);
     SetFlag(Z, (temp & 0x00FF) == 0x0000);
     SetFlag(N, temp & 0x0080);
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_DEX() {
+bool Cpu::Instruction_DEX() {
     m_RegisterX--;
     SetFlag(Z, m_RegisterX == 0x00);
     SetFlag(N, m_RegisterX & 0x80);
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_DEY() {
+bool Cpu::Instruction_DEY() {
     m_RegisterY--;
     SetFlag(Z, m_RegisterY == 0x00);
     SetFlag(N, m_RegisterY & 0x80);
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_EOR() {
+bool Cpu::Instruction_EOR() {
     Fetch();
     m_RegisterA = m_RegisterA ^ m_ValueFetched;
     SetFlag(Z, m_RegisterA == 0x00);
     SetFlag(N, m_RegisterA & 0x80);
-    return 1;
+    return true;
 }
 
-uint8_t Cpu::Instruction_INC() {
+bool Cpu::Instruction_INC() {
     Fetch();
     uint16_t temp = m_ValueFetched + 1;
     Write(m_AddressAbsolute, temp & 0x00FF);
     SetFlag(Z, (temp & 0x00FF) == 0x0000);
     SetFlag(N, temp & 0x0080);
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_INX() {
+bool Cpu::Instruction_INX() {
     m_RegisterX++;
     SetFlag(Z, m_RegisterX == 0x00);
     SetFlag(N, m_RegisterX & 0x80);
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_INY() {
+bool Cpu::Instruction_INY() {
     m_RegisterY++;
     SetFlag(Z, m_RegisterY == 0x00);
     SetFlag(N, m_RegisterY & 0x80);
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_JMP() {
+bool Cpu::Instruction_JMP() {
     m_ProgramCounter = m_AddressAbsolute;
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_JSR() {
+bool Cpu::Instruction_JSR() {
     m_ProgramCounter--;
 
     Write(0x0100 + m_StackPointer, (m_ProgramCounter >> 8) & 0x00FF);
@@ -584,34 +584,34 @@ uint8_t Cpu::Instruction_JSR() {
     m_StackPointer--;
 
     m_ProgramCounter = m_AddressAbsolute;
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_LDA() {
+bool Cpu::Instruction_LDA() {
     Fetch();
     m_RegisterA = m_ValueFetched;
     SetFlag(Z, m_RegisterA == 0x00);
     SetFlag(N, m_RegisterA & 0x80);
-    return 1;
+    return true;
 }
 
-uint8_t Cpu::Instruction_LDX() {
+bool Cpu::Instruction_LDX() {
     Fetch();
     m_RegisterX = m_ValueFetched;
     SetFlag(Z, m_RegisterX == 0x00);
     SetFlag(N, m_RegisterX & 0x80);
-    return 1;
+    return true;
 }
 
-uint8_t Cpu::Instruction_LDY() {
+bool Cpu::Instruction_LDY() {
     Fetch();
     m_RegisterY = m_ValueFetched;
     SetFlag(Z, m_RegisterY == 0x00);
     SetFlag(N, m_RegisterY & 0x80);
-    return 1;
+    return true;
 }
 
-uint8_t Cpu::Instruction_LSR() {
+bool Cpu::Instruction_LSR() {
     Fetch();
     SetFlag(C, m_ValueFetched & 0x0001);
     uint16_t temp = m_ValueFetched >> 1;
@@ -621,10 +621,10 @@ uint8_t Cpu::Instruction_LSR() {
         m_RegisterA = temp & 0x00FF;
     else
         Write(m_AddressAbsolute, temp & 0x00FF);
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_NOP() {
+bool Cpu::Instruction_NOP() {
     // todo: support
     // https://wiki.nesdev.com/w/index.php/CPU_unofficial_opcodes
     switch (m_OpCode) {
@@ -634,50 +634,50 @@ uint8_t Cpu::Instruction_NOP() {
         case 0x7C:
         case 0xDC:
         case 0xFC:
-            return 1;
+            return true;
             break;
     }
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_ORA() {
+bool Cpu::Instruction_ORA() {
     Fetch();
     m_RegisterA = m_RegisterA | m_ValueFetched;
     SetFlag(Z, m_RegisterA == 0x00);
     SetFlag(N, m_RegisterA & 0x80);
-    return 1;
+    return true;
 }
 
-uint8_t Cpu::Instruction_PHA() {
+bool Cpu::Instruction_PHA() {
     Write(0x0100 + m_StackPointer, m_RegisterA);
     m_StackPointer--;
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_PHP() {
+bool Cpu::Instruction_PHP() {
     Write(0x0100 + m_StackPointer, m_StatusRegister | B | U);
     SetFlag(B, 0);
     SetFlag(U, 0);
     m_StackPointer--;
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_PLA() {
+bool Cpu::Instruction_PLA() {
     m_StackPointer++;
     m_RegisterA = Read(0x0100 + m_StackPointer);
     SetFlag(Z, m_RegisterA == 0x00);
     SetFlag(N, m_RegisterA & 0x80);
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_PLP() {
+bool Cpu::Instruction_PLP() {
     m_StackPointer++;
     m_StatusRegister = Read(0x0100 + m_StackPointer);
     SetFlag(U, 1);
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_ROL() {
+bool Cpu::Instruction_ROL() {
     Fetch();
     uint16_t temp = static_cast<uint16_t>(m_ValueFetched << 1) | GetFlag(C);
     SetFlag(C, temp & 0xFF00);
@@ -687,10 +687,10 @@ uint8_t Cpu::Instruction_ROL() {
         m_RegisterA = temp & 0x00FF;
     else
         Write(m_AddressAbsolute, temp & 0x00FF);
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_ROR() {
+bool Cpu::Instruction_ROR() {
     Fetch();
     uint16_t temp =
         static_cast<uint16_t>(GetFlag(C) << 7) | (m_ValueFetched >> 1);
@@ -701,10 +701,10 @@ uint8_t Cpu::Instruction_ROR() {
         m_RegisterA = temp & 0x00FF;
     else
         Write(m_AddressAbsolute, temp & 0x00FF);
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_RTI() {
+bool Cpu::Instruction_RTI() {
     m_StackPointer++;
     m_StatusRegister = Read(0x0100 + m_StackPointer);
     m_StatusRegister &= ~B;
@@ -715,10 +715,10 @@ uint8_t Cpu::Instruction_RTI() {
     m_StackPointer++;
     m_ProgramCounter |= static_cast<uint16_t>(Read(0x0100 + m_StackPointer))
                         << 8;
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_RTS() {
+bool Cpu::Instruction_RTS() {
     m_StackPointer++;
     m_ProgramCounter = static_cast<uint16_t>(Read(0x0100 + m_StackPointer));
     m_StackPointer++;
@@ -726,10 +726,10 @@ uint8_t Cpu::Instruction_RTS() {
                         << 8;
 
     m_ProgramCounter++;
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_SBC() {
+bool Cpu::Instruction_SBC() {
     Fetch();
 
     // Operating in 16-bit domain to capture carry out
@@ -746,77 +746,77 @@ uint8_t Cpu::Instruction_SBC() {
                    0x0080);
     SetFlag(N, temp & 0x0080);
     m_RegisterA = temp & 0x00FF;
-    return 1;
+    return true;
 }
 
-uint8_t Cpu::Instruction_SEC() {
+bool Cpu::Instruction_SEC() {
     SetFlag(C, true);
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_SED() {
+bool Cpu::Instruction_SED() {
     SetFlag(D, true);
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_SEI() {
+bool Cpu::Instruction_SEI() {
     SetFlag(I, true);
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_STA() {
+bool Cpu::Instruction_STA() {
     Write(m_AddressAbsolute, m_RegisterA);
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_STX() {
+bool Cpu::Instruction_STX() {
     Write(m_AddressAbsolute, m_RegisterX);
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_STY() {
+bool Cpu::Instruction_STY() {
     Write(m_AddressAbsolute, m_RegisterY);
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_TAX() {
+bool Cpu::Instruction_TAX() {
     m_RegisterX = m_RegisterA;
     SetFlag(Z, m_RegisterX == 0x00);
     SetFlag(N, m_RegisterX & 0x80);
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_TAY() {
+bool Cpu::Instruction_TAY() {
     m_RegisterY = m_RegisterA;
     SetFlag(Z, m_RegisterY == 0x00);
     SetFlag(N, m_RegisterY & 0x80);
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_TSX() {
+bool Cpu::Instruction_TSX() {
     m_RegisterX = m_StackPointer;
     SetFlag(Z, m_RegisterX == 0x00);
     SetFlag(N, m_RegisterX & 0x80);
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_TXA() {
+bool Cpu::Instruction_TXA() {
     m_RegisterA = m_RegisterX;
     SetFlag(Z, m_RegisterA == 0x00);
     SetFlag(N, m_RegisterA & 0x80);
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_TXS() {
+bool Cpu::Instruction_TXS() {
     m_StackPointer = m_RegisterX;
-    return 0;
+    return false;
 }
 
-uint8_t Cpu::Instruction_TYA() {
+bool Cpu::Instruction_TYA() {
     m_RegisterA = m_RegisterY;
     SetFlag(Z, m_RegisterA == 0x00);
     SetFlag(N, m_RegisterA & 0x80);
-    return 0;
+    return false;
 }
 
 void Cpu::AppendAddressingModeString(uint16_t opCodeAddress,
