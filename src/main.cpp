@@ -32,7 +32,12 @@ using Logger = cpuemulator::Logger;
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window, std::shared_ptr<Nes>& nes);
 
-int main(void) {
+int main(int argc, char* argv[]) {
+    if (argc < 2) {
+        std::cout << "Usage nes-emulator.exe [path/to/rom]\n";
+        return 1;
+    }
+
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -62,8 +67,7 @@ int main(void) {
     ImGui_ImplOpenGL3_Init(NULL);
     ImGui::StyleColorsDark();
 
-    std::shared_ptr<Cartridge> cartridge =
-        std::make_shared<Cartridge>("nestest.nes");
+    std::shared_ptr<Cartridge> cartridge = std::make_shared<Cartridge>(argv[1]);
     if (!cartridge->IsLoaded()) {
         return 1;
     }
