@@ -111,11 +111,15 @@ int main(int argc, char* argv[]) {
 
         glfwSwapBuffers(window);
 
-        milliseconds endFrameTime =
+        const milliseconds endFrameTime =
             duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+        const milliseconds delta = (endFrameTime - startFrameTime);
 
-        milliseconds sleepTime = frameTime - (endFrameTime - startFrameTime);
-        std::this_thread::sleep_for(sleepTime);
+        if (delta < frameTime) {
+            std::this_thread::sleep_for(frameTime - delta);
+        } else {
+            std::cout << "Frame took longer than 1000/60 ms\n";
+        }
     }
 
     logger.Stop();
