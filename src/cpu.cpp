@@ -19,11 +19,9 @@ void Cpu::RenderWidgets() { m_CpuWidget.Render(); }
 
 void Cpu::Clock() {
     if (m_Cycles == 0) {
-        m_OpCode = Read(m_ProgramCounter);
+        m_OpCode = ReadWordFromProgramCounter();
 
         SetFlag(FLAGS::U, 1);
-
-        m_ProgramCounter++;
 
         // todo handle illegal ops
         std::optional<Instruction>& instr = m_InstrTable[m_OpCode];
@@ -132,6 +130,17 @@ void Cpu::SetFlag(FLAGS flag, bool value) {
 
 uint8_t Cpu::Read(uint16_t address) { return m_NesPtr->CpuRead(address); }
 
+uint8_t Cpu::ReadWordFromProgramCounter() {
+    return m_NesPtr->CpuRead(m_ProgramCounter++);
+}
+
+uint16_t Cpu::ReadDoubleWordFromProgramCounter() {
+    uint16_t lowNibble = Read(m_ProgramCounter++);
+    uint16_t highNibble = Read(m_ProgramCounter++);
+
+    return (highNibble << 8) | lowNibble;
+}
+
 void Cpu::Write(uint16_t address, uint8_t data) {
     m_NesPtr->CpuWrite(address, data);
 }
@@ -143,88 +152,53 @@ bool Cpu::ImmediateAddressing() {
 }
 
 bool Cpu::ZeroPageAddressing() {
-    m_AddressAbsolute = Read(m_ProgramCounter);
-    m_ProgramCounter++;
-
+    m_AddressAbsolute = ReadWordFromProgramCounter();
     m_AddressAbsolute &= 0x00FF;
     return false;
 }
 
 bool Cpu::IndexedZeroPageAddressingX() {
-    m_AddressAbsolute = Read(m_ProgramCounter) + m_RegisterX;
-    m_ProgramCounter++;
-
+    m_AddressAbsolute = ReadWordFromProgramCounter();
+    m_AddressAbsolute += m_RegisterX;
     m_AddressAbsolute &= 0x00FF;
     return false;
 }
 
 bool Cpu::IndexedZeroPageAddressingY() {
-    m_AddressAbsolute = Read(m_ProgramCounter) + m_RegisterY;
-    m_ProgramCounter++;
-
+    m_AddressAbsolute = ReadWordFromProgramCounter();
+    m_AddressAbsolute += m_RegisterY;
     m_AddressAbsolute &= 0x00FF;
     return false;
 }
 
 bool Cpu::AbsoluteAddressing() {
-    uint16_t lowNibble = Read(m_ProgramCounter);
-    m_ProgramCounter++;
-
-    uint16_t highNibble = Read(m_ProgramCounter);
-    m_ProgramCounter++;
-
-    m_AddressAbsolute = (highNibble << 8) | lowNibble;
-
+    m_AddressAbsolute = ReadDoubleWordFromProgramCounter();
     return false;
 }
 
 bool Cpu::IndexedAbsoluteAddressingX() {
-    uint16_t lowNibble = Read(m_ProgramCounter);
-    m_ProgramCounter++;
+    m_AddressAbsolute = ReadDoubleWordFromProgramCounter();
+    uint16_t highNibble = m_AddressAbsolute & 0xFF00;
 
-    uint16_t highNibble = Read(m_ProgramCounter);
-    m_ProgramCounter++;
-
-    m_AddressAbsolute = (highNibble << 8) | lowNibble;
     m_AddressAbsolute += m_RegisterX;
 
-    // todo make constexpr function
-    if ((m_AddressAbsolute & 0xFF00) != (highNibble << 8)) {
-        return true;
-    } else {
-        return false;
-    }
+    return (m_AddressAbsolute & 0xFF00) != highNibble;
 }
 
 bool Cpu::IndexedAbsoluteAddressingY() {
-    uint16_t lowNibble = Read(m_ProgramCounter);
-    m_ProgramCounter++;
+    m_AddressAbsolute = ReadDoubleWordFromProgramCounter();
+    uint16_t highNibble = m_AddressAbsolute & 0xFF00;
 
-    uint16_t highNibble = Read(m_ProgramCounter);
-    m_ProgramCounter++;
-
-    m_AddressAbsolute = (highNibble << 8) | lowNibble;
     m_AddressAbsolute += m_RegisterY;
 
-    // todo make constexpr function
-    if ((m_AddressAbsolute & 0xFF00) != (highNibble << 8)) {
-        return true;
-    } else {
-        return false;
-    }
+    return (m_AddressAbsolute & 0xFF00) != highNibble;
 }
 
 bool Cpu::AbsoluteIndirectAddressing() {
-    uint16_t lowNibble = Read(m_ProgramCounter);
-    m_ProgramCounter++;
-
-    uint16_t highNibble = Read(m_ProgramCounter);
-    m_ProgramCounter++;
-
-    uint16_t pointer = (highNibble << 8) | lowNibble;
+    uint16_t pointer = ReadDoubleWordFromProgramCounter();
 
     // Simulate page boundary hardware bug
-    if (lowNibble == 0x00FF) {
+    if ((pointer & 0x00FF) == 0x00FF) {
         m_AddressAbsolute = (Read(pointer & 0xFF00) << 8) | Read(pointer);
     } else {
         m_AddressAbsolute = (Read(pointer + 1) << 8) | Read(pointer);
@@ -233,8 +207,7 @@ bool Cpu::AbsoluteIndirectAddressing() {
 }
 
 bool Cpu::IndexedIndirectAddressingX() {
-    uint16_t t = Read(m_ProgramCounter);
-    m_ProgramCounter++;
+    uint16_t t = ReadWordFromProgramCounter();
 
     uint16_t registerXValue = static_cast<uint16_t>(m_RegisterX);
 
@@ -250,8 +223,7 @@ bool Cpu::IndexedIndirectAddressingX() {
 }
 
 bool Cpu::IndirectIndexedAddressingY() {
-    uint16_t t = Read(m_ProgramCounter);
-    m_ProgramCounter++;
+    uint16_t t = ReadWordFromProgramCounter();
 
     uint16_t lowNibble = Read(t & 0x00FF);
     uint16_t highNibble = Read((t + 1) & 0x00FF);
@@ -267,8 +239,7 @@ bool Cpu::IndirectIndexedAddressingY() {
 }
 
 bool Cpu::RelativeAddressing() {
-    m_AddressRelative = Read(m_ProgramCounter);
-    m_ProgramCounter++;
+    m_AddressRelative = ReadWordFromProgramCounter();
 
     if (m_AddressRelative & 0x80)  // if unsigned
     {
