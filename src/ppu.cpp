@@ -8,9 +8,19 @@
 
 namespace cpuemulator {
 
+Ppu::Ppu(const UiConfig& uiConfig) : m_UiConfig{uiConfig} {}
+
 void Ppu::Update() {
-    UpdatePatternTableSprite(m_SpritePatternTables[0], 0, 0);
-    UpdatePatternTableSprite(m_SpritePatternTables[1], 1, 0);
+    m_SpriteOutputScreen.Update();
+
+    if (m_UiConfig.m_PpuShowPatternTable0) {
+        UpdatePatternTableSprite(m_SpritePatternTables[0], 0, 0);
+        m_SpritePatternTables[0].Update();
+    }
+    if (m_UiConfig.m_PpuShowPatternTable1) {
+        UpdatePatternTableSprite(m_SpritePatternTables[1], 1, 0);
+        m_SpritePatternTables[1].Update();
+    }
 
     for (int p = 0; p < 8; ++p)  // For each palette
     {
@@ -21,17 +31,17 @@ void Ppu::Update() {
             m_SpritePalette.SetPixel(coordX, coordY, GetColorFromPalette(p, s));
         }
     }
-
-	m_SpriteOutputScreen.Update();
-    m_SpritePatternTables[0].Update();
-    m_SpritePatternTables[1].Update();
     m_SpritePalette.Update();
 }
 
 void Ppu::Render() {
     m_SpriteOutputScreen.Render();
-    m_SpritePatternTables[0].Render();
-    m_SpritePatternTables[1].Render();
+    if (m_UiConfig.m_PpuShowPatternTable0) {
+        m_SpritePatternTables[0].Render();
+    }
+    if (m_UiConfig.m_PpuShowPatternTable1) {
+        m_SpritePatternTables[1].Render();
+    }
     m_SpritePalette.Render();
 }
 

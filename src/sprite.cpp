@@ -54,7 +54,7 @@ void Sprite::Update() {
 }
 
 void Sprite::Render() {
-    ImGui::SetNextWindowPos(ImVec2(m_PositionX, m_PositionY), ImGuiCond_Always);
+    ImGui::SetNextWindowPos(ImVec2(m_PositionX, m_PositionY), ImGuiCond_Once);
     ImGui::Begin(m_Name.c_str());
     ImGui::Image((void*)(intptr_t)m_textureId,
                  ImVec2(m_TextureWidth, m_TextureHeight));

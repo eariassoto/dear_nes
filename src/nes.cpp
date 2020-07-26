@@ -7,7 +7,8 @@
 #include "include/logger.h"
 
 namespace cpuemulator {
-Nes::Nes() : m_NesWidget{this} {
+Nes::Nes(const UiConfig& uiConfig)
+    : m_UiConfig{uiConfig}, m_Ppu{std::make_shared<Ppu>(uiConfig)} {
     m_Cpu->RegisterNesPointer(this);
     memset(m_cpuRam, 0, 0x800);
 }
@@ -98,13 +99,10 @@ void Nes::Clock() {
     ++m_SystemClockCounter;
 }
 
-void Nes::RenderWidgets() {
-    m_NesWidget.Render();
-    m_Cpu->RenderWidgets();
-}
+void Nes::RenderWidgets() { m_Cpu->RenderWidgets(); }
 
 void Nes::DoFrame() {
-    if (m_NesWidget.IsSimulationRunChecked()) {
+    if (m_UiConfig.m_EmulatorIsRunning) {
         do {
             Clock();
         } while (!m_Ppu->isFrameComplete);
@@ -114,8 +112,14 @@ void Nes::DoFrame() {
         } while (m_Cpu->IsCurrentInstructionComplete());
 
         m_Ppu->isFrameComplete = false;
-    } else {
-        if (m_NesWidget.IsDoResetButtonClicked()) {
+        return;
+    }
+    if (m_UiConfig.m_EmulatorMustReset) {
+        Reset();
+    }
+
+    /*else*/ {
+        /*if (m_NesWidget.IsDoResetButtonClicked()) {
             Reset();
         }
         if (m_NesWidget.IsDoFrameButtonClicked()) {
@@ -136,7 +140,7 @@ void Nes::DoFrame() {
             do {
                 Clock();
             } while (m_Cpu->IsCurrentInstructionComplete());
-        }
+        }*/
     }
 }
 

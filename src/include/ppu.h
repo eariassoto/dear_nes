@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "include/sprite.h"
+#include "include/ui_config.h"
 
 namespace cpuemulator {
 
@@ -78,6 +79,8 @@ namespace cpuemulator {
 
     class Ppu {
     public:
+        Ppu(const UiConfig& uiConfig);
+
         void Update();
         void Render();
 
@@ -101,6 +104,7 @@ namespace cpuemulator {
         uint8_t* m_OAMPtr = (uint8_t*)m_OAM;
 
     private:
+        const UiConfig& m_UiConfig;
 
         int GetColorFromPalette(uint8_t palette, uint8_t pixel);
 

@@ -4,8 +4,8 @@
 #include <memory>
 
 #include "include/cpu.h"
-#include "include/nes_widget.h"
 #include "include/ppu.h"
+#include "include/ui_config.h"
 
 namespace cpuemulator {
 
@@ -15,7 +15,7 @@ class Cpu;
 
 class Nes {
    public:
-    Nes();
+    Nes(const UiConfig& uiConfig);
     ~Nes();
 
     uint8_t m_Controllers[2] = {0};
@@ -34,13 +34,15 @@ class Nes {
     void Render();
 
    private:
+    const UiConfig& m_UiConfig;
+
     uint8_t* m_cpuRam = new uint8_t[0x800];
 
     std::shared_ptr<Cartridge> m_Cartridge = nullptr;
 
     std::shared_ptr<Cpu> m_Cpu = std::make_shared<Cpu>();
 
-    std::shared_ptr<Ppu> m_Ppu = std::make_shared<Ppu>();
+    std::shared_ptr<Ppu> m_Ppu = nullptr;
 
     uint32_t m_SystemClockCounter = 0;
 
@@ -52,8 +54,6 @@ class Nes {
     bool m_DmaWait = true;
 
     uint8_t m_ControllerState[2] = {0};
-
-    NesWidget m_NesWidget;
 
     inline uint16_t GetRealRamAddress(uint16_t address) const {
         return address & 0x07FF;

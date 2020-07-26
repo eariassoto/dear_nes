@@ -15,10 +15,10 @@
 #include "include/nes.h"
 #include "include/cartridge.h"
 #include "include/cpu_widget.h"
-#include "include/nes_widget.h"
 #include "include/file_manager.h"
 #include "include/sprite.h"
 #include "include/logger.h"
+#include "include/ui_config.h"
 
 using Nes = cpuemulator::Nes;
 using FileManager = cpuemulator::FileManager;
@@ -26,11 +26,54 @@ using Cartridge = cpuemulator::Cartridge;
 using Ppu = cpuemulator::Ppu;
 using Cpu = cpuemulator::Cpu;
 using CpuWidget = cpuemulator::CpuWidget;
-using NesWidget = cpuemulator::NesWidget;
 using Logger = cpuemulator::Logger;
+using UiConfig = cpuemulator::UiConfig;
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window, std::shared_ptr<Nes>& nes);
+
+void RenderUISettingsWidget(UiConfig* uiConfig) {
+    uiConfig->ResetEvents();
+
+    ImGui::Begin("UI Settings");
+    ImGui::SetWindowSize({512, 80});
+    ImGui::SetWindowPos({10, 540}, ImGuiCond_Once);
+
+    if (uiConfig->m_EmulatorIsRunning) {
+        ImGui::PushStyleVar(ImGuiStyleVar_Alpha,
+                            ImGui::GetStyle().Alpha * 0.5f);
+        ImGui::Button("Run");
+        ImGui::PopStyleVar();
+    } else {
+        uiConfig->m_EmulatorIsRunning = ImGui::Button("Run");
+    }
+
+    ImGui::SameLine();
+
+    if (uiConfig->m_EmulatorIsRunning) {
+        if (ImGui::Button("Pause")) {
+            uiConfig->m_EmulatorIsRunning = false;
+        }
+    } else {
+        ImGui::PushStyleVar(ImGuiStyleVar_Alpha,
+                            ImGui::GetStyle().Alpha * 0.5f);
+        ImGui::Button("Pause");
+        ImGui::PopStyleVar();
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Reset")) {
+        uiConfig->m_EmulatorIsRunning = false;
+        uiConfig->m_EmulatorMustReset = true;
+    }
+
+	ImGui::Checkbox("Pattern Table #0", &uiConfig->m_PpuShowPatternTable0);
+    ImGui::SameLine();
+	ImGui::Checkbox("Pattern Table #1", &uiConfig->m_PpuShowPatternTable1);
+
+    ImGui::End();
+}
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
@@ -43,6 +86,7 @@ int main(int argc, char* argv[]) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+    UiConfig uiConfig;
     int screenWidth = 1250;
     int screenHeight = 800;
     GLFWwindow* window =
@@ -72,7 +116,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    std::shared_ptr<Nes> nesEmulator = std::make_shared<Nes>();
+    std::shared_ptr<Nes> nesEmulator = std::make_shared<Nes>(uiConfig);
 
     nesEmulator->InsertCatridge(cartridge);
 
@@ -98,6 +142,7 @@ int main(int argc, char* argv[]) {
         ImGui::NewFrame();
 
         // render widgets
+        RenderUISettingsWidget(&uiConfig);
         nesEmulator->RenderWidgets();
 
         nesEmulator->DoFrame();
