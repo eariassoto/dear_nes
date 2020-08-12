@@ -3,15 +3,14 @@
 #include <cstdint>
 #include <memory>
 
-#include "include/cpu.h"
 #include "include/ppu.h"
 #include "include/ui_config.h"
+#include "include/cpu_widget.h"
+#include "include/virtual6502.h"
 
 namespace cpuemulator {
 
 class Cartridge;
-
-class Cpu;
 
 class Nes {
    public:
@@ -36,11 +35,11 @@ class Nes {
    private:
     const UiConfig& m_UiConfig;
 
-    uint8_t* m_cpuRam = new uint8_t[0x800];
+    uint8_t* m_CpuRam = new uint8_t[0x800];
 
     std::shared_ptr<Cartridge> m_Cartridge = nullptr;
 
-    std::shared_ptr<Cpu> m_Cpu = std::make_shared<Cpu>();
+    Virtual6502<Nes>* m_Virtual6502 = nullptr;
 
     std::shared_ptr<Ppu> m_Ppu = nullptr;
 
@@ -61,5 +60,7 @@ class Nes {
     inline uint16_t GetRealPpuAddress(uint16_t address) const {
         return address & 0x0007;
     }
+
+	CpuWidget<Nes> m_CpuWidget;
 };
 }  // namespace cpuemulator

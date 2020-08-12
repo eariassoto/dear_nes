@@ -8,19 +8,24 @@
 
 namespace cpuemulator {
 Nes::Nes(const UiConfig& uiConfig)
-    : m_UiConfig{uiConfig}, m_Ppu{std::make_shared<Ppu>(uiConfig)} {
-    m_Cpu->RegisterNesPointer(this);
-    memset(m_cpuRam, 0, 0x800);
+    : m_UiConfig{uiConfig},
+      m_Virtual6502{new Virtual6502(this)},
+      m_Ppu{std::make_shared<Ppu>(uiConfig)},
+      m_CpuWidget{m_Virtual6502} {
+    memset(m_CpuRam, 0, 0x800);
 }
 
-Nes::~Nes() { delete[] m_cpuRam; }
+Nes::~Nes() {
+    delete m_Virtual6502;
+    delete[] m_CpuRam;
+}
 
 uint64_t Nes::GetSystemClockCounter() const { return m_SystemClockCounter; }
 
 void Nes::CpuWrite(uint16_t address, uint8_t data) {
     if (m_Cartridge->CpuWrite(address, data)) {
     } else if (address >= 0x0000 && address <= 0x1FFF) {
-        m_cpuRam[GetRealRamAddress(address)] = data;
+        m_CpuRam[GetRealRamAddress(address)] = data;
     } else if (address >= 0x2000 && address <= 0x3FFF) {
         m_Ppu->CpuWrite(GetRealPpuAddress(address), data);
     } else if (address == 0x4014) {
@@ -36,7 +41,7 @@ uint8_t Nes::CpuRead(uint16_t address, bool isReadOnly) {
     uint8_t data = 0x00;
     if (m_Cartridge->CpuRead(address, data)) {
     } else if (address >= 0x0000 && address <= 0x1FFF) {
-        data = m_cpuRam[GetRealRamAddress(address)];
+        data = m_CpuRam[GetRealRamAddress(address)];
     } else if (address >= 0x2000 && address <= 0x3FFF) {
         data = m_Ppu->CpuRead(GetRealPpuAddress(address), isReadOnly);
     } else if (address >= 0x4016 && address <= 0x4017) {
@@ -55,7 +60,7 @@ void Nes::InsertCatridge(const std::shared_ptr<Cartridge>& cartridge) {
 }
 
 void Nes::Reset() {
-    m_Cpu->Reset();
+    m_Virtual6502->Reset();
     m_SystemClockCounter = 0;
     m_DmaPage = 0x00;
     m_DmaAddress = 0x00;
@@ -87,61 +92,30 @@ void Nes::Clock() {
                 }
             }
         } else {
-            m_Cpu->Clock();
+            m_Virtual6502->Clock();
         }
     }
 
     if (m_Ppu->m_DoNMI) {
         m_Ppu->m_DoNMI = false;
-        m_Cpu->NonMaskableInterrupt();
+        m_Virtual6502->NonMaskableInterrupt();
     }
 
     ++m_SystemClockCounter;
 }
 
-void Nes::RenderWidgets() { m_Cpu->RenderWidgets(); }
+void Nes::RenderWidgets() { m_CpuWidget.Render(); }
 
 void Nes::DoFrame() {
-    if (m_UiConfig.m_EmulatorIsRunning) {
-        do {
-            Clock();
-        } while (!m_Ppu->isFrameComplete);
+    do {
+        Clock();
+    } while (!m_Ppu->isFrameComplete);
 
-        do {
-            m_Cpu->Clock();
-        } while (m_Cpu->IsCurrentInstructionComplete());
+    do {
+        m_Virtual6502->Clock();
+    } while (m_Virtual6502->IsCurrentInstructionComplete());
 
-        m_Ppu->isFrameComplete = false;
-        return;
-    }
-    if (m_UiConfig.m_EmulatorMustReset) {
-        Reset();
-    }
-
-    /*else*/ {
-        /*if (m_NesWidget.IsDoResetButtonClicked()) {
-            Reset();
-        }
-        if (m_NesWidget.IsDoFrameButtonClicked()) {
-            do {
-                Clock();
-            } while (!m_Ppu->isFrameComplete);
-
-            do {
-                m_Cpu->Clock();
-            } while (m_Cpu->IsCurrentInstructionComplete());
-
-            m_Ppu->isFrameComplete = false;
-        }
-        if (m_NesWidget.IsDoStepButtonClicked()) {
-            do {
-                Clock();
-            } while (!m_Cpu->IsCurrentInstructionComplete());
-            do {
-                Clock();
-            } while (m_Cpu->IsCurrentInstructionComplete());
-        }*/
-    }
+    m_Ppu->isFrameComplete = false;
 }
 
 void Nes::Update() { m_Ppu->Update(); }

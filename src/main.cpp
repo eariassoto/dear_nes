@@ -14,7 +14,6 @@
 
 #include "include/nes.h"
 #include "include/cartridge.h"
-#include "include/cpu_widget.h"
 #include "include/file_manager.h"
 #include "include/sprite.h"
 #include "include/logger.h"
@@ -24,8 +23,6 @@ using Nes = cpuemulator::Nes;
 using FileManager = cpuemulator::FileManager;
 using Cartridge = cpuemulator::Cartridge;
 using Ppu = cpuemulator::Ppu;
-using Cpu = cpuemulator::Cpu;
-using CpuWidget = cpuemulator::CpuWidget;
 using Logger = cpuemulator::Logger;
 using UiConfig = cpuemulator::UiConfig;
 
@@ -68,9 +65,9 @@ void RenderUISettingsWidget(UiConfig* uiConfig) {
         uiConfig->m_EmulatorMustReset = true;
     }
 
-	ImGui::Checkbox("Pattern Table #0", &uiConfig->m_PpuShowPatternTable0);
+    ImGui::Checkbox("Pattern Table #0", &uiConfig->m_PpuShowPatternTable0);
     ImGui::SameLine();
-	ImGui::Checkbox("Pattern Table #1", &uiConfig->m_PpuShowPatternTable1);
+    ImGui::Checkbox("Pattern Table #1", &uiConfig->m_PpuShowPatternTable1);
 
     ImGui::End();
 }
@@ -125,15 +122,18 @@ int main(int argc, char* argv[]) {
     Logger& logger = Logger::Get();
     logger.Start();
 
+    using clock = std::chrono::high_resolution_clock;
     using namespace std::chrono;
-    const milliseconds frameTime{1000 / 60};
-    while (!glfwWindowShouldClose(window)) {
-        std::chrono::milliseconds startFrameTime =
-            duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+    static constexpr nanoseconds frameTime{1000ms / 60};
 
+    nanoseconds residualTime = 0ms;
+    auto frameStartTime = clock::now();
+
+    while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
         processInput(window, nesEmulator);
+
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -143,11 +143,23 @@ int main(int argc, char* argv[]) {
 
         // render widgets
         RenderUISettingsWidget(&uiConfig);
+
+        auto deltaTime = clock::now() - frameStartTime;
+        frameStartTime = clock::now();
+
+        if (uiConfig.m_EmulatorIsRunning) {
+            if (residualTime > 0ns) {
+                residualTime -= deltaTime;
+            } else {
+                residualTime += frameTime - deltaTime;
+
+                nesEmulator->DoFrame();
+
+                nesEmulator->Update();
+            }
+        }
+
         nesEmulator->RenderWidgets();
-
-        nesEmulator->DoFrame();
-
-        nesEmulator->Update();
 
         nesEmulator->Render();
 
@@ -155,16 +167,6 @@ int main(int argc, char* argv[]) {
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(window);
-
-        const milliseconds endFrameTime =
-            duration_cast<milliseconds>(system_clock::now().time_since_epoch());
-        const milliseconds delta = (endFrameTime - startFrameTime);
-
-        if (delta < frameTime) {
-            std::this_thread::sleep_for(frameTime - delta);
-        } else {
-            std::cout << "Frame took longer than 1000/60 ms\n";
-        }
     }
 
     logger.Stop();
