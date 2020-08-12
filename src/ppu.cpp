@@ -155,7 +155,7 @@ uint8_t Ppu::PpuRead(uint16_t address, bool readOnly) {
             if (address >= 0x0000 && address <= 0x03FF)
                 data = m_Nametables[0][address & 0x03FF];
             if (address >= 0x0400 && address <= 0x07FF)
-                address = m_Nametables[1][address & 0x03FF];
+                data = m_Nametables[1][address & 0x03FF];
             if (address >= 0x0800 && address <= 0x0BFF)
                 data = m_Nametables[0][address & 0x03FF];
             if (address >= 0x0C00 && address <= 0x0FFF)
