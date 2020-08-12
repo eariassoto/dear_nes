@@ -4,4 +4,4 @@ RMDIR /Q /S build
 MKDIR build
 PUSHD build
 
-cmake -G "Visual Studio 15" ..
+cmake -G "Visual Studio 16" ..
