@@ -3,6 +3,18 @@
 #include <cinttypes>
 #include <functional>
 #include <map>
+#include <cassert>
+
+enum Virtual6502Flag : uint8_t {
+    C = (0b1 << 0),  // Carry Bit
+    Z = (0b1 << 1),  // Zero
+    I = (0b1 << 2),  // Disable Interrupts
+    D = (0b1 << 3),  // Decimal Mode
+    B = (0b1 << 4),  // Break
+    U = (0b1 << 5),  // Unused
+    V = (0b1 << 6),  // Overflow
+    N = (0b1 << 7),  // Negative
+};
 
 template <class MemoryInterfaceT>
 class Virtual6502 {
@@ -24,7 +36,7 @@ class Virtual6502 {
         m_RegisterA = 0;
         m_RegisterX = 0;
         m_RegisterY = 0;
-        m_StatusRegister = 0x00 | Flag::U;
+        m_StatusRegister = 0x00 | Virtual6502Flag::U;
 
         static constexpr uint16_t addressToReadPC = 0xFFFC;
         uint16_t lo = m_MemoryInterface->CpuRead(addressToReadPC);
@@ -40,7 +52,7 @@ class Virtual6502 {
         if (m_Cycles == 0) {
             m_OpCode = ReadWordFromProgramCounter();
 
-            SetFlag(Flag::U, 1);
+            SetFlag(Virtual6502Flag::U, 1);
 
             // todo handle illegal ops
             auto instrIt = m_InstrTable.find(m_OpCode);
@@ -91,25 +103,14 @@ class Virtual6502 {
 
     bool IsCurrentInstructionComplete() const { return m_Cycles == 0; }
 
-    enum Flag : uint8_t {
-        C = (0b1 << 0),  // Carry Bit
-        Z = (0b1 << 1),  // Zero
-        I = (0b1 << 2),  // Disable Interrupts
-        D = (0b1 << 3),  // Decimal Mode
-        B = (0b1 << 4),  // Break
-        U = (0b1 << 5),  // Unused
-        V = (0b1 << 6),  // Overflow
-        N = (0b1 << 7),  // Negative
-    };
-
-    uint8_t GetFlag(Flag flag) const {
+    uint8_t GetFlag(Virtual6502Flag flag) const {
         if ((m_StatusRegister & flag) == 0x00) {
             return 0;
         }
         return 1;
     }
 
-    void SetFlag(Flag flag, bool value) {
+    void SetFlag(Virtual6502Flag flag, bool value) {
         if (value) {
             m_StatusRegister |= flag;
         } else {
@@ -281,13 +282,13 @@ class Virtual6502 {
         uint8_t valueFetched = Read(m_AddressAbsolute);
 
         uint16_t castedFetched = static_cast<uint16_t>(valueFetched);
-        uint16_t castedCarry = static_cast<uint16_t>(GetFlag(Flag::C));
+        uint16_t castedCarry = static_cast<uint16_t>(GetFlag(Virtual6502Flag::C));
         uint16_t castedAccum = static_cast<uint16_t>(m_RegisterA);
 
         uint16_t temp = castedAccum + castedFetched + castedCarry;
-        SetFlag(Flag::C, temp > 255);
-        SetFlag(Flag::Z, (temp & 0x00FF) == 0);
-        SetFlag(Flag::N, temp & 0x80);
+        SetFlag(Virtual6502Flag::C, temp > 255);
+        SetFlag(Virtual6502Flag::Z, (temp & 0x00FF) == 0);
+        SetFlag(Virtual6502Flag::N, temp & 0x80);
         SetFlag(V, (~(castedAccum ^ castedFetched) & (castedAccum ^ temp)) &
                        0x0080);
 
@@ -300,8 +301,8 @@ class Virtual6502 {
         uint8_t valueFetched = Read(m_AddressAbsolute);
 
         m_RegisterA &= valueFetched;
-        SetFlag(Flag::Z, m_RegisterA == 0x00);
-        SetFlag(Flag::N, m_RegisterA & 0x80);
+        SetFlag(Virtual6502Flag::Z, m_RegisterA == 0x00);
+        SetFlag(Virtual6502Flag::N, m_RegisterA & 0x80);
 
         m_InstructionNeedsAdditionalCycle = true;
     }
@@ -310,18 +311,18 @@ class Virtual6502 {
         uint8_t valueFetched = Read(m_AddressAbsolute);
 
         uint16_t temp = static_cast<uint16_t>(valueFetched) << 1;
-        SetFlag(Flag::C, (temp & 0xFF00) > 0);
-        SetFlag(Flag::Z, (temp & 0x00FF) == 0);
-        SetFlag(Flag::N, temp & 0x80);
+        SetFlag(Virtual6502Flag::C, (temp & 0xFF00) > 0);
+        SetFlag(Virtual6502Flag::Z, (temp & 0x00FF) == 0);
+        SetFlag(Virtual6502Flag::N, temp & 0x80);
 
         Write(m_AddressAbsolute, temp & 0x00FF);
     }
 
     void Instruction_ASL_AcummAddr() {
         uint16_t temp = static_cast<uint16_t>(m_RegisterA) << 1;
-        SetFlag(Flag::C, (temp & 0xFF00) > 0);
-        SetFlag(Flag::Z, (temp & 0x00FF) == 0);
-        SetFlag(Flag::N, temp & 0x80);
+        SetFlag(Virtual6502Flag::C, (temp & 0xFF00) > 0);
+        SetFlag(Virtual6502Flag::Z, (temp & 0x00FF) == 0);
+        SetFlag(Virtual6502Flag::N, temp & 0x80);
 
         m_RegisterA = temp & 0x00FF;
     }
@@ -337,19 +338,19 @@ class Virtual6502 {
     }
 
     void Instruction_BCC() {
-        if (GetFlag(Flag::C) == 0) {
+        if (GetFlag(Virtual6502Flag::C) == 0) {
             Instruction_ExecuteBranch();
         }
     }
 
     void Instruction_BCS() {
-        if (GetFlag(Flag::C) == 1) {
+        if (GetFlag(Virtual6502Flag::C) == 1) {
             Instruction_ExecuteBranch();
         }
     }
 
     void Instruction_BEQ() {
-        if (GetFlag(Flag::Z) == 1) {
+        if (GetFlag(Virtual6502Flag::Z) == 1) {
             Instruction_ExecuteBranch();
         }
     }
@@ -364,19 +365,19 @@ class Virtual6502 {
     }
 
     void Instruction_BMI() {
-        if (GetFlag(Flag::N) == 1) {
+        if (GetFlag(Virtual6502Flag::N) == 1) {
             Instruction_ExecuteBranch();
         }
     }
 
     void Instruction_BNE() {
-        if (GetFlag(Flag::Z) == 0) {
+        if (GetFlag(Virtual6502Flag::Z) == 0) {
             Instruction_ExecuteBranch();
         }
     }
 
     void Instruction_BPL() {
-        if (GetFlag(Flag::N) == 0) {
+        if (GetFlag(Virtual6502Flag::N) == 0) {
             Instruction_ExecuteBranch();
         }
     }
@@ -390,7 +391,7 @@ class Virtual6502 {
         Write(0x0100 + m_StackPointer, m_ProgramCounter & 0x00FF);
         m_StackPointer--;
 
-        SetFlag(Flag::B, 1);
+        SetFlag(Virtual6502Flag::B, 1);
         Write(0x0100 + m_StackPointer, m_StatusRegister);
         m_StackPointer--;
         SetFlag(B, 0);
@@ -400,24 +401,24 @@ class Virtual6502 {
     }
 
     void Instruction_BVC() {
-        if (GetFlag(Flag::V) == 0) {
+        if (GetFlag(Virtual6502Flag::V) == 0) {
             Instruction_ExecuteBranch();
         }
     }
 
     void Instruction_BVS() {
-        if (GetFlag(Flag::V) == 1) {
+        if (GetFlag(Virtual6502Flag::V) == 1) {
             Instruction_ExecuteBranch();
         }
     }
 
-    void Instruction_CLC() { SetFlag(Flag::C, false); }
+    void Instruction_CLC() { SetFlag(Virtual6502Flag::C, false); }
 
-    void Instruction_CLD() { SetFlag(Flag::D, false); }
+    void Instruction_CLD() { SetFlag(Virtual6502Flag::D, false); }
 
-    void Instruction_CLI() { SetFlag(Flag::I, false); }
+    void Instruction_CLI() { SetFlag(Virtual6502Flag::I, false); }
 
-    void Instruction_CLV() { SetFlag(Flag::V, false); }
+    void Instruction_CLV() { SetFlag(Virtual6502Flag::V, false); }
 
     void Instruction_CMP() {
         uint8_t valueFetched = Read(m_AddressAbsolute);

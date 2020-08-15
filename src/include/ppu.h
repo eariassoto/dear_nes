@@ -112,6 +112,9 @@ namespace cpuemulator {
 
         void PpuWrite(uint16_t address, uint8_t data);
 
+        void DoRenderTick();
+        void DoPreRenderTick();
+
         /// PPU Nametables
         /// A nametable is a 1024 byte area of memory used by the PPU
         /// to lay out backgrounds. Each byte in the nametable controls

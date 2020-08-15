@@ -17,8 +17,8 @@ Sprite::Sprite(const std::string& spriteName, unsigned int width,
       m_Width{width},
       m_Height{height},
       m_CellSizeInPixels{cellSize},
-      m_TextureWidth{(float)width * cellSize},
-      m_TextureHeight{(float)height * cellSize},
+      m_TextureWidth{static_cast<float>(width) * cellSize},
+      m_TextureHeight{static_cast<float>(height) * cellSize},
       m_PositionX{posX},
       m_PositionY{posY} {
     int dataSize = m_Width * m_Height * CHANNEL_COUNT;
@@ -62,7 +62,7 @@ void Sprite::Render() {
 }
 
 void Sprite::SetPixel(int x, int y, int color) {
-    if (x < 0 || x >= m_Width || y < 0 || y >= m_Height) {
+    if (x < 0 || x >= static_cast<int>(m_Width) || y < 0 || y >= static_cast<int>(m_Height)) {
         return;
     }
 

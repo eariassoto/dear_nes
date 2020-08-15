@@ -225,7 +225,7 @@ void Ppu::ConnectCatridge(const std::shared_ptr<Cartridge>& cartridge) {
     m_Cartridge = cartridge;
 }
 
-void Ppu::Clock() {
+void Ppu::DoRenderTick() {
     auto IncrementScrollX = [&]() {
         if (m_MaskReg.GetField(MaskRegisterFields::RENDER_BACKGROUND) ||
             m_MaskReg.GetField(MaskRegisterFields::RENDER_SPRITES)) {
@@ -266,15 +266,6 @@ void Ppu::Clock() {
         }
     };
 
-    auto TransferAddressY = [&]() {
-        if (m_MaskReg.GetField(MaskRegisterFields::RENDER_BACKGROUND) ||
-            m_MaskReg.GetField(MaskRegisterFields::RENDER_SPRITES)) {
-            m_VramAddress.fine_y = m_TramAddress.fine_y;
-            m_VramAddress.nametable_y = m_TramAddress.nametable_y;
-            m_VramAddress.coarse_y = m_TramAddress.coarse_y;
-        }
-    };
-
     auto LoadBackgroundShifters = [&]() {
         bgShifterPatternLo = (bgShifterPatternLo & 0xFF00) | bgNextTileLsb;
         bgShifterPatternHi = (bgShifterPatternHi & 0xFF00) | bgNextTileMsb;
@@ -310,19 +301,6 @@ void Ppu::Clock() {
         if (m_ScanLine == 0 && m_Cycle == 0) {
             // "Odd Frame" cycle skip
             m_Cycle = 1;
-        }
-
-        if (m_ScanLine == -1 && m_Cycle == 1) {
-            m_StatusReg.SetField(VERTICAL_BLANK, false);
-
-            m_StatusReg.SetField(SPRITE_OVERFLOW, false);
-
-            m_StatusReg.SetField(SPRITE_ZERO_HIT, false);
-
-            for (int i = 0; i < 8; ++i) {
-                m_SpriteShifterPatternLo[i] = 0;
-                m_SpriteShifterPatternHi[i] = 0;
-            }
         }
 
         if ((m_Cycle >= 2 && m_Cycle < 258) ||
@@ -502,11 +480,6 @@ void Ppu::Clock() {
                 m_SpriteShifterPatternHi[i] = sprite_pattern_bits_hi;
             }
         }
-        ////
-
-        if (m_ScanLine == -1 && m_Cycle >= 280 && m_Cycle < 305) {
-            TransferAddressY();
-        }
     }
 
     if (m_ScanLine == 241 && m_Cycle == 1) {
@@ -515,6 +488,42 @@ void Ppu::Clock() {
             m_DoNMI = true;
         }
     }
+}
+
+void Ppu::DoPreRenderTick() {
+    auto TransferAddressY = [&]() {
+        if (m_MaskReg.GetField(MaskRegisterFields::RENDER_BACKGROUND) ||
+            m_MaskReg.GetField(MaskRegisterFields::RENDER_SPRITES)) {
+            m_VramAddress.fine_y = m_TramAddress.fine_y;
+            m_VramAddress.nametable_y = m_TramAddress.nametable_y;
+            m_VramAddress.coarse_y = m_TramAddress.coarse_y;
+        }
+    };
+
+    if (m_Cycle == 1) {
+        m_StatusReg.SetField(VERTICAL_BLANK, false);
+
+        m_StatusReg.SetField(SPRITE_OVERFLOW, false);
+
+        m_StatusReg.SetField(SPRITE_ZERO_HIT, false);
+
+        for (int i = 0; i < 8; ++i) {
+            m_SpriteShifterPatternLo[i] = 0;
+            m_SpriteShifterPatternHi[i] = 0;
+        }
+    } else if (m_Cycle >= 280 && m_Cycle < 305) {
+        TransferAddressY();
+    }
+}
+
+void Ppu::Clock() {
+
+    const bool isPreRenderScanline = m_ScanLine == -1;
+    if (isPreRenderScanline) {
+        DoPreRenderTick();
+    }
+
+    DoRenderTick();
 
     uint8_t bgPixel = 0x00;
     uint8_t bgPalette = 0x00;
@@ -582,7 +591,7 @@ void Ppu::Clock() {
                 // The left edge of the screen has specific switches to control
                 // its appearance. This is used to smooth inconsistencies when
                 // scrolling (since sprites x coord must be >= 0)
-                if (~(m_MaskReg.GetField(RENDER_BACKGROUND_LEFT) |
+                if (!(m_MaskReg.GetField(RENDER_BACKGROUND_LEFT) |
                       m_MaskReg.GetField(RENDER_SPRITES_LEFT))) {
                     if (m_Cycle >= 9 && m_Cycle < 258) {
                         m_StatusReg.SetField(SPRITE_ZERO_HIT, true);
@@ -608,7 +617,7 @@ void Ppu::Clock() {
             isFrameComplete = true;
         }
     }
-}  // namespace cpuemulator
+}
 
 void Ppu::UpdatePatternTableSprite(Sprite& sprite, unsigned int index,
                                    uint8_t palette) {

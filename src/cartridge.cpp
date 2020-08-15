@@ -28,28 +28,28 @@ Cartridge::Cartridge(const std::string& fileName) {
         Logger::Get().Log("CART", "File {} not found", fileName);
         return;
     }
-    ifs.read((char*)&header, sizeof(header));
+    ifs.read(reinterpret_cast<char*>(&header), sizeof(header));
 
     if (header.mapper1 & 0x04) {
         ifs.seekg(512, std::ios_base::cur);
     }
     m_MapperId = ((header.mapper2 >> 4) << 4) | (header.mapper1 >> 4);
 
-    mirror = (header.mapper1 & 0x01) ? VERTICAL : HORIZONTAL;
+    mirror = (header.mapper1 & 0x01) ? MIRROR::VERTICAL : MIRROR::HORIZONTAL;
 
     Logger::Get().Log("CART", "Mapper ID: {}", m_MapperId);
 
-    // TODO: support file types
+    // TODO(eariassoto): support file types
 
     // file type 1
     m_NumPrgBanks = header.prgRomChunks;
-    m_ProgramMemory.resize(m_NumPrgBanks * 16384);
-    ifs.read((char*)m_ProgramMemory.data(), m_ProgramMemory.size());
+    m_ProgramMemory.resize(static_cast<size_t>(m_NumPrgBanks) * 16384);
+    ifs.read(reinterpret_cast<char*>(m_ProgramMemory.data()), m_ProgramMemory.size());
     Logger::Get().Log("CART", "Number of program banks: {}", m_NumPrgBanks);
 
     m_NumChrBanks = header.chrRomChunks;
-    m_CharacterMemory.resize(m_NumChrBanks * 8192);
-    ifs.read((char*)m_CharacterMemory.data(), m_CharacterMemory.size());
+    m_CharacterMemory.resize(static_cast<size_t>(m_NumChrBanks) * 8192);
+    ifs.read(reinterpret_cast<char*>(m_CharacterMemory.data()), m_CharacterMemory.size());
     Logger::Get().Log("CART", "Number of character banks: {}", m_NumChrBanks);
 
     ifs.close();

@@ -187,16 +187,16 @@ void processInput(GLFWwindow* window, std::shared_ptr<Nes>& nesEmulator) {
         glfwSetWindowShouldClose(window, true);
     }
     nesEmulator->m_Controllers[0] = 0x00;
-    if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) {
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
         nesEmulator->m_Controllers[0] |= 0x80;
     }
-    if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
         nesEmulator->m_Controllers[0] |= 0x40;
     }
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
         nesEmulator->m_Controllers[0] |= 0x20;
     }
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
         nesEmulator->m_Controllers[0] |= 0x10;
     }
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {

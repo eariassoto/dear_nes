@@ -11,14 +11,14 @@ class Mapper;
 
 class Cartridge {
    public:
-    Cartridge(const std::string& fileName);
+    explicit Cartridge(const std::string& fileName);
 
-    enum MIRROR {
+    enum class MIRROR {
         HORIZONTAL,
         VERTICAL,
         ONESCREEN_LO,
         ONESCREEN_HI
-    } mirror = HORIZONTAL;
+    } mirror = MIRROR::HORIZONTAL;
 
    private:
     bool m_IsLoaded = false;

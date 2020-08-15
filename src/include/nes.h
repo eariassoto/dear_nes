@@ -1,11 +1,11 @@
 // Copyright (c) 2020 Emmanuel Arias
 #pragma once
+
 #include <cstdint>
 #include <memory>
 
 #include "include/ppu.h"
 #include "include/ui_config.h"
-#include "include/cpu_widget.h"
 #include "include/virtual6502.h"
 
 namespace cpuemulator {
@@ -14,7 +14,7 @@ class Cartridge;
 
 class Nes {
    public:
-    Nes(const UiConfig& uiConfig);
+    explicit Nes(const UiConfig& uiConfig);
     ~Nes();
 
     uint8_t m_Controllers[2] = {0};
@@ -61,6 +61,7 @@ class Nes {
         return address & 0x0007;
     }
 
-	CpuWidget<Nes> m_CpuWidget;
+    void RenderCpuWidget();
+    void RenderControllerWidget();
 };
 }  // namespace cpuemulator
