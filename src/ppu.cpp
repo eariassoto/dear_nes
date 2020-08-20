@@ -416,7 +416,8 @@ void Ppu::DoRenderTick() {
 
         if (m_Cycle == 340) {
             for (uint8_t i = 0; i < m_SpriteCount; i++) {
-                uint16_t sprite_pattern_addr_lo = 0;
+                uint8_t sprite_pattern_bits_lo, sprite_pattern_bits_hi;
+                uint16_t sprite_pattern_addr_lo, sprite_pattern_addr_hi;
 
                 // Determine the memory addresses that contain the byte of
                 // pattern data. We only need the lo pattern address, because
@@ -424,61 +425,62 @@ void Ppu::DoRenderTick() {
                 // address.
                 if (!m_ControlReg.GetField(SPRITE_SIZE)) {
                     // 8x8 Sprite Mode
-
-                    sprite_pattern_addr_lo =
-                        (m_ControlReg.GetField(PATTERN_SPRITE) << 12) |
-                        (m_SpriteScanLine[i].id << 4);
-
                     if (!(m_SpriteScanLine[i].attribute & 0x80)) {
                         // Sprite is NOT flipped vertically, i.e. normal
-                        sprite_pattern_addr_lo |=
+                        sprite_pattern_addr_lo =
+                            (m_ControlReg.GetField(PATTERN_SPRITE) << 12) |
+                            (m_SpriteScanLine[i].id << 4) |
                             (m_ScanLine - m_SpriteScanLine[i].y);
 
                     } else {
                         // Sprite is flipped vertically, i.e. upside down
-                        sprite_pattern_addr_lo |=
+                        sprite_pattern_addr_lo =
+                            (m_ControlReg.GetField(PATTERN_SPRITE) << 12) |
+                            (m_SpriteScanLine[i].id << 4) |
                             (7 - (m_ScanLine - m_SpriteScanLine[i].y));
                     }
 
                 } else {
                     // 8x16 Sprite Mode
-                    sprite_pattern_addr_lo =
-                        ((m_SpriteScanLine[i].id & 0x01) << 12);
                     if (!(m_SpriteScanLine[i].attribute & 0x80)) {
                         // Sprite is NOT flipped vertically, i.e. normal
-                        sprite_pattern_addr_lo |=
-                            ((m_ScanLine - m_SpriteScanLine[i].y) & 0x07);
                         if (m_ScanLine - m_SpriteScanLine[i].y < 8) {
                             // Reading Top half Tile
-                            sprite_pattern_addr_lo |=
-                                ((m_SpriteScanLine[i].id & 0xFE) << 4);
+                            sprite_pattern_addr_lo =
+                                ((m_SpriteScanLine[i].id & 0x01) << 12) |
+                                ((m_SpriteScanLine[i].id & 0xFE) << 4) |
+                                ((m_ScanLine - m_SpriteScanLine[i].y) & 0x07);
                         } else {
                             // Reading Bottom Half Tile
-                            sprite_pattern_addr_lo |=
-                                (((m_SpriteScanLine[i].id & 0xFE) + 1) << 4);
+                            sprite_pattern_addr_lo =
+                                ((m_SpriteScanLine[i].id & 0x01) << 12) |
+                                (((m_SpriteScanLine[i].id & 0xFE) + 1) << 4) |
+                                ((m_ScanLine - m_SpriteScanLine[i].y) & 0x07);
                         }
                     } else {
                         // Sprite is flipped vertically, i.e. upside down
-                        sprite_pattern_addr_lo |=
-                            (7 - (m_ScanLine - m_SpriteScanLine[i].y) & 0x07);
                         if (m_ScanLine - m_SpriteScanLine[i].y < 8) {
                             // Reading Top half Tile
-                            sprite_pattern_addr_lo |=
-                                (((m_SpriteScanLine[i].id & 0xFE) + 1) << 4);
+                            sprite_pattern_addr_lo =
+                                ((m_SpriteScanLine[i].id & 0x01) << 12) |
+                                (((m_SpriteScanLine[i].id & 0xFE) + 1) << 4) |
+                                (7 - (m_ScanLine - m_SpriteScanLine[i].y) &
+                                 0x07);
                         } else {
                             // Reading Bottom Half Tile
-                            sprite_pattern_addr_lo |=
-                                ((m_SpriteScanLine[i].id & 0xFE) << 4);
+                            sprite_pattern_addr_lo =
+                                ((m_SpriteScanLine[i].id & 0x01) << 12) |
+                                ((m_SpriteScanLine[i].id & 0xFE) << 4) |
+                                (7 - (m_ScanLine - m_SpriteScanLine[i].y) &
+                                 0x07);
                         }
                     }
                 }
 
-                uint16_t sprite_pattern_addr_hi = sprite_pattern_addr_lo + 8;
+                sprite_pattern_addr_hi = sprite_pattern_addr_lo + 8;
 
-                uint8_t sprite_pattern_bits_lo =
-                    PpuRead(sprite_pattern_addr_lo);
-                uint8_t sprite_pattern_bits_hi =
-                    PpuRead(sprite_pattern_addr_hi);
+                sprite_pattern_bits_lo = PpuRead(sprite_pattern_addr_lo);
+                sprite_pattern_bits_hi = PpuRead(sprite_pattern_addr_hi);
 
                 // If the sprite is flipped horizontally, we need to flip the
                 // pattern bytes.
@@ -487,7 +489,7 @@ void Ppu::DoRenderTick() {
                     // so 0b11100000 becomes 0b00000111. It's very
                     // clever, and stolen completely from here:
                     // https://stackoverflow.com/a/2602885
-                    auto flipbyte = [](uint8_t b) -> uint8_t {
+                    auto flipbyte = [](uint8_t b) {
                         b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
                         b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
                         b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
@@ -541,6 +543,7 @@ void Ppu::DoPreRenderTick() {
 }
 
 void Ppu::Clock() {
+
     const bool isPreRenderScanline = m_ScanLine == -1;
     if (isPreRenderScanline) {
         DoPreRenderTick();
