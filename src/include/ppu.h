@@ -83,6 +83,7 @@ namespace cpuemulator {
 
         void Update();
         void Render();
+        void RenderWidgets();
 
         uint8_t CpuRead(uint16_t address, bool readOnly = false);
 

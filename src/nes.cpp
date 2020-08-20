@@ -203,6 +203,7 @@ void Nes::RenderControllerWidget() {
 }
 
 void Nes::RenderWidgets() {
+    m_Ppu->RenderWidgets();
     RenderCpuWidget();
     RenderControllerWidget();
 }

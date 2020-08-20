@@ -2,6 +2,7 @@
 #include "include/ppu.h"
 
 #include <cassert>
+#include <imgui.h>
 
 #include "include/cartridge.h"
 #include "include/logger.h"
@@ -44,6 +45,31 @@ void Ppu::Render() {
     }
     m_SpritePalette.Render();
 }
+
+void Ppu::RenderWidgets() {
+
+    auto GetNametableString = [&](std::size_t nametableId) -> std::string {
+        std::string nametableStr = "";
+
+        for (int y = 0; y < 30; ++y) {
+            for (int x = 0; x < 32; ++x) {
+                nametableStr += fmt::format(
+                    "{:02x} ", m_Nametables[nametableId][y * 32 + x]);
+            }
+            nametableStr += '\n';
+        }
+        return nametableStr;
+    };
+
+    ImGui::Begin("Nametable #0");
+    ImGui::Text(GetNametableString(0).c_str());
+    ImGui::End();
+
+    ImGui::Begin("Nametable #1");
+    ImGui::Text(GetNametableString(1).c_str());
+    ImGui::End();
+}
+
 
 int Ppu::GetColorFromPalette(uint8_t palette, uint8_t pixel) {
     assert(pixel <= 3);
