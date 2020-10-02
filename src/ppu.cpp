@@ -1,8 +1,9 @@
 // Copyright (c) 2020 Emmanuel Arias
 #include "include/ppu.h"
 
-#include <cassert>
 #include <imgui.h>
+
+#include <cassert>
 
 #include "include/cartridge.h"
 #include "include/logger.h"
@@ -47,7 +48,6 @@ void Ppu::Render() {
 }
 
 void Ppu::RenderWidgets() {
-
     auto GetNametableString = [&](std::size_t nametableId) -> std::string {
         std::string nametableStr = "";
 
@@ -69,7 +69,6 @@ void Ppu::RenderWidgets() {
     ImGui::Text(GetNametableString(1).c_str());
     ImGui::End();
 }
-
 
 int Ppu::GetColorFromPalette(uint8_t palette, uint8_t pixel) {
     assert(pixel <= 3);
@@ -137,7 +136,7 @@ void Ppu::CpuWrite(uint16_t address, uint8_t data) {
             break;
         case 0x0005:  // Scroll
             if (m_AddressLatch == 0x00) {
-                fine_x = data & 0x07;
+                m_FineX = data & 0x07;
                 m_TramAddress.coarse_x = data >> 3;
                 m_AddressLatch = 0x01;
             } else {
@@ -293,22 +292,26 @@ void Ppu::DoRenderTick() {
     };
 
     auto LoadBackgroundShifters = [&]() {
-        bgShifterPatternLo = (bgShifterPatternLo & 0xFF00) | bgNextTileLsb;
-        bgShifterPatternHi = (bgShifterPatternHi & 0xFF00) | bgNextTileMsb;
+        m_BackgroundShifter.patternLo =
+            (m_BackgroundShifter.patternLo & 0xFF00) | m_NextBackgroundTileInfo.lsb;
+        m_BackgroundShifter.patternHi =
+            (m_BackgroundShifter.patternHi & 0xFF00) | m_NextBackgroundTileInfo.msb;
 
-        bgShifterAttribLo = (bgShifterAttribLo & 0xFF00) |
-                            ((bgNextTileAttribute & 0b01) ? 0xFF : 0x00);
-        bgShifterAttribHi = (bgShifterAttribHi & 0xFF00) |
-                            ((bgNextTileAttribute & 0b10) ? 0xFF : 0x00);
+        m_BackgroundShifter.attributeLo =
+            (m_BackgroundShifter.attributeLo & 0xFF00) |
+            ((m_NextBackgroundTileInfo.attribute & 0b01) ? 0xFF : 0x00);
+        m_BackgroundShifter.attributeHi =
+            (m_BackgroundShifter.attributeHi & 0xFF00) |
+            ((m_NextBackgroundTileInfo.attribute & 0b10) ? 0xFF : 0x00);
     };
 
     auto UpdateShifters = [&]() {
         if (m_MaskReg.GetField(RENDER_BACKGROUND)) {
-            bgShifterPatternLo <<= 1;
-            bgShifterPatternHi <<= 1;
+            m_BackgroundShifter.patternLo <<= 1;
+            m_BackgroundShifter.patternHi <<= 1;
 
-            bgShifterAttribLo <<= 1;
-            bgShifterAttribHi <<= 1;
+            m_BackgroundShifter.attributeLo <<= 1;
+            m_BackgroundShifter.attributeHi <<= 1;
         }
         if (m_MaskReg.GetField(RENDER_SPRITES) && m_Cycle >= 0 &&
             m_Cycle < 258) {
@@ -324,47 +327,47 @@ void Ppu::DoRenderTick() {
     };
 
     if (m_ScanLine >= -1 && m_ScanLine < 240) {
-        if (m_ScanLine == 0 && m_Cycle == 0) {
+        if (m_ScanLine == 0 && m_Cycle == 0) { // covered
             // "Odd Frame" cycle skip
             m_Cycle = 1;
         }
 
-        if ((m_Cycle >= 2 && m_Cycle < 258) ||
+        if ((m_Cycle >= 2 && m_Cycle < 258) || // covered
             (m_Cycle >= 321 && m_Cycle < 338)) {
             UpdateShifters();
 
             switch ((m_Cycle - 1) % 8) {
                 case 0:
                     LoadBackgroundShifters();
-                    bgNextTileId =
+                    m_NextBackgroundTileInfo.id =
                         PpuRead(0x2000 | (m_VramAddress.reg & 0x0FFF));
                     break;
                 case 2:
-                    bgNextTileAttribute =
+                    m_NextBackgroundTileInfo.attribute =
                         PpuRead(0x23C0 | (m_VramAddress.nametable_y << 11) |
                                 (m_VramAddress.nametable_x << 10) |
                                 ((m_VramAddress.coarse_y >> 2) << 3) |
                                 (m_VramAddress.coarse_x >> 2));
                     if (m_VramAddress.coarse_y & 0x02)
-                        bgNextTileAttribute >>= 4;
+                        m_NextBackgroundTileInfo.attribute >>= 4;
                     if (m_VramAddress.coarse_x & 0x02)
-                        bgNextTileAttribute >>= 2;
-                    bgNextTileAttribute &= 0x03;
+                        m_NextBackgroundTileInfo.attribute >>= 2;
+                    m_NextBackgroundTileInfo.attribute &= 0x03;
                     break;
                 case 4:
-                    bgNextTileLsb =
+                    m_NextBackgroundTileInfo.lsb =
                         PpuRead((m_ControlReg.GetField(
                                      ControlRegisterFields::PATTERN_BACKGROUND)
                                  << 12) +
-                                ((uint16_t)bgNextTileId << 4) +
+                                ((uint16_t)m_NextBackgroundTileInfo.id << 4) +
                                 (m_VramAddress.fine_y + 0));
                     break;
                 case 6:
-                    bgNextTileMsb =
+                    m_NextBackgroundTileInfo.msb =
                         PpuRead((m_ControlReg.GetField(
                                      ControlRegisterFields::PATTERN_BACKGROUND)
                                  << 12) +
-                                ((uint16_t)bgNextTileId << 4) +
+                                ((uint16_t)m_NextBackgroundTileInfo.id << 4) +
                                 (m_VramAddress.fine_y + 8));
                     break;
                 case 7:
@@ -382,7 +385,8 @@ void Ppu::DoRenderTick() {
         }
 
         if (m_Cycle == 338 || m_Cycle == 340) {
-            bgNextTileId = PpuRead(0x2000 | (m_VramAddress.reg & 0x0FFF));
+            m_NextBackgroundTileInfo.id =
+                PpuRead(0x2000 | (m_VramAddress.reg & 0x0FFF));
         }
 
         ////
@@ -414,7 +418,7 @@ void Ppu::DoRenderTick() {
             m_StatusReg.SetField(SPRITE_OVERFLOW, (m_SpriteCount > 8));
         }
 
-        if (m_Cycle == 340) {
+        if (m_Cycle == 340) { // covered
             for (uint8_t i = 0; i < m_SpriteCount; i++) {
                 uint16_t sprite_pattern_addr_lo = 0;
 
@@ -506,7 +510,7 @@ void Ppu::DoRenderTick() {
         }
     }
 
-    if (m_ScanLine == 241 && m_Cycle == 1) {
+    if (m_ScanLine == 241 && m_Cycle == 1) { // covered
         m_StatusReg.SetField(StatusRegisterFields::VERTICAL_BLANK, true);
         if (m_ControlReg.GetField(ControlRegisterFields::ENABLE_NMI)) {
             m_DoNMI = true;
@@ -551,15 +555,15 @@ void Ppu::Clock() {
     uint8_t bgPixel = 0x00;
     uint8_t bgPalette = 0x00;
     if (m_MaskReg.GetField(MaskRegisterFields::RENDER_BACKGROUND)) {
-        uint16_t bitMux = 0x8000 >> fine_x;
+        uint16_t bitMux = 0x8000 >> m_FineX;
 
-        uint8_t p0_pixel = (bgShifterPatternLo & bitMux) > 0;
-        uint8_t p1_pixel = (bgShifterPatternHi & bitMux) > 0;
+        uint8_t p0_pixel = (m_BackgroundShifter.patternLo & bitMux) > 0;
+        uint8_t p1_pixel = (m_BackgroundShifter.patternHi & bitMux) > 0;
 
         bgPixel = (p1_pixel << 1) | p0_pixel;
 
-        uint8_t bg_pal0 = (bgShifterAttribLo & bitMux) > 0;
-        uint8_t bg_pal1 = (bgShifterAttribHi & bitMux) > 0;
+        uint8_t bg_pal0 = (m_BackgroundShifter.attributeLo & bitMux) > 0;
+        uint8_t bg_pal1 = (m_BackgroundShifter.attributeHi & bitMux) > 0;
         bgPalette = (bg_pal1 << 1) | bg_pal0;
     }
 

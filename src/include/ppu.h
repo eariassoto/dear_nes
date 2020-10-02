@@ -138,6 +138,16 @@ namespace cpuemulator {
         /// https://wiki.nesdev.com/w/index.php/PPU_pattern_tables
         uint8_t m_PatternTables[2][4096] = { 0 };
 
+        // Data structures used for handling scrolling information.
+        // They are called Loopy after the user who explained them in detail
+        // https://wiki.nesdev.com/w/index.php/PPU_scrolling
+        // Further explanations can be found here:
+        // http://forums.nesdev.com/viewtopic.php?t=664
+        LoopyRegister m_VramAddress;
+        LoopyRegister m_TramAddress;
+
+        uint8_t m_FineX = 0x00;
+
         Sprite m_SpriteOutputScreen = Sprite{ "NES Screen", 256, 240, 2, 10, 10 };
 
         Sprite m_SpritePatternTables[2] = {
@@ -154,23 +164,28 @@ namespace cpuemulator {
         PpuRegister<StatusRegisterFields> m_StatusReg;
         PpuRegister<MaskRegisterFields> m_MaskReg;
         PpuRegister<ControlRegisterFields> m_ControlReg;
+
         uint8_t m_AddressLatch = 0x00;
+        
+        // Temporal cache to simulate 1 cycle delay when reading
+        // the PPU data
         uint8_t m_PpuDataBuffer = 0x00;
 
-        LoopyRegister m_VramAddress;
-        LoopyRegister m_TramAddress;
+        struct NextBackgroundTileInfo {
+            uint8_t id = 0x00;
+            uint8_t attribute = 0x00;
+            uint8_t lsb = 0x00;
+            uint8_t msb = 0x00;    
+        };
+        NextBackgroundTileInfo m_NextBackgroundTileInfo;
 
-        uint8_t fine_x = 0x00;
-
-        uint8_t bgNextTileId = 0x00;
-        uint8_t bgNextTileAttribute = 0x00;
-        uint8_t bgNextTileLsb = 0x00;
-        uint8_t bgNextTileMsb = 0x00;
-
-        uint16_t bgShifterPatternLo = 0x0000;
-        uint16_t bgShifterPatternHi = 0x0000;
-        uint16_t bgShifterAttribLo = 0x0000;
-        uint16_t bgShifterAttribHi = 0x0000;
+        struct BackgroundShifter {
+            uint16_t patternLo = 0x0000;
+            uint16_t patternHi = 0x0000;
+            uint16_t attributeLo = 0x0000;
+            uint16_t attributeHi = 0x0000;
+        };
+        BackgroundShifter m_BackgroundShifter;
 
         struct ObjectAttributeEntry {
             uint8_t y;
