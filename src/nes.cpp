@@ -7,10 +7,9 @@
 
 #include "include/cartridge.h"
 #include "include/logger.h"
+#include "include/ppu.h"
 
 namespace cpuemulator {
-
-using Ppu = Ppu2;
 
 Nes::Nes(const UiConfig& uiConfig)
     : m_UiConfig{uiConfig},

@@ -4,16 +4,15 @@
 #include <cstdint>
 #include <memory>
 
-#include "include/ppu2.h"
 #include "include/ui_config.h"
 #include "include/virtual6502.h"
 
 namespace cpuemulator {
 
 class Cartridge;
+class Ppu;
 
 class Nes {
-    using Ppu = Ppu2;
 
    public:
     explicit Nes(const UiConfig& uiConfig);
