@@ -9,6 +9,9 @@
 #include "include/logger.h"
 
 namespace cpuemulator {
+
+using Ppu = Ppu2;
+
 Nes::Nes(const UiConfig& uiConfig)
     : m_UiConfig{uiConfig},
       m_Virtual6502{new Virtual6502(this)},

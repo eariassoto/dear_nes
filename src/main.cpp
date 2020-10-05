@@ -22,7 +22,6 @@
 using Nes = cpuemulator::Nes;
 using FileManager = cpuemulator::FileManager;
 using Cartridge = cpuemulator::Cartridge;
-using Ppu = cpuemulator::Ppu;
 using Logger = cpuemulator::Logger;
 using UiConfig = cpuemulator::UiConfig;
 

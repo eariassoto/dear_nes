@@ -327,12 +327,12 @@ void Ppu::DoRenderTick() {
     };
 
     if (m_ScanLine >= -1 && m_ScanLine < 240) {
-        if (m_ScanLine == 0 && m_Cycle == 0) { // covered
+        if (m_ScanLine == 0 && m_Cycle == 0) { // moved
             // "Odd Frame" cycle skip
             m_Cycle = 1;
         }
 
-        if ((m_Cycle >= 2 && m_Cycle < 258) || // covered
+        if ((m_Cycle >= 2 && m_Cycle < 258) || // moved
             (m_Cycle >= 321 && m_Cycle < 338)) {
             UpdateShifters();
 
@@ -529,7 +529,7 @@ void Ppu::DoPreRenderTick() {
     };
 
     if (m_Cycle == 1) {
-        m_StatusReg.SetField(VERTICAL_BLANK, false);
+        m_StatusReg.SetField(VERTICAL_BLANK, false); // moved
 
         m_StatusReg.SetField(SPRITE_OVERFLOW, false);
 
@@ -540,7 +540,7 @@ void Ppu::DoPreRenderTick() {
             m_SpriteShifterPatternHi[i] = 0;
         }
     } else if (m_Cycle >= 280 && m_Cycle < 305) {
-        TransferAddressY();
+        TransferAddressY(); // moved
     }
 }
 
