@@ -1,18 +1,37 @@
 // Copyright (c) 2020 Emmanuel Arias
 #pragma once
-#include <cstdint>
-#include <functional>
-#include <memory>
 #include <array>
-
-#include "include/sprite.h"
-#include "include/ui_config.h"
+#include <cstdint>
+#include <memory>
 
 namespace cpuemulator {
 
+// Forward declaration
 class Cartridge;
 class Sprite;
 
+/// <summary>
+/// This struct makes the extraction of bit flags from a byte register easier.
+/// The template enum parameter will identify the flags by name and position.
+/// The position of a flag is counted from left to right.
+/// For example, the enum MyFlagEnum:
+///
+/// enum MyFlagEnum {
+///     FLAG_A = 0,
+///     FLAG_B = 2,
+///     FLAG_C = 6
+/// };
+/// Describes the register
+///
+///    0 0 0 0 0 0 0 0
+///      ^       ^   ^
+///      |       |   |
+///      +       +   +
+/// FLAG_C  FLAG_B   FLAG_A
+///
+/// </summary>
+/// <typeparam name="RegEnumType">Enum (0-7) that identifies bit flags within a
+/// byte</typeparam>
 template <typename RegEnumType>
 struct PpuRegister {
     bool GetField(RegEnumType field) const {
@@ -94,11 +113,9 @@ enum PpuAction {
 
 class Ppu {
    public:
-    Ppu(const UiConfig& uiConfig);
+    Ppu();
 
-    void Update();
-    void Render();
-    void RenderWidgets();
+    ~Ppu();
 
     uint8_t CpuRead(uint16_t address, bool readOnly = false);
 
@@ -107,8 +124,12 @@ class Ppu {
     void ConnectCatridge(const std::shared_ptr<Cartridge>& cartridge);
     void Clock();
 
-    void UpdatePatternTableSprite(Sprite& sprite, unsigned int index,
-                                  uint8_t palette);
+    uint8_t PpuRead(uint16_t address, bool readOnly = false);
+    void PpuWrite(uint16_t address, uint8_t data);
+
+    int GetColorFromPalette(uint8_t palette, uint8_t pixel);
+
+    const int* GetOutputScreen() const;
 
     // TODO: This should be private
     bool isFrameComplete = false;
@@ -120,11 +141,7 @@ class Ppu {
     uint8_t* m_OAMPtr = (uint8_t*)m_OAM;
 
    private:
-    const UiConfig& m_UiConfig;
-
     size_t GetNextState(std::array<PpuAction, 3>& nextActions);
-
-    int GetColorFromPalette(uint8_t palette, uint8_t pixel);
 
     void DoPpuActionPrerenderClear();
     void DoPpuActionPrerenderTransferY();
@@ -138,14 +155,13 @@ class Ppu {
     void DoPpuActionRenderUpdateSprites();
     void DoPpuActionRenderEndFrameRendering();
 
-    uint8_t PpuRead(uint16_t address, bool readOnly = false);
-    void PpuWrite(uint16_t address, uint8_t data);
-
     void UpdateShifters();
     void LoadBackgroundShifters();
     void IncrementScrollX();
     void TransferAddressX();
 
+    // TODO: Do not expose
+   public:
     /// PPU Nametables
     /// A nametable is a 1024 byte area of memory used by the PPU
     /// to lay out backgrounds. Each byte in the nametable controls
@@ -168,6 +184,7 @@ class Ppu {
     /// https://wiki.nesdev.com/w/index.php/PPU_pattern_tables
     uint8_t m_PatternTables[2][4096] = {0};
 
+   private:
     // Data structures used for handling scrolling information.
     // They are called Loopy after the user who explained them in detail
     // https://wiki.nesdev.com/w/index.php/PPU_scrolling
@@ -178,13 +195,7 @@ class Ppu {
 
     uint8_t m_FineX = 0x00;
 
-    Sprite m_SpriteOutputScreen = Sprite{"NES Screen", 256, 240, 2, 10, 10};
-
-    Sprite m_SpritePatternTables[2] = {
-        Sprite{"Pattern Table #0", 128, 128, 2, 542, 10},
-        Sprite{"Pattern Table #1", 128, 128, 2, 818, 10}};
-
-    Sprite m_SpritePalette{"Color Palettes", 9, 4, 30, 542, 310};
+    int* m_OutputScreen = nullptr;
 
     std::shared_ptr<Cartridge> m_Cartridge;
 

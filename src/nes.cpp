@@ -14,13 +14,15 @@ namespace cpuemulator {
 Nes::Nes(const UiConfig& uiConfig)
     : m_UiConfig{uiConfig},
       m_Virtual6502{new Virtual6502(this)},
-      m_Ppu{std::make_shared<Ppu>(uiConfig)} {
+      m_Ppu{new Ppu()},
+      m_PpuImguiWidget{m_UiConfig, m_Ppu} {
     memset(m_CpuRam, 0, 0x800);
 }
 
 Nes::~Nes() {
     delete m_Virtual6502;
     delete[] m_CpuRam;
+    delete m_Ppu;
 }
 
 uint64_t Nes::GetSystemClockCounter() const { return m_SystemClockCounter; }
@@ -205,7 +207,7 @@ void Nes::RenderControllerWidget() {
 }
 
 void Nes::RenderWidgets() {
-    m_Ppu->RenderWidgets();
+    m_PpuImguiWidget.RenderWidgets();
     RenderCpuWidget();
     RenderControllerWidget();
 }
@@ -222,8 +224,8 @@ void Nes::DoFrame() {
     m_Ppu->isFrameComplete = false;
 }
 
-void Nes::Update() { m_Ppu->Update(); }
+void Nes::Update() { m_PpuImguiWidget.Update(); }
 
-void Nes::Render() { m_Ppu->Render(); }
+void Nes::Render() { m_PpuImguiWidget.Render(); }
 
 }  // namespace cpuemulator

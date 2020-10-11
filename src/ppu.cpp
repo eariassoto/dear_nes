@@ -1,75 +1,25 @@
 // Copyright (c) 2020 Emmanuel Arias
 #include "include/ppu.h"
 
-#include <imgui.h>
-
 #include <cassert>
 
 #include "include/cartridge.h"
-// TODO check this and fmt include
 #include "include/logger.h"
 
 namespace cpuemulator {
 
-Ppu::Ppu(const UiConfig& uiConfig) : m_UiConfig{uiConfig} {}
+Ppu::Ppu() : m_OutputScreen{new int[256 * 240]} {}
 
-void Ppu::Update() {
-    m_SpriteOutputScreen.Update();
+Ppu::~Ppu() { delete m_OutputScreen; }
 
-    if (m_UiConfig.m_PpuShowPatternTable0) {
-        UpdatePatternTableSprite(m_SpritePatternTables[0], 0, 0);
-        m_SpritePatternTables[0].Update();
-    }
-    if (m_UiConfig.m_PpuShowPatternTable1) {
-        UpdatePatternTableSprite(m_SpritePatternTables[1], 1, 0);
-        m_SpritePatternTables[1].Update();
-    }
+int Ppu::GetColorFromPalette(uint8_t palette, uint8_t pixel) {
+    assert(pixel <= 3);
+    uint8_t data = PpuRead(0x3F00 + (palette << 2) + pixel) & 0x3F;
 
-    for (int p = 0; p < 8; ++p)  // For each palette
-    {
-        for (int s = 0; s < 4; ++s)  // For each index
-        {
-            const int coordX = (p > 3) ? s + 5 : s;
-            const int coordY = p % 4;
-            m_SpritePalette.SetPixel(coordX, coordY, GetColorFromPalette(p, s));
-        }
-    }
-    m_SpritePalette.Update();
+    return m_PalScreen[data];
 }
 
-void Ppu::Render() {
-    m_SpriteOutputScreen.Render();
-    if (m_UiConfig.m_PpuShowPatternTable0) {
-        m_SpritePatternTables[0].Render();
-    }
-    if (m_UiConfig.m_PpuShowPatternTable1) {
-        m_SpritePatternTables[1].Render();
-    }
-    m_SpritePalette.Render();
-}
-
-void Ppu::RenderWidgets() {
-    auto GetNametableString = [&](std::size_t nametableId) -> std::string {
-        std::string nametableStr = "";
-
-        for (int y = 0; y < 30; ++y) {
-            for (int x = 0; x < 32; ++x) {
-                nametableStr += fmt::format(
-                    "{:02x} ", m_Nametables[nametableId][y * 32 + x]);
-            }
-            nametableStr += '\n';
-        }
-        return nametableStr;
-    };
-
-    ImGui::Begin("Nametable #0");
-    ImGui::Text(GetNametableString(0).c_str());
-    ImGui::End();
-
-    ImGui::Begin("Nametable #1");
-    ImGui::Text(GetNametableString(1).c_str());
-    ImGui::End();
-}
+const int* Ppu::GetOutputScreen() const { return m_OutputScreen; }
 
 uint8_t Ppu::CpuRead(uint16_t address, bool readOnly) {
     uint8_t data = 0x00;
@@ -157,29 +107,6 @@ void Ppu::CpuWrite(uint16_t address, uint8_t data) {
             break;
         default:
             break;
-    }
-}
-
-void Ppu::UpdatePatternTableSprite(Sprite& sprite, unsigned int index,
-                                    uint8_t palette) {
-    for (uint16_t nTileX = 0; nTileX < 16; ++nTileX) {
-        for (uint16_t nTileY = 0; nTileY < 16; ++nTileY) {
-            uint16_t offset = nTileY * 256 + nTileX * 16;
-
-            for (uint16_t row = 0; row < 8; ++row) {
-                uint8_t tileLSB = PpuRead(index * 0x1000 + offset + row + 0);
-                uint8_t tileMSB = PpuRead(index * 0x1000 + offset + row + 8);
-                for (uint16_t col = 0; col < 8; ++col) {
-                    uint8_t pixel = static_cast<uint8_t>(tileLSB & 0b01) +
-                                    static_cast<uint8_t>((tileMSB << 1) & 0b10);
-                    tileLSB >>= 1;
-                    tileMSB >>= 1;
-
-                    sprite.SetPixel(nTileX * 8 + (7 - col), nTileY * 8 + row,
-                                    GetColorFromPalette(palette, pixel));
-                }
-            }
-        }
     }
 }
 
@@ -360,7 +287,7 @@ size_t Ppu::GetNextState(std::array<PpuAction, 3>& nextActions) {
 
         if (m_Cycle == 257) {
             nextActions[arrIndex++] =
-                
+
                 PpuAction::kRenderLoadShiftersAndTransferX;
         }
 
@@ -483,8 +410,13 @@ void Ppu::Clock() {
         }
     }
 
-    m_SpriteOutputScreen.SetPixel(m_Cycle - 1, m_ScanLine,
-                                  GetColorFromPalette(palette, pixel));
+    const int x = static_cast<int>(m_Cycle - 1);
+    const int y = static_cast<int>(m_ScanLine);
+    const int color = GetColorFromPalette(palette, pixel);
+    if (x >= 0 && x < 256 && y >= 0 && y < 240) {
+        const int position = (y * 256) + x;
+        m_OutputScreen[position] = color;
+    }
 
     ++m_Cycle;
     if (m_Cycle >= 341) {
@@ -495,13 +427,6 @@ void Ppu::Clock() {
             isFrameComplete = true;
         }
     }
-}
-
-int Ppu::GetColorFromPalette(uint8_t palette, uint8_t pixel) {
-    assert(pixel <= 3);
-    uint8_t data = PpuRead(0x3F00 + (palette << 2) + pixel) & 0x3F;
-
-    return m_PalScreen[data];
 }
 
 void Ppu::DoPpuActionPrerenderClear() {

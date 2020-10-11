@@ -5,6 +5,7 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
+#include <cstring>
 #include <string>
 
 #include "include/logger.h"
@@ -62,13 +63,19 @@ void Sprite::Render() {
 }
 
 void Sprite::SetPixel(int x, int y, int color) {
-    if (x < 0 || x >= static_cast<int>(m_Width) || y < 0 || y >= static_cast<int>(m_Height)) {
+    if (x < 0 || x >= static_cast<int>(m_Width) || y < 0 ||
+        y >= static_cast<int>(m_Height)) {
         return;
     }
 
     int* ptr = reinterpret_cast<int*>(m_TextureData);
     const int position = (y * m_Width) + x;
     ptr[position] = color;
+}
+
+void Sprite::CopyTextureFromArray(const int* intArray) {
+    memcpy(reinterpret_cast<void*>(m_TextureData),
+           reinterpret_cast<const void*>(intArray), m_Width * m_Height * sizeof(int));
 }
 
 }  // namespace cpuemulator
