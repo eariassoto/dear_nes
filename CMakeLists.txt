@@ -56,6 +56,8 @@ target_link_libraries(${PROJECT_NAME} ${LIBS})
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
+
 # Create virtual folders to make it look nicer in VS
 if(MSVC_IDE)
 	# Macro to preserve source files hierarchy in the IDE

@@ -245,7 +245,7 @@ void Ppu::PpuWrite(uint16_t address, uint8_t data) {
     }
 }
 
-void Ppu::ConnectCatridge(const std::shared_ptr<Cartridge>& cartridge) {
+void Ppu::ConnectCatridge(Cartridge* cartridge) {
     Logger::Get().Log("PPU", "Connecting cartridge");
     m_Cartridge = cartridge;
 }
