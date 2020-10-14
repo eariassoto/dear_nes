@@ -1,8 +1,6 @@
 // Copyright (c) 2020 Emmanuel Arias
 #include "include/ppu.h"
 
-#include <imgui.h>
-
 #include <cassert>
 
 #include "include/cartridge.h"
@@ -10,65 +8,9 @@
 
 namespace cpuemulator {
 
-Ppu::Ppu(const UiConfig& uiConfig) : m_UiConfig{uiConfig} {}
+Ppu::Ppu() : m_OutputScreen{new int[256 * 240]} {}
 
-void Ppu::Update() {
-    m_SpriteOutputScreen.Update();
-
-    if (m_UiConfig.m_PpuShowPatternTable0) {
-        UpdatePatternTableSprite(m_SpritePatternTables[0], 0, 0);
-        m_SpritePatternTables[0].Update();
-    }
-    if (m_UiConfig.m_PpuShowPatternTable1) {
-        UpdatePatternTableSprite(m_SpritePatternTables[1], 1, 0);
-        m_SpritePatternTables[1].Update();
-    }
-
-    for (int p = 0; p < 8; ++p)  // For each palette
-    {
-        for (int s = 0; s < 4; ++s)  // For each index
-        {
-            const int coordX = (p > 3) ? s + 5 : s;
-            const int coordY = p % 4;
-            m_SpritePalette.SetPixel(coordX, coordY, GetColorFromPalette(p, s));
-        }
-    }
-    m_SpritePalette.Update();
-}
-
-void Ppu::Render() {
-    m_SpriteOutputScreen.Render();
-    if (m_UiConfig.m_PpuShowPatternTable0) {
-        m_SpritePatternTables[0].Render();
-    }
-    if (m_UiConfig.m_PpuShowPatternTable1) {
-        m_SpritePatternTables[1].Render();
-    }
-    m_SpritePalette.Render();
-}
-
-void Ppu::RenderWidgets() {
-    auto GetNametableString = [&](std::size_t nametableId) -> std::string {
-        std::string nametableStr = "";
-
-        for (int y = 0; y < 30; ++y) {
-            for (int x = 0; x < 32; ++x) {
-                nametableStr += fmt::format(
-                    "{:02x} ", m_Nametables[nametableId][y * 32 + x]);
-            }
-            nametableStr += '\n';
-        }
-        return nametableStr;
-    };
-
-    ImGui::Begin("Nametable #0");
-    ImGui::Text(GetNametableString(0).c_str());
-    ImGui::End();
-
-    ImGui::Begin("Nametable #1");
-    ImGui::Text(GetNametableString(1).c_str());
-    ImGui::End();
-}
+Ppu::~Ppu() { delete m_OutputScreen; }
 
 int Ppu::GetColorFromPalette(uint8_t palette, uint8_t pixel) {
     assert(pixel <= 3);
@@ -76,6 +18,8 @@ int Ppu::GetColorFromPalette(uint8_t palette, uint8_t pixel) {
 
     return m_PalScreen[data];
 }
+
+const int* Ppu::GetOutputScreen() const { return m_OutputScreen; }
 
 uint8_t Ppu::CpuRead(uint16_t address, bool readOnly) {
     uint8_t data = 0x00;
@@ -166,6 +110,11 @@ void Ppu::CpuWrite(uint16_t address, uint8_t data) {
     }
 }
 
+void Ppu::ConnectCatridge(Cartridge* cartridge) {
+    Logger::Get().Log("PPU", "Connecting cartridge");
+    m_Cartridge = cartridge;
+}
+
 uint8_t Ppu::PpuRead(uint16_t address, bool readOnly) {
     uint8_t data = 0x00;
     address &= 0x3FFF;
@@ -245,312 +194,140 @@ void Ppu::PpuWrite(uint16_t address, uint8_t data) {
     }
 }
 
-void Ppu::ConnectCatridge(Cartridge* cartridge) {
-    Logger::Get().Log("PPU", "Connecting cartridge");
-    m_Cartridge = cartridge;
-}
-
-void Ppu::DoRenderTick() {
-    auto IncrementScrollX = [&]() {
-        if (m_MaskReg.GetField(MaskRegisterFields::RENDER_BACKGROUND) ||
-            m_MaskReg.GetField(MaskRegisterFields::RENDER_SPRITES)) {
-            if (m_VramAddress.coarse_x == 31) {
-                m_VramAddress.coarse_x = 0;
-                m_VramAddress.nametable_x = ~m_VramAddress.nametable_x;
+void Ppu::UpdateShifters() {
+    if (m_MaskReg.GetField(RENDER_BACKGROUND)) {
+        m_BackgroundShifter.patternLo <<= 1;
+        m_BackgroundShifter.patternHi <<= 1;
+        m_BackgroundShifter.attributeLo <<= 1;
+        m_BackgroundShifter.attributeHi <<= 1;
+    }
+    if (m_MaskReg.GetField(RENDER_SPRITES) && m_Cycle >= 0 && m_Cycle < 258) {
+        for (int i = 0; i < m_SpriteCount; ++i) {
+            if (m_SpriteScanLine[i].x > 0) {
+                --m_SpriteScanLine[i].x;
             } else {
-                m_VramAddress.coarse_x++;
+                m_SpriteShifterPatternLo[i] <<= 1;
+                m_SpriteShifterPatternHi[i] <<= 1;
             }
         }
-    };
+    }
+};
 
-    auto IncrementScrollY = [&]() {
-        if (m_MaskReg.GetField(MaskRegisterFields::RENDER_BACKGROUND) ||
-            m_MaskReg.GetField(MaskRegisterFields::RENDER_SPRITES)) {
-            if (m_VramAddress.fine_y < 7) {
-                m_VramAddress.fine_y++;
-            } else {
-                m_VramAddress.fine_y = 0;
+void Ppu::LoadBackgroundShifters() {
+    m_BackgroundShifter.patternLo =
+        (m_BackgroundShifter.patternLo & 0xFF00) | m_NextBackgroundTileInfo.lsb;
+    m_BackgroundShifter.patternHi =
+        (m_BackgroundShifter.patternHi & 0xFF00) | m_NextBackgroundTileInfo.msb;
 
-                if (m_VramAddress.coarse_y == 29) {
-                    m_VramAddress.coarse_y = 0;
-                    m_VramAddress.nametable_y = ~m_VramAddress.nametable_y;
-                } else if (m_VramAddress.coarse_y == 31) {
-                    m_VramAddress.coarse_y = 0;
-                } else {
-                    m_VramAddress.coarse_y++;
-                }
-            }
+    m_BackgroundShifter.attributeLo =
+        (m_BackgroundShifter.attributeLo & 0xFF00) |
+        ((m_NextBackgroundTileInfo.attribute & 0b01) ? 0xFF : 0x00);
+    m_BackgroundShifter.attributeHi =
+        (m_BackgroundShifter.attributeHi & 0xFF00) |
+        ((m_NextBackgroundTileInfo.attribute & 0b10) ? 0xFF : 0x00);
+};
+
+void Ppu::IncrementScrollX() {
+    if (m_MaskReg.GetField(MaskRegisterFields::RENDER_BACKGROUND) ||
+        m_MaskReg.GetField(MaskRegisterFields::RENDER_SPRITES)) {
+        if (m_VramAddress.coarse_x == 31) {
+            m_VramAddress.coarse_x = 0;
+            m_VramAddress.nametable_x = ~m_VramAddress.nametable_x;
+        } else {
+            m_VramAddress.coarse_x++;
         }
-    };
+    }
+};
 
-    auto TransferAddressX = [&]() {
-        if (m_MaskReg.GetField(MaskRegisterFields::RENDER_BACKGROUND) ||
-            m_MaskReg.GetField(MaskRegisterFields::RENDER_SPRITES)) {
-            m_VramAddress.nametable_x = m_TramAddress.nametable_x;
-            m_VramAddress.coarse_x = m_TramAddress.coarse_x;
+void Ppu::TransferAddressX() {
+    if (m_MaskReg.GetField(MaskRegisterFields::RENDER_BACKGROUND) ||
+        m_MaskReg.GetField(MaskRegisterFields::RENDER_SPRITES)) {
+        m_VramAddress.nametable_x = m_TramAddress.nametable_x;
+        m_VramAddress.coarse_x = m_TramAddress.coarse_x;
+    }
+};
+
+size_t Ppu::GetNextState(std::array<PpuAction, 3>& nextActions) {
+    /*
+        kPrerenderClear,
+        kPrerenderTransferY,
+        kRenderSkipOdd,
+        kRenderProcessNextTile,
+        kRenderIncrementScrollY,
+        kRenderLoadShiftersAndTransferX,
+        kRenderLoadNextBackgroundTile,
+        kRenderDoOAMTransfer,
+        kRenderUpdateSprites,
+        kRenderEndFrameRendering,
+        kStatesSize
+        */
+    size_t arrIndex = 0;
+    if (const bool isPreRenderScanline = m_ScanLine == -1;
+        isPreRenderScanline) {
+        if (m_Cycle == 1) {
+            nextActions[arrIndex++] = PpuAction::kPrerenderClear;
+        } else if (m_Cycle >= 280 && m_Cycle < 305) {
+            nextActions[arrIndex++] = PpuAction::kPrerenderTransferY;
         }
-    };
-
-    auto LoadBackgroundShifters = [&]() {
-        m_BackgroundShifter.patternLo =
-            (m_BackgroundShifter.patternLo & 0xFF00) | m_NextBackgroundTileInfo.lsb;
-        m_BackgroundShifter.patternHi =
-            (m_BackgroundShifter.patternHi & 0xFF00) | m_NextBackgroundTileInfo.msb;
-
-        m_BackgroundShifter.attributeLo =
-            (m_BackgroundShifter.attributeLo & 0xFF00) |
-            ((m_NextBackgroundTileInfo.attribute & 0b01) ? 0xFF : 0x00);
-        m_BackgroundShifter.attributeHi =
-            (m_BackgroundShifter.attributeHi & 0xFF00) |
-            ((m_NextBackgroundTileInfo.attribute & 0b10) ? 0xFF : 0x00);
-    };
-
-    auto UpdateShifters = [&]() {
-        if (m_MaskReg.GetField(RENDER_BACKGROUND)) {
-            m_BackgroundShifter.patternLo <<= 1;
-            m_BackgroundShifter.patternHi <<= 1;
-
-            m_BackgroundShifter.attributeLo <<= 1;
-            m_BackgroundShifter.attributeHi <<= 1;
-        }
-        if (m_MaskReg.GetField(RENDER_SPRITES) && m_Cycle >= 0 &&
-            m_Cycle < 258) {
-            for (int i = 0; i < m_SpriteCount; ++i) {
-                if (m_SpriteScanLine[i].x > 0) {
-                    --m_SpriteScanLine[i].x;
-                } else {
-                    m_SpriteShifterPatternLo[i] <<= 1;
-                    m_SpriteShifterPatternHi[i] <<= 1;
-                }
-            }
-        }
-    };
-
-    if (m_ScanLine >= -1 && m_ScanLine < 240) {
-        if (m_ScanLine == 0 && m_Cycle == 0) { // covered
-            // "Odd Frame" cycle skip
-            m_Cycle = 1;
-        }
-
-        if ((m_Cycle >= 2 && m_Cycle < 258) || // covered
+    }
+    if (m_ScanLine == 0 && m_Cycle == 0) {
+        nextActions[arrIndex++] = PpuAction::kRenderSkipOdd;
+    }
+    if (const bool isRenderScanline = m_ScanLine >= -1 && m_ScanLine < 240;
+        isRenderScanline) {
+        if ((m_Cycle >= 2 && m_Cycle < 258) ||
             (m_Cycle >= 321 && m_Cycle < 338)) {
-            UpdateShifters();
-
-            switch ((m_Cycle - 1) % 8) {
-                case 0:
-                    LoadBackgroundShifters();
-                    m_NextBackgroundTileInfo.id =
-                        PpuRead(0x2000 | (m_VramAddress.reg & 0x0FFF));
-                    break;
-                case 2:
-                    m_NextBackgroundTileInfo.attribute =
-                        PpuRead(0x23C0 | (m_VramAddress.nametable_y << 11) |
-                                (m_VramAddress.nametable_x << 10) |
-                                ((m_VramAddress.coarse_y >> 2) << 3) |
-                                (m_VramAddress.coarse_x >> 2));
-                    if (m_VramAddress.coarse_y & 0x02)
-                        m_NextBackgroundTileInfo.attribute >>= 4;
-                    if (m_VramAddress.coarse_x & 0x02)
-                        m_NextBackgroundTileInfo.attribute >>= 2;
-                    m_NextBackgroundTileInfo.attribute &= 0x03;
-                    break;
-                case 4:
-                    m_NextBackgroundTileInfo.lsb =
-                        PpuRead((m_ControlReg.GetField(
-                                     ControlRegisterFields::PATTERN_BACKGROUND)
-                                 << 12) +
-                                ((uint16_t)m_NextBackgroundTileInfo.id << 4) +
-                                (m_VramAddress.fine_y + 0));
-                    break;
-                case 6:
-                    m_NextBackgroundTileInfo.msb =
-                        PpuRead((m_ControlReg.GetField(
-                                     ControlRegisterFields::PATTERN_BACKGROUND)
-                                 << 12) +
-                                ((uint16_t)m_NextBackgroundTileInfo.id << 4) +
-                                (m_VramAddress.fine_y + 8));
-                    break;
-                case 7:
-                    IncrementScrollX();
-                    break;
-            }
+            nextActions[arrIndex++] = PpuAction::kRenderProcessNextTile;
         }
 
         if (m_Cycle == 256) {
-            IncrementScrollY();
+            nextActions[arrIndex++] = PpuAction::kRenderIncrementScrollY;
         }
+
         if (m_Cycle == 257) {
-            LoadBackgroundShifters();
-            TransferAddressX();
+            nextActions[arrIndex++] =
+
+                PpuAction::kRenderLoadShiftersAndTransferX;
         }
 
         if (m_Cycle == 338 || m_Cycle == 340) {
-            m_NextBackgroundTileInfo.id =
-                PpuRead(0x2000 | (m_VramAddress.reg & 0x0FFF));
+            nextActions[arrIndex++] = PpuAction::kRenderLoadNextBackgroundTile;
         }
-
-        ////
         if (m_Cycle == 257 && m_ScanLine >= 0) {
-            std::memset(m_SpriteScanLine, 0xFF,
-                        8 * sizeof(ObjectAttributeEntry));
-            m_SpriteCount = 0;
-
-            uint8_t nOAMEntry = 0;
-            m_SpriteZeroHitPossible = false;
-            while (nOAMEntry < 64 && m_SpriteCount < 9) {
-                int16_t diff =
-                    ((int16_t)m_ScanLine - (int16_t)m_OAM[nOAMEntry].y);
-                if (diff >= 0 && diff < (m_ControlReg.GetField(
-                                             ControlRegisterFields::SPRITE_SIZE)
-                                             ? 16
-                                             : 8)) {
-                    if (m_SpriteCount < 8) {
-                        if (nOAMEntry == 0) {
-                            m_SpriteZeroHitPossible = true;
-                        }
-                        memcpy(&m_SpriteScanLine[m_SpriteCount],
-                               &m_OAM[nOAMEntry], sizeof(ObjectAttributeEntry));
-                        ++m_SpriteCount;
-                    }
-                }
-                ++nOAMEntry;
-            }
-            m_StatusReg.SetField(SPRITE_OVERFLOW, (m_SpriteCount > 8));
+            nextActions[arrIndex++] = PpuAction::kRenderDoOAMTransfer;
         }
-
-        if (m_Cycle == 340) { // covered
-            for (uint8_t i = 0; i < m_SpriteCount; i++) {
-                uint16_t sprite_pattern_addr_lo = 0;
-
-                // Determine the memory addresses that contain the byte of
-                // pattern data. We only need the lo pattern address, because
-                // the hi pattern address is always offset by 8 from the lo
-                // address.
-                if (!m_ControlReg.GetField(SPRITE_SIZE)) {
-                    // 8x8 Sprite Mode
-
-                    sprite_pattern_addr_lo =
-                        (m_ControlReg.GetField(PATTERN_SPRITE) << 12) |
-                        (m_SpriteScanLine[i].id << 4);
-
-                    if (!(m_SpriteScanLine[i].attribute & 0x80)) {
-                        // Sprite is NOT flipped vertically, i.e. normal
-                        sprite_pattern_addr_lo |=
-                            (m_ScanLine - m_SpriteScanLine[i].y);
-
-                    } else {
-                        // Sprite is flipped vertically, i.e. upside down
-                        sprite_pattern_addr_lo |=
-                            (7 - (m_ScanLine - m_SpriteScanLine[i].y));
-                    }
-
-                } else {
-                    // 8x16 Sprite Mode
-                    sprite_pattern_addr_lo =
-                        ((m_SpriteScanLine[i].id & 0x01) << 12);
-                    if (!(m_SpriteScanLine[i].attribute & 0x80)) {
-                        // Sprite is NOT flipped vertically, i.e. normal
-                        sprite_pattern_addr_lo |=
-                            ((m_ScanLine - m_SpriteScanLine[i].y) & 0x07);
-                        if (m_ScanLine - m_SpriteScanLine[i].y < 8) {
-                            // Reading Top half Tile
-                            sprite_pattern_addr_lo |=
-                                ((m_SpriteScanLine[i].id & 0xFE) << 4);
-                        } else {
-                            // Reading Bottom Half Tile
-                            sprite_pattern_addr_lo |=
-                                (((m_SpriteScanLine[i].id & 0xFE) + 1) << 4);
-                        }
-                    } else {
-                        // Sprite is flipped vertically, i.e. upside down
-                        sprite_pattern_addr_lo |=
-                            (7 - (m_ScanLine - m_SpriteScanLine[i].y) & 0x07);
-                        if (m_ScanLine - m_SpriteScanLine[i].y < 8) {
-                            // Reading Top half Tile
-                            sprite_pattern_addr_lo |=
-                                (((m_SpriteScanLine[i].id & 0xFE) + 1) << 4);
-                        } else {
-                            // Reading Bottom Half Tile
-                            sprite_pattern_addr_lo |=
-                                ((m_SpriteScanLine[i].id & 0xFE) << 4);
-                        }
-                    }
-                }
-
-                uint16_t sprite_pattern_addr_hi = sprite_pattern_addr_lo + 8;
-
-                uint8_t sprite_pattern_bits_lo =
-                    PpuRead(sprite_pattern_addr_lo);
-                uint8_t sprite_pattern_bits_hi =
-                    PpuRead(sprite_pattern_addr_hi);
-
-                // If the sprite is flipped horizontally, we need to flip the
-                // pattern bytes.
-                if (m_SpriteScanLine[i].attribute & 0x40) {
-                    // This little lambda function "flips" a byte
-                    // so 0b11100000 becomes 0b00000111. It's very
-                    // clever, and stolen completely from here:
-                    // https://stackoverflow.com/a/2602885
-                    auto flipbyte = [](uint8_t b) -> uint8_t {
-                        b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
-                        b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
-                        b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
-                        return b;
-                    };
-
-                    sprite_pattern_bits_lo = flipbyte(sprite_pattern_bits_lo);
-                    sprite_pattern_bits_hi = flipbyte(sprite_pattern_bits_hi);
-                }
-
-                // Finally! We can load the pattern into our sprite shift
-                // registers ready for rendering on the next scanline
-                m_SpriteShifterPatternLo[i] = sprite_pattern_bits_lo;
-                m_SpriteShifterPatternHi[i] = sprite_pattern_bits_hi;
-            }
+        if (m_Cycle == 340) {
+            nextActions[arrIndex++] = PpuAction::kRenderUpdateSprites;
         }
     }
 
-    if (m_ScanLine == 241 && m_Cycle == 1) { // covered
-        m_StatusReg.SetField(StatusRegisterFields::VERTICAL_BLANK, true);
-        if (m_ControlReg.GetField(ControlRegisterFields::ENABLE_NMI)) {
-            m_DoNMI = true;
-        }
+    if (m_ScanLine == 241 && m_Cycle == 1) {  // covered
+        nextActions[arrIndex++] = PpuAction::kRenderEndFrameRendering;
     }
-}
-
-void Ppu::DoPreRenderTick() {
-    auto TransferAddressY = [&]() {
-        if (m_MaskReg.GetField(MaskRegisterFields::RENDER_BACKGROUND) ||
-            m_MaskReg.GetField(MaskRegisterFields::RENDER_SPRITES)) {
-            m_VramAddress.fine_y = m_TramAddress.fine_y;
-            m_VramAddress.nametable_y = m_TramAddress.nametable_y;
-            m_VramAddress.coarse_y = m_TramAddress.coarse_y;
-        }
-    };
-
-    if (m_Cycle == 1) {
-        m_StatusReg.SetField(VERTICAL_BLANK, false);
-
-        m_StatusReg.SetField(SPRITE_OVERFLOW, false);
-
-        m_StatusReg.SetField(SPRITE_ZERO_HIT, false);
-
-        for (int i = 0; i < 8; ++i) {
-            m_SpriteShifterPatternLo[i] = 0;
-            m_SpriteShifterPatternHi[i] = 0;
-        }
-    } else if (m_Cycle >= 280 && m_Cycle < 305) {
-        TransferAddressY();
-    }
+    return arrIndex;
 }
 
 void Ppu::Clock() {
-    const bool isPreRenderScanline = m_ScanLine == -1;
-    if (isPreRenderScanline) {
-        DoPreRenderTick();
-    }
+    static void (Ppu::*m_PpuActionsCallbacks[PpuAction::kPpuActionSize])() = {
+        &Ppu::DoPpuActionPrerenderClear,
+        &Ppu::DoPpuActionPrerenderTransferY,
+        &Ppu::DoPpuActionRenderSkipOdd,
+        &Ppu::DoPpuActionRenderProcessNextTile,
+        &Ppu::DoPpuActionRenderIncrementScrollY,
+        &Ppu::DoPpuActionRenderLoadShiftersAndTransferX,
+        &Ppu::DoPpuActionRenderLoadNextBackgroundTile,
+        &Ppu::DoPpuActionRenderDoOAMTransfer,
+        &Ppu::DoPpuActionRenderUpdateSprites,
+        &Ppu::DoPpuActionRenderEndFrameRendering,
+    };
 
-    DoRenderTick();
+    // TODO make 3 as a max const
+    static std::array<PpuAction, 3> nextActions;
+    size_t actions = GetNextState(nextActions);
+    assert(actions <= 3);
+    for (size_t i = 0; i < actions; i++) {
+        (this->*m_PpuActionsCallbacks[static_cast<int>(nextActions[i])])();
+    }
 
     uint8_t bgPixel = 0x00;
     uint8_t bgPalette = 0x00;
@@ -632,8 +409,13 @@ void Ppu::Clock() {
         }
     }
 
-    m_SpriteOutputScreen.SetPixel(m_Cycle - 1, m_ScanLine,
-                                  GetColorFromPalette(palette, pixel));
+    const int x = static_cast<int>(m_Cycle - 1);
+    const int y = static_cast<int>(m_ScanLine);
+    const int color = GetColorFromPalette(palette, pixel);
+    if (x >= 0 && x < 256 && y >= 0 && y < 240) {
+        const int position = (y * 256) + x;
+        m_OutputScreen[position] = color;
+    }
 
     ++m_Cycle;
     if (m_Cycle >= 341) {
@@ -646,26 +428,220 @@ void Ppu::Clock() {
     }
 }
 
-void Ppu::UpdatePatternTableSprite(Sprite& sprite, unsigned int index,
-                                   uint8_t palette) {
-    for (uint16_t nTileX = 0; nTileX < 16; ++nTileX) {
-        for (uint16_t nTileY = 0; nTileY < 16; ++nTileY) {
-            uint16_t offset = nTileY * 256 + nTileX * 16;
+void Ppu::DoPpuActionPrerenderClear() {
+    m_StatusReg.SetField(VERTICAL_BLANK, false);
 
-            for (uint16_t row = 0; row < 8; ++row) {
-                uint8_t tileLSB = PpuRead(index * 0x1000 + offset + row + 0);
-                uint8_t tileMSB = PpuRead(index * 0x1000 + offset + row + 8);
-                for (uint16_t col = 0; col < 8; ++col) {
-                    uint8_t pixel = static_cast<uint8_t>(tileLSB & 0b01) +
-                                    static_cast<uint8_t>((tileMSB << 1) & 0b10);
-                    tileLSB >>= 1;
-                    tileMSB >>= 1;
+    m_StatusReg.SetField(SPRITE_OVERFLOW, false);
 
-                    sprite.SetPixel(nTileX * 8 + (7 - col), nTileY * 8 + row,
-                                    GetColorFromPalette(palette, pixel));
+    m_StatusReg.SetField(SPRITE_ZERO_HIT, false);
+
+    for (int i = 0; i < 8; ++i) {
+        m_SpriteShifterPatternLo[i] = 0;
+        m_SpriteShifterPatternHi[i] = 0;
+    }
+}
+
+void Ppu::DoPpuActionPrerenderTransferY() {
+    if (m_MaskReg.GetField(MaskRegisterFields::RENDER_BACKGROUND) ||
+        m_MaskReg.GetField(MaskRegisterFields::RENDER_SPRITES)) {
+        m_VramAddress.fine_y = m_TramAddress.fine_y;
+        m_VramAddress.nametable_y = m_TramAddress.nametable_y;
+        m_VramAddress.coarse_y = m_TramAddress.coarse_y;
+    }
+}
+
+void Ppu::DoPpuActionRenderSkipOdd() {}
+
+void Ppu::DoPpuActionRenderProcessNextTile() {
+    UpdateShifters();
+
+    switch ((m_Cycle - 1) % 8) {
+        case 0:
+            LoadBackgroundShifters();
+            m_NextBackgroundTileInfo.id =
+                PpuRead(0x2000 | (m_VramAddress.reg & 0x0FFF));
+            break;
+        case 2:
+            m_NextBackgroundTileInfo.attribute =
+                PpuRead(0x23C0 | (m_VramAddress.nametable_y << 11) |
+                        (m_VramAddress.nametable_x << 10) |
+                        ((m_VramAddress.coarse_y >> 2) << 3) |
+                        (m_VramAddress.coarse_x >> 2));
+            if (m_VramAddress.coarse_y & 0x02)
+                m_NextBackgroundTileInfo.attribute >>= 4;
+            if (m_VramAddress.coarse_x & 0x02)
+                m_NextBackgroundTileInfo.attribute >>= 2;
+            m_NextBackgroundTileInfo.attribute &= 0x03;
+            break;
+        case 4:
+            m_NextBackgroundTileInfo.lsb =
+                PpuRead((m_ControlReg.GetField(
+                             ControlRegisterFields::PATTERN_BACKGROUND)
+                         << 12) +
+                        ((uint16_t)m_NextBackgroundTileInfo.id << 4) +
+                        (m_VramAddress.fine_y + 0));
+            break;
+        case 6:
+            m_NextBackgroundTileInfo.msb =
+                PpuRead((m_ControlReg.GetField(
+                             ControlRegisterFields::PATTERN_BACKGROUND)
+                         << 12) +
+                        ((uint16_t)m_NextBackgroundTileInfo.id << 4) +
+                        (m_VramAddress.fine_y + 8));
+            break;
+        case 7:
+            IncrementScrollX();
+            break;
+    }
+}
+
+void Ppu::DoPpuActionRenderIncrementScrollY() {
+    if (m_MaskReg.GetField(MaskRegisterFields::RENDER_BACKGROUND) ||
+        m_MaskReg.GetField(MaskRegisterFields::RENDER_SPRITES)) {
+        if (m_VramAddress.fine_y < 7) {
+            m_VramAddress.fine_y++;
+        } else {
+            m_VramAddress.fine_y = 0;
+
+            if (m_VramAddress.coarse_y == 29) {
+                m_VramAddress.coarse_y = 0;
+                m_VramAddress.nametable_y = ~m_VramAddress.nametable_y;
+            } else if (m_VramAddress.coarse_y == 31) {
+                m_VramAddress.coarse_y = 0;
+            } else {
+                m_VramAddress.coarse_y++;
+            }
+        }
+    }
+}
+
+void Ppu::DoPpuActionRenderLoadShiftersAndTransferX() {
+    LoadBackgroundShifters();
+    TransferAddressX();
+}
+
+void Ppu::DoPpuActionRenderLoadNextBackgroundTile() {
+    m_NextBackgroundTileInfo.id =
+        PpuRead(0x2000 | (m_VramAddress.reg & 0x0FFF));
+}
+
+void Ppu::DoPpuActionRenderDoOAMTransfer() {
+    std::memset(m_SpriteScanLine, 0xFF, 8 * sizeof(ObjectAttributeEntry));
+    m_SpriteCount = 0;
+
+    uint8_t nOAMEntry = 0;
+    m_SpriteZeroHitPossible = false;
+    while (nOAMEntry < 64 && m_SpriteCount < 9) {
+        int16_t diff = ((int16_t)m_ScanLine - (int16_t)m_OAM[nOAMEntry].y);
+        if (diff >= 0 &&
+            diff < (m_ControlReg.GetField(ControlRegisterFields::SPRITE_SIZE)
+                        ? 16
+                        : 8)) {
+            if (m_SpriteCount < 8) {
+                if (nOAMEntry == 0) {
+                    m_SpriteZeroHitPossible = true;
+                }
+                memcpy(&m_SpriteScanLine[m_SpriteCount], &m_OAM[nOAMEntry],
+                       sizeof(ObjectAttributeEntry));
+                ++m_SpriteCount;
+            }
+        }
+        ++nOAMEntry;
+    }
+    m_StatusReg.SetField(SPRITE_OVERFLOW, (m_SpriteCount > 8));
+}
+
+void Ppu::DoPpuActionRenderUpdateSprites() {
+    for (uint8_t i = 0; i < m_SpriteCount; i++) {
+        uint16_t sprite_pattern_addr_lo = 0;
+
+        // Determine the memory addresses that contain the byte of
+        // pattern data. We only need the lo pattern address, because
+        // the hi pattern address is always offset by 8 from the lo
+        // address.
+        if (!m_ControlReg.GetField(SPRITE_SIZE)) {
+            // 8x8 Sprite Mode
+
+            sprite_pattern_addr_lo =
+                (m_ControlReg.GetField(PATTERN_SPRITE) << 12) |
+                (m_SpriteScanLine[i].id << 4);
+
+            if (!(m_SpriteScanLine[i].attribute & 0x80)) {
+                // Sprite is NOT flipped vertically, i.e. normal
+                sprite_pattern_addr_lo |= (m_ScanLine - m_SpriteScanLine[i].y);
+
+            } else {
+                // Sprite is flipped vertically, i.e. upside down
+                sprite_pattern_addr_lo |=
+                    (7 - (m_ScanLine - m_SpriteScanLine[i].y));
+            }
+
+        } else {
+            // 8x16 Sprite Mode
+            sprite_pattern_addr_lo = ((m_SpriteScanLine[i].id & 0x01) << 12);
+            if (!(m_SpriteScanLine[i].attribute & 0x80)) {
+                // Sprite is NOT flipped vertically, i.e. normal
+                sprite_pattern_addr_lo |=
+                    ((m_ScanLine - m_SpriteScanLine[i].y) & 0x07);
+                if (m_ScanLine - m_SpriteScanLine[i].y < 8) {
+                    // Reading Top half Tile
+                    sprite_pattern_addr_lo |=
+                        ((m_SpriteScanLine[i].id & 0xFE) << 4);
+                } else {
+                    // Reading Bottom Half Tile
+                    sprite_pattern_addr_lo |=
+                        (((m_SpriteScanLine[i].id & 0xFE) + 1) << 4);
+                }
+            } else {
+                // Sprite is flipped vertically, i.e. upside down
+                sprite_pattern_addr_lo |=
+                    (7 - (m_ScanLine - m_SpriteScanLine[i].y) & 0x07);
+                if (m_ScanLine - m_SpriteScanLine[i].y < 8) {
+                    // Reading Top half Tile
+                    sprite_pattern_addr_lo |=
+                        (((m_SpriteScanLine[i].id & 0xFE) + 1) << 4);
+                } else {
+                    // Reading Bottom Half Tile
+                    sprite_pattern_addr_lo |=
+                        ((m_SpriteScanLine[i].id & 0xFE) << 4);
                 }
             }
         }
+
+        uint16_t sprite_pattern_addr_hi = sprite_pattern_addr_lo + 8;
+
+        uint8_t sprite_pattern_bits_lo = PpuRead(sprite_pattern_addr_lo);
+        uint8_t sprite_pattern_bits_hi = PpuRead(sprite_pattern_addr_hi);
+
+        // If the sprite is flipped horizontally, we need to flip the
+        // pattern bytes.
+        if (m_SpriteScanLine[i].attribute & 0x40) {
+            // This little lambda function "flips" a byte
+            // so 0b11100000 becomes 0b00000111. It's very
+            // clever, and stolen completely from here:
+            // https://stackoverflow.com/a/2602885
+            auto flipbyte = [](uint8_t b) -> uint8_t {
+                b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
+                b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
+                b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
+                return b;
+            };
+
+            sprite_pattern_bits_lo = flipbyte(sprite_pattern_bits_lo);
+            sprite_pattern_bits_hi = flipbyte(sprite_pattern_bits_hi);
+        }
+
+        // Finally! We can load the pattern into our sprite shift
+        // registers ready for rendering on the next scanline
+        m_SpriteShifterPatternLo[i] = sprite_pattern_bits_lo;
+        m_SpriteShifterPatternHi[i] = sprite_pattern_bits_hi;
+    }
+}
+
+void Ppu::DoPpuActionRenderEndFrameRendering() {
+    m_StatusReg.SetField(StatusRegisterFields::VERTICAL_BLANK, true);
+    if (m_ControlReg.GetField(ControlRegisterFields::ENABLE_NMI)) {
+        m_DoNMI = true;
     }
 }
 

@@ -3,16 +3,18 @@
 
 #include <cstdint>
 
-#include "include/ppu.h"
 #include "include/ui_config.h"
 #include "include/virtual6502.h"
+#include "include/ppu_imgui_widgets.h"
 #include "include/imgui_cartridge_explorer.h"
 
 namespace cpuemulator {
 
 class Cartridge;
+class Ppu;
 
 class Nes {
+
    public:
     explicit Nes(const UiConfig& uiConfig);
     ~Nes();
@@ -46,6 +48,8 @@ class Nes {
     Virtual6502<Nes>* m_Virtual6502 = nullptr;
 
     Ppu* m_Ppu = nullptr;
+
+    PpuImguiWidget m_PpuImguiWidget;
 
     uint32_t m_SystemClockCounter = 0;
 

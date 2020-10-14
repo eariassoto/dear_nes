@@ -19,6 +19,8 @@ class Sprite {
 
     void SetPixel(int x, int y, int color);
 
+    void CopyTextureFromArray(const int* intArray);
+
    private:
     std::string m_Name;
     unsigned int m_Width = 0;
