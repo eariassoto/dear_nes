@@ -1,2 +1,5 @@
 #pragma once
 #define ROOT_DIR "@CMAKE_SOURCE_DIR@/"
+
+#define CAT(A, B)   A##B
+#define WSTRING(A)  CAT(L, A)

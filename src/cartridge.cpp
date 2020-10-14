@@ -8,7 +8,29 @@
 #include "include/mapper_000.h"
 
 namespace cpuemulator {
+
 Cartridge::Cartridge(const std::string& fileName) {
+    std::ifstream ifs;
+    ifs.open(ROOT_DIR "res/roms/" + fileName, std::ifstream::binary);
+    if (!ifs.is_open()) {
+        Logger::Get().Log("CART", "File {} not found", fileName);
+        return;
+    }
+    ConstructFromFile(ifs);
+}
+
+// TODO: This should be Windows only
+Cartridge::Cartridge(const std::wstring& fileName) {
+    std::ifstream ifs;
+    ifs.open(fileName, std::ifstream::binary);
+    if (!ifs.is_open()) {
+        Logger::Get().Log("CART", "File not found");
+        return;
+    }
+    ConstructFromFile(ifs);
+}
+
+void Cartridge::ConstructFromFile(std::ifstream& ifs) {
     // iNES Format
     struct Header {
         char name[4];
@@ -21,13 +43,6 @@ Cartridge::Cartridge(const std::string& fileName) {
         uint8_t tv_system2;
         char unused[5];
     } header;
-
-    std::ifstream ifs;
-    ifs.open(ROOT_DIR "res/roms/" + fileName, std::ifstream::binary);
-    if (!ifs.is_open()) {
-        Logger::Get().Log("CART", "File {} not found", fileName);
-        return;
-    }
     ifs.read(reinterpret_cast<char*>(&header), sizeof(header));
 
     if (header.mapper1 & 0x04) {
@@ -44,12 +59,14 @@ Cartridge::Cartridge(const std::string& fileName) {
     // file type 1
     m_NumPrgBanks = header.prgRomChunks;
     m_ProgramMemory.resize(static_cast<size_t>(m_NumPrgBanks) * 16384);
-    ifs.read(reinterpret_cast<char*>(m_ProgramMemory.data()), m_ProgramMemory.size());
+    ifs.read(reinterpret_cast<char*>(m_ProgramMemory.data()),
+             m_ProgramMemory.size());
     Logger::Get().Log("CART", "Number of program banks: {}", m_NumPrgBanks);
 
     m_NumChrBanks = header.chrRomChunks;
     m_CharacterMemory.resize(static_cast<size_t>(m_NumChrBanks) * 8192);
-    ifs.read(reinterpret_cast<char*>(m_CharacterMemory.data()), m_CharacterMemory.size());
+    ifs.read(reinterpret_cast<char*>(m_CharacterMemory.data()),
+             m_CharacterMemory.size());
     Logger::Get().Log("CART", "Number of character banks: {}", m_NumChrBanks);
 
     ifs.close();
@@ -66,8 +83,7 @@ Cartridge::Cartridge(const std::string& fileName) {
     }
     if (m_Mapper != nullptr) {
         m_IsLoaded = true;
-        Logger::Get().Log("CART", "Cartridge {} intialized successfully",
-                          fileName);
+        Logger::Get().Log("CART", "Cartridge intialized successfully");
     }
 }
 

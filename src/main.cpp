@@ -7,7 +7,6 @@
 #include <imgui_impl_opengl3.h>
 // clang-format on
 #include <iostream>
-#include <memory>
 #include <sstream>
 #include <chrono>
 #include <thread>
@@ -20,13 +19,12 @@
 #include "include/ui_config.h"
 
 using Nes = cpuemulator::Nes;
-using FileManager = cpuemulator::FileManager;
 using Cartridge = cpuemulator::Cartridge;
 using Logger = cpuemulator::Logger;
 using UiConfig = cpuemulator::UiConfig;
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow* window, std::shared_ptr<Nes>& nes);
+void processInput(GLFWwindow* window, Nes* nes);
 
 void RenderUISettingsWidget(UiConfig* uiConfig) {
     uiConfig->ResetEvents();
@@ -72,11 +70,6 @@ void RenderUISettingsWidget(UiConfig* uiConfig) {
 }
 
 int main(int argc, char* argv[]) {
-    if (argc < 2) {
-        std::cout << "Usage nes-emulator.exe [path/to/rom]\n";
-        return 1;
-    }
-
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -107,14 +100,14 @@ int main(int argc, char* argv[]) {
     ImGui_ImplOpenGL3_Init(NULL);
     ImGui::StyleColorsDark();
 
-    std::shared_ptr<Cartridge> cartridge = std::make_shared<Cartridge>(argv[1]);
-    if (!cartridge->IsLoaded()) {
-        return 1;
+    Nes* nesEmulator = new Nes(uiConfig);
+
+    if (argc > 1) {
+        Cartridge* cartridge = new Cartridge(argv[1]);
+        if (cartridge->IsLoaded()) {
+            nesEmulator->InsertCatridge(cartridge);
+        }
     }
-
-    std::shared_ptr<Nes> nesEmulator = std::make_shared<Nes>(uiConfig);
-
-    nesEmulator->InsertCatridge(cartridge);
 
     nesEmulator->Reset();
 
@@ -169,6 +162,8 @@ int main(int argc, char* argv[]) {
     }
 
     logger.Stop();
+    delete nesEmulator;
+
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
@@ -181,7 +176,7 @@ void framebufferSizeCallback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-void processInput(GLFWwindow* window, std::shared_ptr<Nes>& nesEmulator) {
+void processInput(GLFWwindow* window, Nes* nesEmulator) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }

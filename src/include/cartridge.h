@@ -12,6 +12,7 @@ class Mapper;
 class Cartridge {
    public:
     explicit Cartridge(const std::string& fileName);
+    explicit Cartridge(const std::wstring& fileName);
 
     enum class MIRROR {
         HORIZONTAL,
@@ -29,6 +30,8 @@ class Cartridge {
     std::vector<uint8_t> m_CharacterMemory;
 
     std::shared_ptr<Mapper> m_Mapper;
+
+    void ConstructFromFile(std::ifstream& ifs);
 
    public:
     bool IsLoaded() const { return m_IsLoaded; }

@@ -2,7 +2,6 @@
 #pragma once
 #include <array>
 #include <cstdint>
-#include <memory>
 
 namespace cpuemulator {
 
@@ -121,7 +120,7 @@ class Ppu {
 
     void CpuWrite(uint16_t address, uint8_t data);
 
-    void ConnectCatridge(const std::shared_ptr<Cartridge>& cartridge);
+    void ConnectCatridge(Cartridge* cartridge);
     void Clock();
 
     uint8_t PpuRead(uint16_t address, bool readOnly = false);
@@ -197,7 +196,7 @@ class Ppu {
 
     int* m_OutputScreen = nullptr;
 
-    std::shared_ptr<Cartridge> m_Cartridge;
+    Cartridge* m_Cartridge = nullptr;
 
     int16_t m_ScanLine = 0;
     int16_t m_Cycle = 0;

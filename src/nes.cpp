@@ -22,6 +22,7 @@ Nes::Nes(const UiConfig& uiConfig)
 Nes::~Nes() {
     delete m_Virtual6502;
     delete[] m_CpuRam;
+    delete m_Cartridge;
     delete m_Ppu;
 }
 
@@ -57,11 +58,12 @@ uint8_t Nes::CpuRead(uint16_t address, bool isReadOnly) {
     return data;
 }
 
-void Nes::InsertCatridge(const std::shared_ptr<Cartridge>& cartridge) {
+void Nes::InsertCatridge(Cartridge* cartridge) {
     Logger::Get().Log("BUS", "Inserting cartridge");
     m_Cartridge = cartridge;
 
     m_Ppu->ConnectCatridge(cartridge);
+    m_IsCartridgeLoaded = true;
 }
 
 void Nes::Reset() {
@@ -210,6 +212,7 @@ void Nes::RenderWidgets() {
     m_PpuImguiWidget.RenderWidgets();
     RenderCpuWidget();
     RenderControllerWidget();
+    m_CartridgeExplorer.RenderWidgets();
 }
 
 void Nes::DoFrame() {
@@ -227,5 +230,7 @@ void Nes::DoFrame() {
 void Nes::Update() { m_PpuImguiWidget.Update(); }
 
 void Nes::Render() { m_PpuImguiWidget.Render(); }
+
+bool Nes::IsCartridgeLoaded() const { return m_IsCartridgeLoaded; }
 
 }  // namespace cpuemulator

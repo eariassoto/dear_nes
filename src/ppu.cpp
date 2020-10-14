@@ -110,7 +110,7 @@ void Ppu::CpuWrite(uint16_t address, uint8_t data) {
     }
 }
 
-void Ppu::ConnectCatridge(const std::shared_ptr<Cartridge>& cartridge) {
+void Ppu::ConnectCatridge(Cartridge* cartridge) {
     Logger::Get().Log("PPU", "Connecting cartridge");
     m_Cartridge = cartridge;
 }
@@ -198,7 +198,6 @@ void Ppu::UpdateShifters() {
     if (m_MaskReg.GetField(RENDER_BACKGROUND)) {
         m_BackgroundShifter.patternLo <<= 1;
         m_BackgroundShifter.patternHi <<= 1;
-
         m_BackgroundShifter.attributeLo <<= 1;
         m_BackgroundShifter.attributeHi <<= 1;
     }
