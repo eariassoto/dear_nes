@@ -1,7 +1,6 @@
 // Copyright (c) 2020 Emmanuel Arias
 #pragma once
 #include <cstdint>
-#include <memory>
 
 #include "include/sprite.h"
 #include "include/ui_config.h"
@@ -89,7 +88,7 @@ namespace cpuemulator {
 
         void CpuWrite(uint16_t address, uint8_t data);
 
-        void ConnectCatridge(const std::shared_ptr<Cartridge>& cartridge);
+        void ConnectCatridge(Cartridge* cartridge);
         void Clock();
 
         void UpdatePatternTableSprite(Sprite& sprite, unsigned int index,
@@ -156,7 +155,7 @@ namespace cpuemulator {
 
         Sprite m_SpritePalette{ "Color Palettes", 9, 4, 30, 542, 310 };
 
-        std::shared_ptr<Cartridge> m_Cartridge;
+        Cartridge* m_Cartridge;
 
         int16_t m_ScanLine = 0;
         int16_t m_Cycle = 0;
