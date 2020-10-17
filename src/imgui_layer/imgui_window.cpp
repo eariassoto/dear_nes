@@ -3,13 +3,11 @@
 
 #include <imgui.h>
 
-ImGuiWindow::ImGuiWindow() {}
-
-ImGuiWindow::~ImGuiWindow() {}
-
 void ImGuiWindow::Update() {}
 
-void ImGuiWindow::Show() {}
+void ImGuiWindow::Render() {}
+
+bool ImGuiWindow::ShouldShow() const { return m_Show; }
 
 bool ImGuiWindow::Begin(const std::string& name) {
     return ImGui::Begin(name.c_str(), &m_Show);

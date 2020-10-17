@@ -22,6 +22,6 @@ class ImGuiWindowManager {
     std::vector<ImGuiWindow*> m_Windows;
     void ShowDockSpace(bool* p_open);
     void SetStyle();
-    void UpdateWindows();
+    void RenderWindows();
     void DeleteWindows();
 };

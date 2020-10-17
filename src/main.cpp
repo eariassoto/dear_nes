@@ -69,7 +69,7 @@ void RenderUISettingsWidget(UiConfig* uiConfig) {
     ImGui::End();
 }
 
-int main_(int argc, char* argv[]) {
+int main3(int argc, char* argv[]) {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);

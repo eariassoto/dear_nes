@@ -6,13 +6,15 @@ struct GLFWwindow;
 
 class ImGuiWindow {
    public:
-    ImGuiWindow();
-    virtual ~ImGuiWindow();
+    ImGuiWindow() = default;
+    virtual ~ImGuiWindow() = default;
+
     virtual void Update();
-    void Show();
+    virtual void Render();
+    bool ShouldShow() const;
 
    protected:
-    virtual bool Begin(const std::string& name);
+    bool Begin(const std::string& name);
     void End();
     bool m_Show = true;
 };

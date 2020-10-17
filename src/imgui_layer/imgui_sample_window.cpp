@@ -3,7 +3,7 @@
 
 #include <imgui.h>
 
-void IGStartupWindow::Update() {
+void IGStartupWindow::Render() {
     if (m_Show) {
         if (!Begin(m_WindowName)) {
             End();

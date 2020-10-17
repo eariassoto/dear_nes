@@ -10,6 +10,8 @@
 
 #include "include/imgui_layer/imgui_sample_window.h"
 #include "include/imgui_layer/imgui_window_manager.h"
+#include "include/imgui_layer/imgui_nes_screen_window.h"
+#include "include/imgui_layer/imgui_nes_status_window.h"
 
 // Forward declaration
 void framebufferSizeCallback2(GLFWwindow* window, int width, int height);
@@ -21,7 +23,7 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    //UiConfig uiConfig;
+    // UiConfig uiConfig;
     int screenWidth = 1250;
     int screenHeight = 800;
     GLFWwindow* window =
@@ -43,7 +45,9 @@ int main() {
 
     ImGuiWindowManager uiManager;
     uiManager.Initialize(window);
-    uiManager.AddWindow(new IGStartupWindow());
+    uiManager.AddWindow(new ImGuiNesScreenWindow());
+    ImGuiNesStatusWindow* nesStatusWindow = dynamic_cast<ImGuiNesStatusWindow*>(
+        uiManager.AddWindow(new ImGuiNesStatusWindow()));
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -51,14 +55,13 @@ int main() {
         processInput2(window);
 
         uiManager.Update();
-        
         uiManager.Render();
 
         glfwSwapBuffers(window);
     }
 
-    //logger.Stop();
-    //delete nesEmulator;
+    // logger.Stop();
+    // delete nesEmulator;
 
     // Cleanup
     uiManager.Shutdown();
@@ -69,6 +72,4 @@ void framebufferSizeCallback2(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-void processInput2(GLFWwindow* window) {
-    
-}
+void processInput2(GLFWwindow* window) {}

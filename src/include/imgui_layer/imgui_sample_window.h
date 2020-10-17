@@ -5,7 +5,7 @@
 
 class IGStartupWindow : public ImGuiWindow {
    public:
-    virtual void Update() override;
+    virtual void Render() override;
 
    private:
     const std::string m_WindowName = "Startup";

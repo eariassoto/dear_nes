@@ -43,6 +43,12 @@ void ImGuiWindowManager::Shutdown() {
 ImGuiWindowManager::~ImGuiWindowManager() { DeleteWindows(); }
 
 void ImGuiWindowManager::Update() {
+    for (ImGuiWindow* window : m_Windows) {
+        window->Update();
+    }
+}
+
+void ImGuiWindowManager::Render() {
     bool show = true;
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -51,7 +57,7 @@ void ImGuiWindowManager::Update() {
 
     ShowDockSpace(&show);
 
-    UpdateWindows();
+    RenderWindows();
 
     ImGui::Render();
 
@@ -61,9 +67,6 @@ void ImGuiWindowManager::Update() {
         ImGui::RenderPlatformWindowsDefault();
         glfwMakeContextCurrent(backup_current_context);
     }
-}
-void ImGuiWindowManager::Render() {
-    ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
@@ -198,9 +201,9 @@ void ImGuiWindowManager::SetStyle() {
     style->WindowRounding = 4.0f;
 }
 
-void ImGuiWindowManager::UpdateWindows() {
+void ImGuiWindowManager::RenderWindows() {
     for (ImGuiWindow* window : m_Windows) {
-        window->Update();
+        window->Render();
     }
 }
 void ImGuiWindowManager::DeleteWindows() {
