@@ -12,6 +12,7 @@
 #include "include/imgui_layer/imgui_window_manager.h"
 #include "include/imgui_layer/imgui_nes_screen_window.h"
 #include "include/imgui_layer/imgui_nes_status_window.h"
+#include "include/imgui_layer/imgui_nes_cpu_window.h"
 #include "include/nes.h"
 #include "include/cartridge.h"
 #include "include/global_nes.h"
@@ -75,6 +76,7 @@ int main(int argc, char* argv[]) {
     uiManager.AddWindow(new ImGuiNesScreenWindow());
     ImGuiNesStatusWindow* nesStatusWindow = dynamic_cast<ImGuiNesStatusWindow*>(
         uiManager.AddWindow(new ImGuiNesStatusWindow()));
+    uiManager.AddWindow(new ImGuiNesCpuWindow());
 
     using clock = std::chrono::high_resolution_clock;
     using namespace std::chrono;
@@ -119,4 +121,34 @@ void framebufferSizeCallback2(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-void processInput2(GLFWwindow* window) {}
+void processInput2(GLFWwindow* window) {
+    Nes* nesEmulator = g_GetGlobalNes();
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        glfwSetWindowShouldClose(window, true);
+    }
+    nesEmulator->m_Controllers[0] = 0x00;
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        nesEmulator->m_Controllers[0] |= 0x80;
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        nesEmulator->m_Controllers[0] |= 0x40;
+    }
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+        nesEmulator->m_Controllers[0] |= 0x20;
+    }
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        nesEmulator->m_Controllers[0] |= 0x10;
+    }
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+        nesEmulator->m_Controllers[0] |= 0x08;
+    }
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+        nesEmulator->m_Controllers[0] |= 0x04;
+    }
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+        nesEmulator->m_Controllers[0] |= 0x02;
+    }
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+        nesEmulator->m_Controllers[0] |= 0x01;
+    }
+}

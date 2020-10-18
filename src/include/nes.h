@@ -37,6 +37,7 @@ class Nes {
 
     // TODO: provide api and make it private
     Ppu* m_Ppu = nullptr;
+    Virtual6502<Nes>* m_Virtual6502 = nullptr;
 
    private:
 
@@ -45,8 +46,6 @@ class Nes {
     Cartridge* m_Cartridge = nullptr;
 
     bool m_IsCartridgeLoaded = false;
-
-    Virtual6502<Nes>* m_Virtual6502 = nullptr;
 
     uint32_t m_SystemClockCounter = 0;
 

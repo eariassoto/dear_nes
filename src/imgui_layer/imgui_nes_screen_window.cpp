@@ -13,7 +13,6 @@ void ImGuiNesScreenWindow::Render() {
         End();
         return;
     }
-    auto initialCursorPos = ImGui::GetCursorPos();
     ImVec2 windowsSize = ImGui::GetContentRegionAvail();
     if (windowsSize.x < windowsSize.y) {
         m_NesScreenWidget.ScaleImageToWidth(windowsSize.x);
