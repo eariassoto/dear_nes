@@ -6,8 +6,7 @@
 
 class ImGuiTextureImage {
    public:
-    ImGuiTextureImage(unsigned int width, unsigned int height,
-                      unsigned int cellSize);
+    ImGuiTextureImage(unsigned int width, unsigned int height);
     ~ImGuiTextureImage();
 
     void Update();
@@ -18,11 +17,16 @@ class ImGuiTextureImage {
 
     void CopyTextureFromArray(const int* intArray);
 
+    void ScaleImageToWidth(float newWidth);
+
+    void ScaleImageToHeight(float newHeight);
+
+    float GetTextureWidth() const;
+    float GetTextureHeight() const;
+
    private:
     unsigned int m_Width = 0;
     unsigned int m_Height = 0;
-
-    unsigned int m_CellSizeInPixels = 0;
 
     float m_TextureWidth = 0;
     float m_TextureHeight = 0;

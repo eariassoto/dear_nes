@@ -12,13 +12,11 @@
 
 using cpuemulator::Logger;
 
-ImGuiTextureImage::ImGuiTextureImage(unsigned int width,
-               unsigned int height, unsigned int cellSize)
+ImGuiTextureImage::ImGuiTextureImage(unsigned int width, unsigned int height)
     : m_Width{width},
       m_Height{height},
-      m_CellSizeInPixels{cellSize},
-      m_TextureWidth{static_cast<float>(width) * cellSize},
-      m_TextureHeight{static_cast<float>(height) * cellSize} {
+      m_TextureWidth{static_cast<float>(width)},
+      m_TextureHeight{static_cast<float>(height)} {
     int dataSize = m_Width * m_Height * CHANNEL_COUNT;
     m_TextureData = new GLubyte[dataSize];
     memset(m_TextureData, 0, dataSize);
@@ -69,5 +67,28 @@ void ImGuiTextureImage::SetPixel(int x, int y, int color) {
 
 void ImGuiTextureImage::CopyTextureFromArray(const int* intArray) {
     memcpy(reinterpret_cast<void*>(m_TextureData),
-           reinterpret_cast<const void*>(intArray), m_Width * m_Height * sizeof(int));
+           reinterpret_cast<const void*>(intArray),
+           m_Width * m_Height * sizeof(int));
 }
+
+void ImGuiTextureImage::ScaleImageToWidth(float newWidth) {
+    if (newWidth == m_TextureWidth) {
+        return;
+    }
+    float scale = newWidth / m_TextureWidth;
+    m_TextureWidth = newWidth;
+    m_TextureHeight *= scale;
+}
+
+void ImGuiTextureImage::ScaleImageToHeight(float newHeight) {
+    if (newHeight == m_TextureHeight) {
+        return;
+    }
+    float scale = newHeight / m_TextureHeight;
+    m_TextureWidth *= scale;
+    m_TextureHeight = newHeight;
+}
+
+float ImGuiTextureImage::GetTextureWidth() const { return m_TextureWidth; }
+
+float ImGuiTextureImage::GetTextureHeight() const { return m_TextureHeight; }

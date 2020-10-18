@@ -100,7 +100,7 @@ int main3(int argc, char* argv[]) {
     ImGui_ImplOpenGL3_Init(NULL);
     ImGui::StyleColorsDark();
 
-    Nes* nesEmulator = new Nes(uiConfig);
+    Nes* nesEmulator = new Nes();
 
     if (argc > 1) {
         Cartridge* cartridge = new Cartridge(argv[1]);
@@ -146,8 +146,6 @@ int main3(int argc, char* argv[]) {
                 residualTime += frameTime - deltaTime;
 
                 nesEmulator->DoFrame();
-
-                nesEmulator->Update();
             }
         }
 

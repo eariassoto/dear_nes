@@ -3,6 +3,8 @@
 
 #include <imgui.h>
 
+bool ImGuiNesStatusWindow::IsNesPoweredUp() const { return m_IsPowerUp; }
+
 void ImGuiNesStatusWindow::Render() {
     if (!m_Show) {
         return;

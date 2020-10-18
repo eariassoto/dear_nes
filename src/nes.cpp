@@ -11,11 +11,7 @@
 
 namespace cpuemulator {
 
-Nes::Nes(const UiConfig& uiConfig)
-    : m_UiConfig{uiConfig},
-      m_Virtual6502{new Virtual6502(this)},
-      m_Ppu{new Ppu()},
-      m_PpuImguiWidget{m_UiConfig, m_Ppu} {
+Nes::Nes() : m_Virtual6502{new Virtual6502(this)}, m_Ppu{new Ppu()} {
     memset(m_CpuRam, 0, 0x800);
 }
 
@@ -209,7 +205,6 @@ void Nes::RenderControllerWidget() {
 }
 
 void Nes::RenderWidgets() {
-    m_PpuImguiWidget.RenderWidgets();
     RenderCpuWidget();
     RenderControllerWidget();
     m_CartridgeExplorer.RenderWidgets();
@@ -227,9 +222,7 @@ void Nes::DoFrame() {
     m_Ppu->isFrameComplete = false;
 }
 
-void Nes::Update() { m_PpuImguiWidget.Update(); }
-
-void Nes::Render() { m_PpuImguiWidget.Render(); }
+void Nes::Render() {}
 
 bool Nes::IsCartridgeLoaded() const { return m_IsCartridgeLoaded; }
 

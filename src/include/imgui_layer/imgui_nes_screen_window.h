@@ -13,8 +13,7 @@ class ImGuiNesScreenWindow : public ImGuiWindow {
    private:
     static constexpr unsigned int SCREEN_REAL_WIDHT = 256;
     static constexpr unsigned int SCREEN_REAL_HEIGHT = 240;
-    static constexpr unsigned int VIRTUAL_PIXEL_IN_REAL_PIXELS = 2;
     const std::string m_WindowName = "NES Screen";
     ImGuiTextureImage m_NesScreenWidget = ImGuiTextureImage{
-        SCREEN_REAL_WIDHT, SCREEN_REAL_HEIGHT, VIRTUAL_PIXEL_IN_REAL_PIXELS};
+        SCREEN_REAL_WIDHT, SCREEN_REAL_HEIGHT};
 };

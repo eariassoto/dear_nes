@@ -6,6 +6,7 @@
 class ImGuiNesStatusWindow : public ImGuiWindow {
    public:
     virtual void Render() override;
+    bool IsNesPoweredUp() const;
 
    private:
     const std::string m_WindowName = "NES Console Status";

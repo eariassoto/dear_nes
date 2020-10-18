@@ -16,7 +16,7 @@ class Ppu;
 class Nes {
 
    public:
-    explicit Nes(const UiConfig& uiConfig);
+    Nes();
     ~Nes();
 
     uint8_t m_Controllers[2] = {0};
@@ -30,14 +30,15 @@ class Nes {
     void Clock();
 
     void RenderWidgets();
-    void Update();
     void DoFrame();
     void Render();
 
     bool IsCartridgeLoaded() const;
 
+    // TODO: provide api and make it private
+    Ppu* m_Ppu = nullptr;
+
    private:
-    const UiConfig& m_UiConfig;
 
     uint8_t* m_CpuRam = new uint8_t[0x800];
 
@@ -46,10 +47,6 @@ class Nes {
     bool m_IsCartridgeLoaded = false;
 
     Virtual6502<Nes>* m_Virtual6502 = nullptr;
-
-    Ppu* m_Ppu = nullptr;
-
-    PpuImguiWidget m_PpuImguiWidget;
 
     uint32_t m_SystemClockCounter = 0;
 
