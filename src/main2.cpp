@@ -13,6 +13,8 @@
 #include "include/imgui_layer/imgui_nes_screen_window.h"
 #include "include/imgui_layer/imgui_nes_status_window.h"
 #include "include/imgui_layer/imgui_nes_cpu_window.h"
+#include "include/imgui_layer/imgui_nes_ppu_pattern_table_window.h"
+#include "include/imgui_layer/imgui_nes_controller_window.h"
 #include "include/nes.h"
 #include "include/cartridge.h"
 #include "include/global_nes.h"
@@ -77,6 +79,9 @@ int main(int argc, char* argv[]) {
     ImGuiNesStatusWindow* nesStatusWindow = dynamic_cast<ImGuiNesStatusWindow*>(
         uiManager.AddWindow(new ImGuiNesStatusWindow()));
     uiManager.AddWindow(new ImGuiNesCpuWindow());
+    uiManager.AddWindow(new ImGuiNesPpuPatternTableWindow(0));
+    uiManager.AddWindow(new ImGuiNesPpuPatternTableWindow(1));
+    uiManager.AddWindow(new ImGuiNesControllerWindow(0));
 
     using clock = std::chrono::high_resolution_clock;
     using namespace std::chrono;
@@ -85,12 +90,12 @@ int main(int argc, char* argv[]) {
     nanoseconds residualTime = 0ms;
     auto frameStartTime = clock::now();
     while (!glfwWindowShouldClose(window)) {
+        auto deltaTime = clock::now() - frameStartTime;
+        frameStartTime = clock::now();
+        
         glfwPollEvents();
 
         processInput2(window);
-
-        auto deltaTime = clock::now() - frameStartTime;
-        frameStartTime = clock::now();
 
         if (nesStatusWindow->IsNesPoweredUp()) {
             if (residualTime > 0ns) {

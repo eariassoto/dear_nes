@@ -16,14 +16,11 @@ void ImGuiNesScreenWindow::Render() {
     ImVec2 windowsSize = ImGui::GetContentRegionAvail();
     if (windowsSize.x < windowsSize.y) {
         m_NesScreenWidget.ScaleImageToWidth(windowsSize.x);
-        ImGui::SetCursorPosY((windowsSize.y - m_NesScreenWidget.GetTextureHeight()) * 0.5);
     } else {
         m_NesScreenWidget.ScaleImageToHeight(windowsSize.y);
-        ImGui::SetCursorPosX((windowsSize.x - m_NesScreenWidget.GetTextureWidth()) * 0.5);
     }
     m_NesScreenWidget.Render();
     End();
-
 }
 
 void ImGuiNesScreenWindow::Update() {
