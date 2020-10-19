@@ -1,8 +1,6 @@
 // Copyright (c) 2020 Emmanuel Arias
 #include "include/nes.h"
 
-#include <imgui.h>
-
 #include <iostream>
 
 #include "include/cartridge.h"
@@ -11,11 +9,7 @@
 
 namespace cpuemulator {
 
-Nes::Nes(const UiConfig& uiConfig)
-    : m_UiConfig{uiConfig},
-      m_Virtual6502{new Virtual6502(this)},
-      m_Ppu{new Ppu()},
-      m_PpuImguiWidget{m_UiConfig, m_Ppu} {
+Nes::Nes() : m_Virtual6502{new Virtual6502(this)}, m_Ppu{new Ppu()} {
     memset(m_CpuRam, 0, 0x800);
 }
 
@@ -111,110 +105,6 @@ void Nes::Clock() {
     ++m_SystemClockCounter;
 }
 
-void Nes::RenderCpuWidget() {
-    auto GetColorForFlag = [](bool status) -> const ImVec4& {
-        static ImVec4 m_ColorFlagSet{.0f, 1.f, .0f, 1.f};
-        static ImVec4 m_ColorFlagReset{1.f, .0f, .0f, 1.f};
-        if (status) {
-            return m_ColorFlagSet;
-        } else {
-            return m_ColorFlagReset;
-        }
-    };
-    ImGui::Begin("CPU registers");
-    ImGui::SetWindowSize({280, 160});
-
-    ImGui::Text("Status: ");
-    ImGui::SameLine();
-    ImGui::TextColored(
-        GetColorForFlag(m_Virtual6502->GetFlag(Virtual6502Flag::N)), "N");
-    ImGui::SameLine();
-    ImGui::TextColored(
-        GetColorForFlag(m_Virtual6502->GetFlag(Virtual6502Flag::V)), "V");
-    ImGui::SameLine();
-    ImGui::TextColored(GetColorForFlag(false), "-");
-    ImGui::SameLine();
-    ImGui::TextColored(
-        GetColorForFlag(m_Virtual6502->GetFlag(Virtual6502Flag::B)), "B");
-    ImGui::SameLine();
-    ImGui::TextColored(
-        GetColorForFlag(m_Virtual6502->GetFlag(Virtual6502Flag::D)), "D");
-    ImGui::SameLine();
-    ImGui::TextColored(
-        GetColorForFlag(m_Virtual6502->GetFlag(Virtual6502Flag::I)), "I");
-    ImGui::SameLine();
-    ImGui::TextColored(
-        GetColorForFlag(m_Virtual6502->GetFlag(Virtual6502Flag::Z)), "Z");
-    ImGui::SameLine();
-    ImGui::TextColored(
-        GetColorForFlag(m_Virtual6502->GetFlag(Virtual6502Flag::C)), "C");
-
-    uint8_t regA = m_Virtual6502->GetRegisterA();
-    ImGui::Text("A: $%02X [%d]", regA, regA);
-    uint8_t regX = m_Virtual6502->GetRegisterX();
-    ImGui::Text("X: $%02X [%d]", regX, regX);
-    uint8_t regY = m_Virtual6502->GetRegisterY();
-    ImGui::Text("Y: $%02X [%d]", regY, regY);
-    ImGui::Text("Stack Pointer: $%04X", m_Virtual6502->GetStackPointer());
-    ImGui::Text("PC: $%04X", m_Virtual6502->GetProgramCounter());
-    // ImGui::Text("Instruction at PC: %s",
-    //            m_Virtual6502->GetInstructionString(m_Virtual6502->m_ProgramCounter).c_str());
-    ImGui::End();
-}
-
-void Nes::RenderControllerWidget() {
-    auto SetColorForButton = [](bool isPressed) {
-        static bool isStyledPushed = false;
-        if (isPressed) {
-            if (!isStyledPushed) {
-                ImGui::PushStyleColor(ImGuiCol_Button,
-                                      (ImVec4)ImColor::HSV(7.0f, 0.6f, 0.6f));
-                isStyledPushed = true;
-            }
-        } else {
-            if (isStyledPushed) {
-                ImGui::PopStyleColor();
-                isStyledPushed = false;
-            }
-        }
-    };
-
-    ImGui::Begin("Controllers");
-    ImGui::PushID(0);
-    ImGui::Columns(3);
-    SetColorForButton((m_Controllers[0] & 0x08) != 0x00);
-    ImGui::Button("Up");
-    SetColorForButton((m_Controllers[0] & 0x02) != 0x00);
-    ImGui::Button("Left");
-    ImGui::SameLine();
-    SetColorForButton((m_Controllers[0] & 0x01) != 0x00);
-    ImGui::Button("Right");
-    SetColorForButton((m_Controllers[0] & 0x04) != 0x00);
-    ImGui::Button("Down");
-    ImGui::NextColumn();
-    SetColorForButton((m_Controllers[0] & 0x20) != 0x00);
-    ImGui::Button("Select\n(Q)");
-    ImGui::SameLine();
-    SetColorForButton((m_Controllers[0] & 0x10) != 0x00);
-    ImGui::Button("Start\n(W)");
-    ImGui::NextColumn();
-    SetColorForButton((m_Controllers[0] & 0x40) != 0x00);
-    ImGui::Button("B\n(A)");
-    ImGui::SameLine();
-    SetColorForButton((m_Controllers[0] & 0x80) != 0x00);
-    ImGui::Button("A\n(S)");
-    SetColorForButton(false);
-    ImGui::PopID();
-    ImGui::End();
-}
-
-void Nes::RenderWidgets() {
-    m_PpuImguiWidget.RenderWidgets();
-    RenderCpuWidget();
-    RenderControllerWidget();
-    m_CartridgeExplorer.RenderWidgets();
-}
-
 void Nes::DoFrame() {
     do {
         Clock();
@@ -226,10 +116,6 @@ void Nes::DoFrame() {
 
     m_Ppu->isFrameComplete = false;
 }
-
-void Nes::Update() { m_PpuImguiWidget.Update(); }
-
-void Nes::Render() { m_PpuImguiWidget.Render(); }
 
 bool Nes::IsCartridgeLoaded() const { return m_IsCartridgeLoaded; }
 
