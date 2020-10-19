@@ -20,8 +20,8 @@ using Cartridge = cpuemulator::Cartridge;
 using Logger = cpuemulator::Logger;
 
 // Forward declaration
-void framebufferSizeCallback2(GLFWwindow* window, int width, int height);
-void processInput2(GLFWwindow* window);
+void framebufferSizeCallback(GLFWwindow* window, int width, int height);
+void processInput(GLFWwindow* window);
 
 int main(int argc, char* argv[]) {
     glfwInit();
@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
     }
 
     glViewport(0, 0, screenWidth, screenHeight);
-    glfwSetFramebufferSizeCallback(window, framebufferSizeCallback2);
+    glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 
     Nes* nesEmulator = g_GetGlobalNes();
 
@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
 
         glfwPollEvents();
 
-        processInput2(window);
+        processInput(window);
 
         if (nesStatusWindow->IsNesPoweredUp()) {
             if (residualTime > 0ns) {
@@ -103,11 +103,11 @@ int main(int argc, char* argv[]) {
     glfwTerminate();
 }
 
-void framebufferSizeCallback2(GLFWwindow* window, int width, int height) {
+void framebufferSizeCallback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-void processInput2(GLFWwindow* window) {
+void processInput(GLFWwindow* window) {
     Nes* nesEmulator = g_GetGlobalNes();
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
