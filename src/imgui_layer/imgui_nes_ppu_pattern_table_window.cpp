@@ -11,7 +11,7 @@
 ImGuiNesPpuPatternTableWindow::ImGuiNesPpuPatternTableWindow(
     unsigned int patternTableIdx)
     : m_PatternTableIdx{patternTableIdx},
-      m_WindowName{fmt::format("Ppu Nametable {}", m_PatternTableIdx)} {}
+      m_WindowName{fmt::format("Ppu Pattern Table {}", m_PatternTableIdx)} {}
 
 void ImGuiNesPpuPatternTableWindow::Render() {
     if (!m_Show) {

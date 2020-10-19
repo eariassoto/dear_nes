@@ -3,10 +3,8 @@
 
 #include <cstdint>
 
-#include "include/ui_config.h"
-#include "include/virtual6502.h"
-#include "include/ppu_imgui_widgets.h"
 #include "include/imgui_cartridge_explorer.h"
+#include "include/virtual6502.h"
 
 namespace cpuemulator {
 
@@ -29,9 +27,7 @@ class Nes {
     void Reset();
     void Clock();
 
-    void RenderWidgets();
     void DoFrame();
-    void Render();
 
     bool IsCartridgeLoaded() const;
 
@@ -49,8 +45,6 @@ class Nes {
 
     uint32_t m_SystemClockCounter = 0;
 
-    ImguiCartridgeExplorer m_CartridgeExplorer;
-
     uint8_t m_DmaPage = 0x00;
     uint8_t m_DmaAddress = 0x00;
     uint8_t m_DmaData = 0x00;
@@ -66,8 +60,5 @@ class Nes {
     inline uint16_t GetRealPpuAddress(uint16_t address) const {
         return address & 0x0007;
     }
-
-    void RenderCpuWidget();
-    void RenderControllerWidget();
 };
 }  // namespace cpuemulator

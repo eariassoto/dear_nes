@@ -1,8 +1,6 @@
 // Copyright (c) 2020 Emmanuel Arias
 #include "include/nes.h"
 
-#include <imgui.h>
-
 #include <iostream>
 
 #include "include/cartridge.h"
@@ -107,62 +105,6 @@ void Nes::Clock() {
     ++m_SystemClockCounter;
 }
 
-void Nes::RenderCpuWidget() {
-    
-}
-
-void Nes::RenderControllerWidget() {
-    auto SetColorForButton = [](bool isPressed) {
-        static bool isStyledPushed = false;
-        if (isPressed) {
-            if (!isStyledPushed) {
-                ImGui::PushStyleColor(ImGuiCol_Button,
-                                      (ImVec4)ImColor::HSV(7.0f, 0.6f, 0.6f));
-                isStyledPushed = true;
-            }
-        } else {
-            if (isStyledPushed) {
-                ImGui::PopStyleColor();
-                isStyledPushed = false;
-            }
-        }
-    };
-
-    ImGui::Begin("Controllers");
-    ImGui::PushID(0);
-    ImGui::Columns(3);
-    SetColorForButton((m_Controllers[0] & 0x08) != 0x00);
-    ImGui::Button("Up");
-    SetColorForButton((m_Controllers[0] & 0x02) != 0x00);
-    ImGui::Button("Left");
-    ImGui::SameLine();
-    SetColorForButton((m_Controllers[0] & 0x01) != 0x00);
-    ImGui::Button("Right");
-    SetColorForButton((m_Controllers[0] & 0x04) != 0x00);
-    ImGui::Button("Down");
-    ImGui::NextColumn();
-    SetColorForButton((m_Controllers[0] & 0x20) != 0x00);
-    ImGui::Button("Select\n(Q)");
-    ImGui::SameLine();
-    SetColorForButton((m_Controllers[0] & 0x10) != 0x00);
-    ImGui::Button("Start\n(W)");
-    ImGui::NextColumn();
-    SetColorForButton((m_Controllers[0] & 0x40) != 0x00);
-    ImGui::Button("B\n(A)");
-    ImGui::SameLine();
-    SetColorForButton((m_Controllers[0] & 0x80) != 0x00);
-    ImGui::Button("A\n(S)");
-    SetColorForButton(false);
-    ImGui::PopID();
-    ImGui::End();
-}
-
-void Nes::RenderWidgets() {
-    RenderCpuWidget();
-    RenderControllerWidget();
-    m_CartridgeExplorer.RenderWidgets();
-}
-
 void Nes::DoFrame() {
     do {
         Clock();
@@ -174,8 +116,6 @@ void Nes::DoFrame() {
 
     m_Ppu->isFrameComplete = false;
 }
-
-void Nes::Render() {}
 
 bool Nes::IsCartridgeLoaded() const { return m_IsCartridgeLoaded; }
 

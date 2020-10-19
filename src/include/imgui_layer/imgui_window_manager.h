@@ -16,10 +16,13 @@ class ImGuiWindowManager {
 
     void Update();
     void Render();
-    ImGuiWindow* AddWindow(ImGuiWindow* newWin);
+    
+    protected:
+        ImGuiWindow* AddWindow(ImGuiWindow* newWin);
 
    private:
     std::vector<ImGuiWindow*> m_Windows;
+
     void ShowDockSpace(bool* p_open);
     void SetStyle();
     void RenderWindows();
