@@ -9,3 +9,6 @@
 	path = external/glfw
 	url = https://github.com/glfw/glfw
 	branch = master
+[submodule "libs/virtual-nes"]
+	path = libs/virtual-nes
+	url = https://github.com/eariassoto/virtual-nes

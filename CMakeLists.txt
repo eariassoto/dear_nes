@@ -30,6 +30,8 @@ add_library(GLAD "external/glad/glad.c")
 add_subdirectory(external/fmt)
 include_directories(${fmt_INCLUDE_DIRS})
 
+add_subdirectory(libs/virtual-nes)
+
 # Imgui
 add_library(IMGUI
 	"external/imgui/imgui.cpp"
@@ -40,7 +42,7 @@ add_library(IMGUI
 	"external/imgui/imgui_widgets.cpp"
 )
 
-set(LIBS glfw opengl32 GLAD IMGUI fmt::fmt)
+set(LIBS glfw opengl32 GLAD IMGUI fmt::fmt virtual-nes)
 
 include_directories(
 	"${CMAKE_SOURCE_DIR}/src"
@@ -48,6 +50,7 @@ include_directories(
 	"${CMAKE_SOURCE_DIR}/external/glfw/include"
 	"${CMAKE_SOURCE_DIR}/external/imgui"
 	"${CMAKE_SOURCE_DIR}/external/imgui/examples"
+	"${CMAKE_SOURCE_DIR}/libs/virtual-nes/src"
 )
 
 target_link_libraries(${PROJECT_NAME} ${LIBS})

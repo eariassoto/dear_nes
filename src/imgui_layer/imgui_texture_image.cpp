@@ -8,10 +8,6 @@
 #include <cstring>
 #include <string>
 
-#include "include/logger.h"
-
-using cpuemulator::Logger;
-
 ImGuiTextureImage::ImGuiTextureImage(unsigned int width, unsigned int height)
     : m_Width{width},
       m_Height{height},
@@ -21,7 +17,7 @@ ImGuiTextureImage::ImGuiTextureImage(unsigned int width, unsigned int height)
     m_TextureData = new GLubyte[dataSize];
     memset(m_TextureData, 0, dataSize);
 
-    Logger::Get().Log("SPRITE", "Created {}x{} sprite", m_Width, m_Height);
+    // Logger::Get().Log("SPRITE", "Created {}x{} sprite", m_Width, m_Height);
 
     glGenTextures(1, &m_textureId);
     // TODO check error
@@ -35,7 +31,7 @@ ImGuiTextureImage::ImGuiTextureImage(unsigned int width, unsigned int height)
                  GL_UNSIGNED_BYTE, (GLvoid*)m_TextureData);
     // Unbind texture
     glBindTexture(GL_TEXTURE_2D, 0);
-    Logger::Get().Log("SPRITE", "Sprite binded to texture id {}", m_textureId);
+    // Logger::Get().Log("SPRITE", "Sprite binded to texture id {}", m_textureId);
 }
 
 ImGuiTextureImage::~ImGuiTextureImage() {

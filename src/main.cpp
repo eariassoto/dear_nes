@@ -7,17 +7,17 @@
 #include <imgui_impl_opengl3.h>
 // clang-format on
 #include <iostream>
+#include <chrono>
 
 #include "include/imgui_layer/imgui_nes_window_manager.h"
 #include "include/imgui_layer/imgui_nes_status_window.h"
 #include "include/nes.h"
 #include "include/cartridge.h"
 #include "include/global_nes.h"
-#include "include/logger.h"
+#include "helpers/RootDir.h"
 
 using Nes = cpuemulator::Nes;
 using Cartridge = cpuemulator::Cartridge;
-using Logger = cpuemulator::Logger;
 
 // Forward declaration
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
@@ -52,16 +52,14 @@ int main(int argc, char* argv[]) {
     Nes* nesEmulator = g_GetGlobalNes();
 
     if (argc > 1) {
-        Cartridge* cartridge = new Cartridge(argv[1]);
+        std::string cartridgePath = ROOT_DIR "res/roms/" + std::string(argv[1]);
+        Cartridge* cartridge = new Cartridge(cartridgePath);
         if (cartridge->IsLoaded()) {
             nesEmulator->InsertCatridge(cartridge);
         }
     }
 
     nesEmulator->Reset();
-
-    Logger& logger = Logger::Get();
-    logger.Start();
 
     ImGuiNesWindowManager uiManager;
     uiManager.Initialize(window);
@@ -95,8 +93,6 @@ int main(int argc, char* argv[]) {
 
         glfwSwapBuffers(window);
     }
-
-    logger.Stop();
 
     // Cleanup
     uiManager.Shutdown();
