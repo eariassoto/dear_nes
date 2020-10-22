@@ -26,7 +26,7 @@ void ImGuiNesScreenWindow::Render() {
 void ImGuiNesScreenWindow::Update() {
     if (m_Show) {
         m_NesScreenWidget.CopyTextureFromArray(
-            g_GetGlobalNes()->m_Ppu->GetOutputScreen());
+            g_GetGlobalNes()->GetPpu()->GetOutputScreen());
         m_NesScreenWidget.Update();
     }
 }

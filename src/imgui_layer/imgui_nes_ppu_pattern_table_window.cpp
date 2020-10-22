@@ -40,7 +40,7 @@ void ImGuiNesPpuPatternTableWindow::Update() {
 
 void ImGuiNesPpuPatternTableWindow::UpdatePatternTable() {
     cpuemulator::Nes* nesEmulator = g_GetGlobalNes();
-    auto ppuPtr = nesEmulator->m_Ppu;
+    auto ppuPtr = nesEmulator->GetPpu();
     for (uint16_t nTileX = 0; nTileX < 16; ++nTileX) {
         for (uint16_t nTileY = 0; nTileY < 16; ++nTileY) {
             uint16_t offset = nTileY * 256 + nTileX * 16;

@@ -12,6 +12,7 @@
 #include "include/imgui_layer/imgui_nes_window_manager.h"
 #include "include/imgui_layer/imgui_nes_status_window.h"
 #include "include/nes.h"
+#include "include/enums.h"
 #include "include/cartridge.h"
 #include "include/global_nes.h"
 #include "helpers/RootDir.h"
@@ -108,29 +109,37 @@ void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }
-    nesEmulator->m_Controllers[0] = 0x00;
+    nesEmulator->ClearControllerState(cpuemulator::CONTROLLER_PLAYER_1_IDX);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        nesEmulator->m_Controllers[0] |= 0x80;
+        nesEmulator->WriteControllerState(cpuemulator::CONTROLLER_PLAYER_1_IDX,
+                                          0x80);
     }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        nesEmulator->m_Controllers[0] |= 0x40;
+        nesEmulator->WriteControllerState(cpuemulator::CONTROLLER_PLAYER_1_IDX,
+                                          0x40);
     }
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-        nesEmulator->m_Controllers[0] |= 0x20;
+        nesEmulator->WriteControllerState(cpuemulator::CONTROLLER_PLAYER_1_IDX,
+                                          0x20);
     }
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        nesEmulator->m_Controllers[0] |= 0x10;
+        nesEmulator->WriteControllerState(cpuemulator::CONTROLLER_PLAYER_1_IDX,
+                                          0x10);
     }
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-        nesEmulator->m_Controllers[0] |= 0x08;
+        nesEmulator->WriteControllerState(cpuemulator::CONTROLLER_PLAYER_1_IDX,
+                                          0x08);
     }
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-        nesEmulator->m_Controllers[0] |= 0x04;
+        nesEmulator->WriteControllerState(cpuemulator::CONTROLLER_PLAYER_1_IDX,
+                                          0x04);
     }
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-        nesEmulator->m_Controllers[0] |= 0x02;
+        nesEmulator->WriteControllerState(cpuemulator::CONTROLLER_PLAYER_1_IDX,
+                                          0x02);
     }
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-        nesEmulator->m_Controllers[0] |= 0x01;
+        nesEmulator->WriteControllerState(cpuemulator::CONTROLLER_PLAYER_1_IDX,
+                                          0x01);
     }
 }

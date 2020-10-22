@@ -5,6 +5,9 @@
 
 #include "include/global_nes.h"
 #include "include/nes.h"
+#include "include/enums.h"
+
+using cpuemulator::CpuFlag;
 
 void ImGuiNesCpuWindow::Render() {
     if (!m_Show) {
@@ -24,31 +27,31 @@ void ImGuiNesCpuWindow::Render() {
         }
     };
     cpuemulator::Nes* nesEmulator = g_GetGlobalNes();
-    auto cpuPtr = nesEmulator->m_Virtual6502;
+    auto cpuPtr = nesEmulator->GetCpu();
 
     ImGui::Text("Status: ");
     ImGui::SameLine();
-    ImGui::TextColored(GetColorForFlag(cpuPtr->GetFlag(Virtual6502Flag::N)),
+    ImGui::TextColored(GetColorForFlag(cpuPtr->GetFlag(CpuFlag::N)),
                        "N");
     ImGui::SameLine();
-    ImGui::TextColored(GetColorForFlag(cpuPtr->GetFlag(Virtual6502Flag::V)),
+    ImGui::TextColored(GetColorForFlag(cpuPtr->GetFlag(CpuFlag::V)),
                        "V");
     ImGui::SameLine();
     ImGui::TextColored(GetColorForFlag(false), "-");
     ImGui::SameLine();
-    ImGui::TextColored(GetColorForFlag(cpuPtr->GetFlag(Virtual6502Flag::B)),
+    ImGui::TextColored(GetColorForFlag(cpuPtr->GetFlag(CpuFlag::B)),
                        "B");
     ImGui::SameLine();
-    ImGui::TextColored(GetColorForFlag(cpuPtr->GetFlag(Virtual6502Flag::D)),
+    ImGui::TextColored(GetColorForFlag(cpuPtr->GetFlag(CpuFlag::D)),
                        "D");
     ImGui::SameLine();
-    ImGui::TextColored(GetColorForFlag(cpuPtr->GetFlag(Virtual6502Flag::I)),
+    ImGui::TextColored(GetColorForFlag(cpuPtr->GetFlag(CpuFlag::I)),
                        "I");
     ImGui::SameLine();
-    ImGui::TextColored(GetColorForFlag(cpuPtr->GetFlag(Virtual6502Flag::Z)),
+    ImGui::TextColored(GetColorForFlag(cpuPtr->GetFlag(CpuFlag::Z)),
                        "Z");
     ImGui::SameLine();
-    ImGui::TextColored(GetColorForFlag(cpuPtr->GetFlag(Virtual6502Flag::C)),
+    ImGui::TextColored(GetColorForFlag(cpuPtr->GetFlag(CpuFlag::C)),
                        "C");
 
     uint8_t regA = cpuPtr->GetRegisterA();

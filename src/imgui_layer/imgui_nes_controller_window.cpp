@@ -37,7 +37,7 @@ void ImGuiNesControllerWindow::Render() {
     cpuemulator::Nes* nesEmulator = g_GetGlobalNes();
     ImGui::PushID(0);
     ImGui::Columns(3);
-    uint8_t controllerByte = nesEmulator->m_Controllers[m_ControllerIdx];
+    uint8_t controllerByte = nesEmulator->GetControllerState(m_ControllerIdx);
     SetColorForButton((controllerByte & 0x08) != 0x00);
     ImGui::Button("Up");
     SetColorForButton((controllerByte & 0x02) != 0x00);
