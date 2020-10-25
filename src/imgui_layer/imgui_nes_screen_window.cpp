@@ -3,7 +3,7 @@
 #include <imgui.h>
 
 #include "include/global_nes.h"
-#include "include/ppu.h"
+#include "virtual-nes/ppu.h"
 
 void ImGuiNesScreenWindow::Render() {
     if (!m_Show) {

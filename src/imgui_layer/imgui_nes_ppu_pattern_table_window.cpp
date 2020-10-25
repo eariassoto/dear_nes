@@ -5,8 +5,8 @@
 #include <imgui.h>
 
 #include "include/global_nes.h"
-#include "include/nes.h"
-#include "include/ppu.h"
+#include "virtual-nes/nes.h"
+#include "virtual-nes/ppu.h"
 
 ImGuiNesPpuPatternTableWindow::ImGuiNesPpuPatternTableWindow(
     unsigned int patternTableIdx)

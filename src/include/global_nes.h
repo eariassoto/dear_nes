@@ -1,6 +1,6 @@
 // Copyright (c) 2020 Emmanuel Arias
 #pragma once
-#include "include/nes.h"
+#include "virtual-nes/nes.h"
 
 // Since C++17, inline variables are guaranteed to be identical
 // across tranlations units. I.e. the linker will know that this is

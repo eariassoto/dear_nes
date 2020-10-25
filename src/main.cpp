@@ -11,11 +11,11 @@
 
 #include "include/imgui_layer/imgui_nes_window_manager.h"
 #include "include/imgui_layer/imgui_nes_status_window.h"
-#include "include/nes.h"
-#include "include/enums.h"
-#include "include/cartridge.h"
 #include "include/global_nes.h"
 #include "helpers/RootDir.h"
+#include "virtual-nes/cartridge.h"
+#include "virtual-nes/enums.h"
+#include "virtual-nes/nes.h"
 
 using Nes = cpuemulator::Nes;
 using Cartridge = cpuemulator::Cartridge;

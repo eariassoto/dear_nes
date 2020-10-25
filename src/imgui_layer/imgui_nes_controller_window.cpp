@@ -5,7 +5,7 @@
 #include <imgui.h>
 
 #include "include/global_nes.h"
-#include "include/nes.h"
+#include "virtual-nes/nes.h"
 
 ImGuiNesControllerWindow::ImGuiNesControllerWindow(unsigned int controllerIdx)
     : m_ControllerIdx{controllerIdx},

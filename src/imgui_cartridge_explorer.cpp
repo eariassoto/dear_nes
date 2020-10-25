@@ -9,7 +9,7 @@
 #include <string>
 
 #include "helpers/RootDir.h"
-#include "include/cartridge.h"
+#include  "virtual-nes/cartridge.h"
 
 namespace cpuemulator {
 

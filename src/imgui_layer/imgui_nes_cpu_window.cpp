@@ -4,8 +4,8 @@
 #include <imgui.h>
 
 #include "include/global_nes.h"
-#include "include/nes.h"
-#include "include/enums.h"
+#include "virtual-nes/nes.h"
+#include "virtual-nes/enums.h"
 
 using cpuemulator::CpuFlag;
 
