@@ -39,7 +39,7 @@ void ImGuiNesPpuPatternTableWindow::Update() {
 }
 
 void ImGuiNesPpuPatternTableWindow::UpdatePatternTable() {
-    cpuemulator::Nes* nesEmulator = g_GetGlobalNes();
+    virtualnes::Nes* nesEmulator = g_GetGlobalNes();
     auto ppuPtr = nesEmulator->GetPpu();
     for (uint16_t nTileX = 0; nTileX < 16; ++nTileX) {
         for (uint16_t nTileY = 0; nTileY < 16; ++nTileY) {

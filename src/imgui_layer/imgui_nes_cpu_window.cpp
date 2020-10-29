@@ -7,7 +7,7 @@
 #include "virtual-nes/nes.h"
 #include "virtual-nes/enums.h"
 
-using cpuemulator::CpuFlag;
+using virtualnes::CpuFlag;
 
 void ImGuiNesCpuWindow::Render() {
     if (!m_Show) {
@@ -26,7 +26,7 @@ void ImGuiNesCpuWindow::Render() {
             return m_ColorFlagReset;
         }
     };
-    cpuemulator::Nes* nesEmulator = g_GetGlobalNes();
+    virtualnes::Nes* nesEmulator = g_GetGlobalNes();
     auto cpuPtr = nesEmulator->GetCpu();
 
     ImGui::Text("Status: ");

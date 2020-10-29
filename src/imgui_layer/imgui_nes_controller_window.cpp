@@ -4,6 +4,8 @@
 #include <fmt/core.h>
 #include <imgui.h>
 
+#include <cinttypes>
+
 #include "include/global_nes.h"
 #include "virtual-nes/nes.h"
 
@@ -34,32 +36,31 @@ void ImGuiNesControllerWindow::Render() {
             }
         }
     };
-    cpuemulator::Nes* nesEmulator = g_GetGlobalNes();
-    ImGui::PushID(0);
-    ImGui::Columns(3);
+    virtualnes::Nes* nesEmulator = g_GetGlobalNes();
+    ImGui::Columns(3, "mycolumns");  // 4-ways, with border
+    ImGui::Separator();
+    ImGui::Text("Button");
+    ImGui::NextColumn();
+    ImGui::Text("Keybind");
+    ImGui::NextColumn();
+    ImGui::Text("Is Pressed");
+    ImGui::NextColumn();
+    ImGui::Separator();
+
+    static int selected = -1;
+    bool test = true;
     uint8_t controllerByte = nesEmulator->GetControllerState(m_ControllerIdx);
-    SetColorForButton((controllerByte & 0x08) != 0x00);
-    ImGui::Button("Up");
-    SetColorForButton((controllerByte & 0x02) != 0x00);
-    ImGui::Button("Left");
-    ImGui::SameLine();
-    SetColorForButton((controllerByte & 0x01) != 0x00);
-    ImGui::Button("Right");
-    SetColorForButton((controllerByte & 0x04) != 0x00);
-    ImGui::Button("Down");
-    ImGui::NextColumn();
-    SetColorForButton((controllerByte & 0x20) != 0x00);
-    ImGui::Button("Select\n(Q)");
-    ImGui::SameLine();
-    SetColorForButton((controllerByte & 0x10) != 0x00);
-    ImGui::Button("Start\n(W)");
-    ImGui::NextColumn();
-    SetColorForButton((controllerByte & 0x40) != 0x00);
-    ImGui::Button("B\n(A)");
-    ImGui::SameLine();
-    SetColorForButton((controllerByte & 0x80) != 0x00);
-    ImGui::Button("A\n(S)");
-    SetColorForButton(false);
-    ImGui::PopID();
+    for (int i = 0; i < NUM_BUTTONS; i++) {
+        ImGui::Text(m_ButtonNames[i]);
+        ImGui::NextColumn();
+        ImGui::Text(m_ButtonBinds[i]);
+        ImGui::NextColumn();
+        test = (controllerByte & m_ButtonMasks[i]);
+        ImGui::Checkbox("", &test);
+        ImGui::NextColumn();
+    }
+    ImGui::Columns(1);
+    ImGui::Separator();
+    ImGui::TreePop();
     End();
 }

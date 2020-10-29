@@ -11,7 +11,7 @@
 #include "helpers/RootDir.h"
 #include  "virtual-nes/cartridge.h"
 
-namespace cpuemulator {
+namespace virtualnes {
 
 int CALLBACK ImguiCartridgeExplorer::BrowseCallbackProc(HWND hwnd, UINT uMsg,
                                                         LPARAM lParam,
@@ -115,17 +115,17 @@ void ImguiCartridgeExplorer::Update() {}
 
 void ImguiCartridgeExplorer::RenderWidgets() {
     ImGui::Begin("Cartridge Explorer");
-    if (ImGui::Button("Load new cartridge")) {
-        std::wstring newPath = GetFileFromUser();
-        if (!newPath.empty()) {
-        
-            Cartridge* cartridge = new Cartridge(newPath);
-            if (cartridge->IsLoaded()) {
-                // TODO
-            }
+    //if (ImGui::Button("Load new cartridge")) {
+    //    std::wstring newPath = GetFileFromUser();
+    //    if (!newPath.empty()) {
+    //    
+    //        Cartridge* cartridge = new Cartridge(newPath);
+    //        if (cartridge->IsLoaded()) {
+    //            // TODO
+    //        }
 
-        }
-    }
+    //    }
+    //}
     ImGui::End();
 }
-}  // namespace cpuemulator
+}  // namespace virtualnes

@@ -21,7 +21,7 @@ void ImGuiNesPpuNametableWindow::Render() {
         End();
         return;
     }
-    cpuemulator::Nes* nesEmulator = g_GetGlobalNes();
+    virtualnes::Nes* nesEmulator = g_GetGlobalNes();
     auto m_PpuPtr = nesEmulator->GetPpu();
     auto GetNametableString = [&](std::size_t nametableId) -> std::string {
         std::string nametableStr = "";

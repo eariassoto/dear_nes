@@ -8,17 +8,19 @@
 // clang-format on
 #include <iostream>
 #include <chrono>
+#include <variant>
 
 #include "include/imgui_layer/imgui_nes_window_manager.h"
 #include "include/imgui_layer/imgui_nes_status_window.h"
 #include "include/global_nes.h"
 #include "helpers/RootDir.h"
 #include "virtual-nes/cartridge.h"
+#include "virtual-nes/cartridge_loader.h"
 #include "virtual-nes/enums.h"
 #include "virtual-nes/nes.h"
 
-using Nes = cpuemulator::Nes;
-using Cartridge = cpuemulator::Cartridge;
+using Nes = virtualnes::Nes;
+using Cartridge = virtualnes::Cartridge;
 
 // Forward declaration
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
@@ -52,12 +54,17 @@ int main(int argc, char* argv[]) {
 
     Nes* nesEmulator = g_GetGlobalNes();
 
-    if (argc > 1) {
-        std::string cartridgePath = ROOT_DIR "res/roms/" + std::string(argv[1]);
-        Cartridge* cartridge = new Cartridge(cartridgePath);
-        if (cartridge->IsLoaded()) {
-            nesEmulator->InsertCatridge(cartridge);
-        }
+    virtualnes::CartridgeLoader cartridgeLoader;
+    if (argc < 2) {
+        return 1;
+    }
+
+    std::string cartridgePath = ROOT_DIR "res/roms/" + std::string(argv[1]);
+    auto ret = cartridgeLoader.LoadNewCartridge(cartridgePath);
+    if (auto pval = std::get_if<Cartridge*>(&ret)) {
+        nesEmulator->InsertCatridge(*pval);
+    } else {
+        return 1;
     }
 
     nesEmulator->Reset();
@@ -109,37 +116,37 @@ void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }
-    nesEmulator->ClearControllerState(cpuemulator::CONTROLLER_PLAYER_1_IDX);
+    nesEmulator->ClearControllerState(virtualnes::CONTROLLER_PLAYER_1_IDX);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        nesEmulator->WriteControllerState(cpuemulator::CONTROLLER_PLAYER_1_IDX,
+        nesEmulator->WriteControllerState(virtualnes::CONTROLLER_PLAYER_1_IDX,
                                           0x80);
     }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        nesEmulator->WriteControllerState(cpuemulator::CONTROLLER_PLAYER_1_IDX,
+        nesEmulator->WriteControllerState(virtualnes::CONTROLLER_PLAYER_1_IDX,
                                           0x40);
     }
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-        nesEmulator->WriteControllerState(cpuemulator::CONTROLLER_PLAYER_1_IDX,
+        nesEmulator->WriteControllerState(virtualnes::CONTROLLER_PLAYER_1_IDX,
                                           0x20);
     }
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        nesEmulator->WriteControllerState(cpuemulator::CONTROLLER_PLAYER_1_IDX,
+        nesEmulator->WriteControllerState(virtualnes::CONTROLLER_PLAYER_1_IDX,
                                           0x10);
     }
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-        nesEmulator->WriteControllerState(cpuemulator::CONTROLLER_PLAYER_1_IDX,
+        nesEmulator->WriteControllerState(virtualnes::CONTROLLER_PLAYER_1_IDX,
                                           0x08);
     }
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-        nesEmulator->WriteControllerState(cpuemulator::CONTROLLER_PLAYER_1_IDX,
+        nesEmulator->WriteControllerState(virtualnes::CONTROLLER_PLAYER_1_IDX,
                                           0x04);
     }
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-        nesEmulator->WriteControllerState(cpuemulator::CONTROLLER_PLAYER_1_IDX,
+        nesEmulator->WriteControllerState(virtualnes::CONTROLLER_PLAYER_1_IDX,
                                           0x02);
     }
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-        nesEmulator->WriteControllerState(cpuemulator::CONTROLLER_PLAYER_1_IDX,
+        nesEmulator->WriteControllerState(virtualnes::CONTROLLER_PLAYER_1_IDX,
                                           0x01);
     }
 }

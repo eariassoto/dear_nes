@@ -4,7 +4,7 @@
 // TODO: precompile guard
 #include <windows.h>
 
-namespace cpuemulator {
+namespace virtualnes {
 
 class NesEmulator;
 
@@ -26,4 +26,4 @@ class ImguiCartridgeExplorer {
     bool m_CartridgeLoaded = false;
 };
 
-}  // namespace cpuemulator
+}  // namespace virtualnes
