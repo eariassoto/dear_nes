@@ -54,19 +54,14 @@ int main(int argc, char* argv[]) {
 
     Nes* nesEmulator = g_GetGlobalNes();
 
-    virtualnes::CartridgeLoader cartridgeLoader;
-    if (argc < 2) {
-        return 1;
+    if (argc > 1) {
+        virtualnes::CartridgeLoader cartridgeLoader;
+        std::string cartridgePath = ROOT_DIR "res/roms/" + std::string(argv[1]);
+        auto ret = cartridgeLoader.LoadNewCartridge(cartridgePath);
+        if (auto pval = std::get_if<Cartridge*>(&ret)) {
+            nesEmulator->InsertCatridge(*pval);
+        }
     }
-
-    std::string cartridgePath = ROOT_DIR "res/roms/" + std::string(argv[1]);
-    auto ret = cartridgeLoader.LoadNewCartridge(cartridgePath);
-    if (auto pval = std::get_if<Cartridge*>(&ret)) {
-        nesEmulator->InsertCatridge(*pval);
-    } else {
-        return 1;
-    }
-
     nesEmulator->Reset();
 
     ImGuiNesWindowManager uiManager;
@@ -87,7 +82,8 @@ int main(int argc, char* argv[]) {
 
         processInput(window);
 
-        if (nesStatusWindow->IsNesPoweredUp()) {
+        if (nesStatusWindow->IsNesPoweredUp() &&
+            nesEmulator->IsCartridgeLoaded()) {
             if (residualTime > 0ns) {
                 residualTime -= deltaTime;
             } else {

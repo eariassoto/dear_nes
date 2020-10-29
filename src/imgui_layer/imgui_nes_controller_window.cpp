@@ -61,6 +61,6 @@ void ImGuiNesControllerWindow::Render() {
     }
     ImGui::Columns(1);
     ImGui::Separator();
-    ImGui::TreePop();
+    //ImGui::TreePop();
     End();
 }
