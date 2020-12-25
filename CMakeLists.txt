@@ -1,6 +1,6 @@
 # Copyright (c) 2020 Emmanuel Arias
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
-project(nes-emulator)
+project(dear_nes)
 
 link_directories(${CMAKE_SOURCE_DIR}/lib)
 
@@ -29,9 +29,9 @@ add_library(GLAD "external/glad/glad.c")
 
 add_subdirectory(external/fmt)
 
-add_subdirectory(libs/virtual-nes)
-get_target_property(VIRTUAL_NES_PUBLIC_HEADER_DIR virtual_nes INTERFACE_INCLUDE_DIRECTORIES)
-include_directories("${VIRTUAL_NES_PUBLIC_HEADER_DIR}")
+add_subdirectory(libs/dear_nes_lib)
+get_target_property(DEAR_NES_LIB_PUBLIC_HEADER_DIR dear_nes_lib INTERFACE_INCLUDE_DIRECTORIES)
+include_directories("${DEAR_NES_LIB_PUBLIC_HEADER_DIR}")
 
 # Imgui
 add_library(IMGUI
@@ -43,7 +43,7 @@ add_library(IMGUI
 	"external/imgui/imgui_widgets.cpp"
 )
 
-set(LIBS glfw opengl32 GLAD IMGUI fmt::fmt virtual_nes)
+set(LIBS glfw opengl32 GLAD IMGUI fmt::fmt dear_nes_lib)
 
 include_directories(
 	"${CMAKE_SOURCE_DIR}/src"

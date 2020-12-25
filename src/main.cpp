@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
     int screenWidth = 1250;
     int screenHeight = 800;
     GLFWwindow* window =
-        glfwCreateWindow(screenWidth, screenHeight, "NES Emulator", NULL, NULL);
+        glfwCreateWindow(screenWidth, screenHeight, "Dear NES", NULL, NULL);
     if (window == NULL) {
         std::cout << "Failed to create GLFW window" << '\n';
         glfwTerminate();

@@ -9,3 +9,6 @@
 	path = external/glfw
 	url = https://github.com/glfw/glfw
 	branch = master
+[submodule "libs/dear_nes_lib"]
+	path = libs/dear_nes_lib
+	url = https://github.com/eariassoto/dear_nes_lib
