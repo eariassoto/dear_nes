@@ -1,5 +1,5 @@
 // Copyright (c) 2020 Emmanuel Arias
-#include "include/imgui_layer/imgui_nes_status_window.h"
+#include "include/status_widget.h"
 
 #include <imgui.h>
 
@@ -15,9 +15,9 @@
 #include "include/global_nes.h"
 #include "virtual-nes/cartridge.h"
 
-bool ImGuiNesStatusWindow::IsNesPoweredUp() const { return m_IsPowerUp; }
+bool StatusWidget::IsNesPoweredUp() const { return m_IsPowerUp; }
 
-void ImGuiNesStatusWindow::Render() {
+void StatusWidget::Render() {
     if (!m_Show) {
         return;
     }
@@ -65,7 +65,7 @@ void ImGuiNesStatusWindow::Render() {
 }
 
 #ifdef _WIN32
-std::wstring ImGuiNesStatusWindow::GetFileFromUser() {
+std::wstring StatusWidget::GetFileFromUser() {
     std::wstring filePath;
     HRESULT hr =
         CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);

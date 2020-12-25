@@ -1,9 +1,10 @@
 // Copyright (c) 2020 Emmanuel Arias
-#include "include/imgui_layer/imgui_sample_window.h"
+
+#include "include/sample_widget.h"
 
 #include <imgui.h>
 
-void IGStartupWindow::Render() {
+void SampleWidget::Render() {
     if (m_Show) {
         if (!Begin(m_WindowName)) {
             End();

@@ -2,10 +2,10 @@
 #pragma once
 #include <string>
 
-#include "include/imgui_layer/imgui_window.h"
+#include "include/base_widget.h"
 #include "virtual-nes/cartridge_loader.h"
 
-class ImGuiNesStatusWindow : public ImGuiWindow {
+class StatusWidget : public BaseWidget {
    public:
     virtual void Render() override;
     bool IsNesPoweredUp() const;

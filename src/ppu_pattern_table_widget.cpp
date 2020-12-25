@@ -1,5 +1,5 @@
 // Copyright (c) 2020 Emmanuel Arias
-#include "include/imgui_layer/imgui_nes_ppu_pattern_table_window.h"
+#include "include/ppu_pattern_table_widget.h"
 
 #include <fmt/core.h>
 #include <imgui.h>
@@ -8,12 +8,12 @@
 #include "virtual-nes/nes.h"
 #include "virtual-nes/ppu.h"
 
-ImGuiNesPpuPatternTableWindow::ImGuiNesPpuPatternTableWindow(
+PpuPatternTableWidget::PpuPatternTableWidget(
     unsigned int patternTableIdx)
     : m_PatternTableIdx{patternTableIdx},
       m_WindowName{fmt::format("Ppu Pattern Table {}", m_PatternTableIdx)} {}
 
-void ImGuiNesPpuPatternTableWindow::Render() {
+void PpuPatternTableWidget::Render() {
     if (!m_Show) {
         return;
     }
@@ -31,14 +31,14 @@ void ImGuiNesPpuPatternTableWindow::Render() {
     End();
 }
 
-void ImGuiNesPpuPatternTableWindow::Update() {
+void PpuPatternTableWidget::Update() {
     if (m_Show) {
         UpdatePatternTable();
         m_PpuPatternTable.Update();
     }
 }
 
-void ImGuiNesPpuPatternTableWindow::UpdatePatternTable() {
+void PpuPatternTableWidget::UpdatePatternTable() {
     virtualnes::Nes* nesEmulator = g_GetGlobalNes();
     auto ppuPtr = nesEmulator->GetPpu();
     for (uint16_t nTileX = 0; nTileX < 16; ++nTileX) {

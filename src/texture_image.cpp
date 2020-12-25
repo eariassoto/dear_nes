@@ -1,5 +1,6 @@
 // Copyright (c) 2020 Emmanuel Arias
-#include "include/imgui_layer/imgui_texture_image.h"
+
+#include "include/texture_image.h"
 
 #include <imgui.h>
 #include <imgui_impl_glfw.h>

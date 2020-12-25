@@ -10,8 +10,8 @@
 #include <chrono>
 #include <variant>
 
-#include "include/imgui_layer/imgui_nes_window_manager.h"
-#include "include/imgui_layer/imgui_nes_status_window.h"
+#include "include/app_widget_manager.h"
+#include "include/status_widget.h"
 #include "include/global_nes.h"
 #include "helpers/RootDir.h"
 #include "virtual-nes/cartridge.h"
@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
     }
     nesEmulator->Reset();
 
-    ImGuiNesWindowManager uiManager;
+    AppWidgetManager uiManager;
     uiManager.Initialize(window);
     auto nesStatusWindow = uiManager.m_NesStatusWindow;
 

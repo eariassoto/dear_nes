@@ -4,12 +4,12 @@
 #include <vector>
 
 struct GLFWwindow;
-class ImGuiWindow;
+class BaseWidget;
 
-class ImGuiWindowManager {
+class ImGuiWidgetManager {
    public:
-    ImGuiWindowManager() = default;
-    ~ImGuiWindowManager();
+    ImGuiWidgetManager() = default;
+    ~ImGuiWidgetManager();
 
     void Initialize(GLFWwindow* window);
     void Shutdown();
@@ -18,10 +18,10 @@ class ImGuiWindowManager {
     void Render();
     
     protected:
-        ImGuiWindow* AddWindow(ImGuiWindow* newWin);
+        BaseWidget* AddWindow(BaseWidget* newWin);
 
    private:
-    std::vector<ImGuiWindow*> m_Windows;
+    std::vector<BaseWidget*> m_Windows;
 
     void ShowDockSpace(bool* p_open);
     void SetStyle();

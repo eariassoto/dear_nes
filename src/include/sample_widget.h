@@ -1,13 +1,13 @@
 // Copyright (c) 2020 Emmanuel Arias
 #pragma once
 #include <string>
-#include "include/imgui_layer/imgui_window.h"
+#include "include/base_widget.h"
 
-class ImGuiNesCpuWindow : public ImGuiWindow {
+class SampleWidget : public BaseWidget {
    public:
     virtual void Render() override;
 
    private:
-    const std::string m_WindowName = "CPU";
+    const std::string m_WindowName = "TEST";
     int counter = 0;
 };

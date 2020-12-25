@@ -1,5 +1,5 @@
 // Copyright (c) 2020 Emmanuel Arias
-#include "include/imgui_layer/imgui_nes_ppu_nametable_window.h"
+#include "include/ppu_nametable_widget.h"
 
 #include <fmt/core.h>
 #include <imgui.h>
@@ -8,12 +8,12 @@
 #include "virtual-nes/nes.h"
 #include "virtual-nes/ppu.h"
 
-ImGuiNesPpuNametableWindow::ImGuiNesPpuNametableWindow(
+PpuNametableWidget::PpuNametableWidget(
     unsigned int nametableIdx)
     : m_NametableIdx{nametableIdx},
       m_WindowName{fmt::format("Ppu Nametable {}", m_NametableIdx)} {}
 
-void ImGuiNesPpuNametableWindow::Render() {
+void PpuNametableWidget::Render() {
     if (!m_Show) {
         return;
     }

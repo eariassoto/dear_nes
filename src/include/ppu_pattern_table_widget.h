@@ -2,12 +2,12 @@
 #pragma once
 #include <string>
 
-#include "include/imgui_layer/imgui_window.h"
-#include "include/imgui_layer/imgui_texture_image.h"
+#include "include/base_widget.h"
+#include "include/texture_image.h"
 
-class ImGuiNesPpuPatternTableWindow : public ImGuiWindow {
+class PpuPatternTableWidget : public BaseWidget {
    public:
-    ImGuiNesPpuPatternTableWindow(unsigned int patternTableIdx);
+    PpuPatternTableWidget(unsigned int patternTableIdx);
     virtual void Render() override;
     virtual void Update() override;
 

@@ -1,11 +1,11 @@
 // Copyright (c) 2020 Emmanuel Arias
-#include "include/imgui_layer/imgui_nes_screen_window.h"
+#include "include/screen_widget.h"
 #include <imgui.h>
 
 #include "include/global_nes.h"
 #include "virtual-nes/ppu.h"
 
-void ImGuiNesScreenWindow::Render() {
+void ScreenWidget::Render() {
     if (!m_Show) {
         return;
     }
@@ -23,7 +23,7 @@ void ImGuiNesScreenWindow::Render() {
     End();
 }
 
-void ImGuiNesScreenWindow::Update() {
+void ScreenWidget::Update() {
     if (m_Show) {
         m_NesScreenWidget.CopyTextureFromArray(
             g_GetGlobalNes()->GetPpu()->GetOutputScreen());

@@ -4,10 +4,10 @@
 
 struct GLFWwindow;
 
-class ImGuiWindow {
+class BaseWidget {
    public:
-    ImGuiWindow() = default;
-    virtual ~ImGuiWindow() = default;
+    BaseWidget() = default;
+    virtual ~BaseWidget() = default;
 
     virtual void Update();
     virtual void Render();

@@ -1,5 +1,5 @@
 // Copyright (c) 2020 Emmanuel Arias
-#include "include/imgui_layer/imgui_nes_controller_window.h"
+#include "include/controller_widget.h"
 
 #include <fmt/core.h>
 #include <imgui.h>
@@ -9,11 +9,11 @@
 #include "include/global_nes.h"
 #include "virtual-nes/nes.h"
 
-ImGuiNesControllerWindow::ImGuiNesControllerWindow(unsigned int controllerIdx)
+ControllerWidget::ControllerWidget(unsigned int controllerIdx)
     : m_ControllerIdx{controllerIdx},
       m_WindowName{fmt::format("Controller {}", (m_ControllerIdx + 1))} {}
 
-void ImGuiNesControllerWindow::Render() {
+void ControllerWidget::Render() {
     if (!m_Show) {
         return;
     }

@@ -2,10 +2,10 @@
 #pragma once
 #include <string>
 
-#include "include/imgui_layer/imgui_texture_image.h"
-#include "include/imgui_layer/imgui_window.h"
+#include "include/texture_image.h"
+#include "include/base_widget.h"
 
-class ImGuiNesScreenWindow : public ImGuiWindow {
+class ScreenWidget : public BaseWidget {
    public:
     virtual void Update() override;
     virtual void Render() override;

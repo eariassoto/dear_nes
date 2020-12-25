@@ -1,5 +1,6 @@
 // Copyright (c) 2020 Emmanuel Arias
-#include "include/imgui_layer/imgui_window_manager.h"
+
+#include "include/imgui_widget_manager.h"
 
 // clang-format off
 #include <GLFW/glfw3.h>
@@ -8,9 +9,9 @@
 #include <imgui_impl_opengl3.h>
 // clang-format on
 
-#include "include/imgui_layer/imgui_window.h"
+#include "include/base_widget.h"
 
-void ImGuiWindowManager::Initialize(GLFWwindow* window) {
+void ImGuiWidgetManager::Initialize(GLFWwindow* window) {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
 
@@ -34,21 +35,21 @@ void ImGuiWindowManager::Initialize(GLFWwindow* window) {
     ImGui_ImplOpenGL3_Init(glsl_version);
 }
 
-void ImGuiWindowManager::Shutdown() {
+void ImGuiWidgetManager::Shutdown() {
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 }
 
-ImGuiWindowManager::~ImGuiWindowManager() { DeleteWindows(); }
+ImGuiWidgetManager::~ImGuiWidgetManager() { DeleteWindows(); }
 
-void ImGuiWindowManager::Update() {
-    for (ImGuiWindow* window : m_Windows) {
+void ImGuiWidgetManager::Update() {
+    for (BaseWidget* window : m_Windows) {
         window->Update();
     }
 }
 
-void ImGuiWindowManager::Render() {
+void ImGuiWidgetManager::Render() {
     bool show = true;
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -70,12 +71,12 @@ void ImGuiWindowManager::Render() {
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-ImGuiWindow* ImGuiWindowManager::AddWindow(ImGuiWindow* newWin) {
+BaseWidget* ImGuiWidgetManager::AddWindow(BaseWidget* newWin) {
     m_Windows.push_back(newWin);
     return newWin;
 }
 
-void ImGuiWindowManager::ShowDockSpace(bool* p_open) {
+void ImGuiWidgetManager::ShowDockSpace(bool* p_open) {
     static bool opt_fullscreen_persistant = true;
     bool opt_fullscreen = opt_fullscreen_persistant;
     static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
@@ -129,7 +130,7 @@ void ImGuiWindowManager::ShowDockSpace(bool* p_open) {
     ImGui::End();
 }
 
-void ImGuiWindowManager::SetStyle() {
+void ImGuiWidgetManager::SetStyle() {
     ImGuiStyle* style = &ImGui::GetStyle();
     ImVec4* colors = style->Colors;
 
@@ -201,13 +202,13 @@ void ImGuiWindowManager::SetStyle() {
     style->WindowRounding = 4.0f;
 }
 
-void ImGuiWindowManager::RenderWindows() {
-    for (ImGuiWindow* window : m_Windows) {
+void ImGuiWidgetManager::RenderWindows() {
+    for (BaseWidget* window : m_Windows) {
         window->Render();
     }
 }
-void ImGuiWindowManager::DeleteWindows() {
-    for (ImGuiWindow* window : m_Windows) {
+void ImGuiWidgetManager::DeleteWindows() {
+    for (BaseWidget* window : m_Windows) {
         delete window;
     }
 }

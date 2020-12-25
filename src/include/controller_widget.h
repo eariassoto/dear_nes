@@ -1,11 +1,11 @@
 // Copyright (c) 2020 Emmanuel Arias
 #pragma once
 #include <string>
-#include "include/imgui_layer/imgui_window.h"
+#include "include/base_widget.h"
 
-class ImGuiNesControllerWindow : public ImGuiWindow {
+class ControllerWidget : public BaseWidget {
    public:
-    ImGuiNesControllerWindow(unsigned int controllerIdx);
+    ControllerWidget(unsigned int controllerIdx);
     virtual void Render() override;
 
    private:

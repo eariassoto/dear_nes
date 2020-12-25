@@ -1,5 +1,5 @@
 // Copyright (c) 2020 Emmanuel Arias
-#include "include/imgui_layer/imgui_nes_cpu_window.h"
+#include "include/cpu_widget.h"
 
 #include <imgui.h>
 
@@ -9,7 +9,7 @@
 
 using virtualnes::CpuFlag;
 
-void ImGuiNesCpuWindow::Render() {
+void CpuWidget::Render() {
     if (!m_Show) {
         return;
     }
