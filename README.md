@@ -8,7 +8,7 @@ This repository includes the code for the GUI layer of the emulator. The NES log
 
 ## Screenshot
 
-![Dear NES Emulator](screenshot.png)
+![Dear NES Emulator](screenshot.PNG)
 
 ## Dependencies
 + [imgui](https://github.com/ocornut/imgui)
