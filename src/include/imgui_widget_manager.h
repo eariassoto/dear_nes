@@ -18,10 +18,10 @@ class ImGuiWidgetManager {
     void Render();
     
     protected:
-        BaseWidget* AddWindow(BaseWidget* newWin);
+        BaseWidget* AddWidget(BaseWidget* newWin);
 
    private:
-    std::vector<BaseWidget*> m_Windows;
+    std::vector<BaseWidget*> m_Widgets;
 
     void ShowDockSpace(bool* p_open);
     void SetStyle();

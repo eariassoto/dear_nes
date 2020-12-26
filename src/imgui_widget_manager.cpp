@@ -44,8 +44,8 @@ void ImGuiWidgetManager::Shutdown() {
 ImGuiWidgetManager::~ImGuiWidgetManager() { DeleteWindows(); }
 
 void ImGuiWidgetManager::Update() {
-    for (BaseWidget* window : m_Windows) {
-        window->Update();
+    for (BaseWidget* widget : m_Widgets) {
+        widget->Update();
     }
 }
 
@@ -71,9 +71,9 @@ void ImGuiWidgetManager::Render() {
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-BaseWidget* ImGuiWidgetManager::AddWindow(BaseWidget* newWin) {
-    m_Windows.push_back(newWin);
-    return newWin;
+BaseWidget* ImGuiWidgetManager::AddWidget(BaseWidget* newWidget) {
+    m_Widgets.push_back(newWidget);
+    return newWidget;
 }
 
 void ImGuiWidgetManager::ShowDockSpace(bool* p_open) {
@@ -203,12 +203,12 @@ void ImGuiWidgetManager::SetStyle() {
 }
 
 void ImGuiWidgetManager::RenderWindows() {
-    for (BaseWidget* window : m_Windows) {
-        window->Render();
+    for (BaseWidget* widget : m_Widgets) {
+        widget->Render();
     }
 }
 void ImGuiWidgetManager::DeleteWindows() {
-    for (BaseWidget* window : m_Windows) {
-        delete window;
+    for (BaseWidget* widget : m_Widgets) {
+        delete widget;
     }
 }

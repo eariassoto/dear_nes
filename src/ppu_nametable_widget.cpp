@@ -5,8 +5,8 @@
 #include <imgui.h>
 
 #include "include/global_nes.h"
-#include "virtual-nes/nes.h"
-#include "virtual-nes/ppu.h"
+#include "dear_nes_lib/nes.h"
+#include "dear_nes_lib/ppu.h"
 
 PpuNametableWidget::PpuNametableWidget(
     unsigned int nametableIdx)
@@ -21,7 +21,7 @@ void PpuNametableWidget::Render() {
         End();
         return;
     }
-    virtualnes::Nes* nesEmulator = g_GetGlobalNes();
+    dearnes::Nes* nesEmulator = g_GetGlobalNes();
     auto m_PpuPtr = nesEmulator->GetPpu();
     auto GetNametableString = [&](std::size_t nametableId) -> std::string {
         std::string nametableStr = "";

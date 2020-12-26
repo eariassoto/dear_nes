@@ -5,8 +5,8 @@
 #include <imgui.h>
 
 #include "include/global_nes.h"
-#include "virtual-nes/nes.h"
-#include "virtual-nes/ppu.h"
+#include "dear_nes_lib/nes.h"
+#include "dear_nes_lib/ppu.h"
 
 PpuPatternTableWidget::PpuPatternTableWidget(
     unsigned int patternTableIdx)
@@ -39,7 +39,7 @@ void PpuPatternTableWidget::Update() {
 }
 
 void PpuPatternTableWidget::UpdatePatternTable() {
-    virtualnes::Nes* nesEmulator = g_GetGlobalNes();
+    dearnes::Nes* nesEmulator = g_GetGlobalNes();
     auto ppuPtr = nesEmulator->GetPpu();
     for (uint16_t nTileX = 0; nTileX < 16; ++nTileX) {
         for (uint16_t nTileY = 0; nTileY < 16; ++nTileY) {

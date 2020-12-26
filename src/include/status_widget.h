@@ -3,7 +3,7 @@
 #include <string>
 
 #include "include/base_widget.h"
-#include "virtual-nes/cartridge_loader.h"
+#include "dear_nes_lib/cartridge_loader.h"
 
 class StatusWidget : public BaseWidget {
    public:
@@ -17,7 +17,7 @@ class StatusWidget : public BaseWidget {
     bool m_IsPowerUp = false;
 
 #ifdef _WIN32
-    virtualnes::CartridgeLoader m_CartridgeLoader;
+    dearnes::CartridgeLoader m_CartridgeLoader;
     std::wstring GetFileFromUser();
 #endif
 };

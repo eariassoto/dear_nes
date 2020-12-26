@@ -4,19 +4,40 @@ project(dear_nes)
 
 link_directories(${CMAKE_SOURCE_DIR}/lib)
 
-file(GLOB_RECURSE SOURCE_FILES 
-	${CMAKE_SOURCE_DIR}/src/*.c
-	${CMAKE_SOURCE_DIR}/src/*.cpp)
+set(
+    source_files_list
+    ${CMAKE_SOURCE_DIR}/src/app_widget_manager.cpp
+    ${CMAKE_SOURCE_DIR}/src/base_widget.cpp
+    ${CMAKE_SOURCE_DIR}/src/controller_widget.cpp
+    ${CMAKE_SOURCE_DIR}/src/cpu_widget.cpp
+    ${CMAKE_SOURCE_DIR}/src/imgui_widget_manager.cpp
+    ${CMAKE_SOURCE_DIR}/src/main.cpp
+    ${CMAKE_SOURCE_DIR}/src/ppu_nametable_widget.cpp
+    ${CMAKE_SOURCE_DIR}/src/ppu_pattern_table_widget.cpp
+    ${CMAKE_SOURCE_DIR}/src/screen_widget.cpp
+    ${CMAKE_SOURCE_DIR}/src/status_widget.cpp
+    ${CMAKE_SOURCE_DIR}/src/texture_image.cpp
+)
 	
-file(GLOB_RECURSE HEADER_FILES 
-	${CMAKE_SOURCE_DIR}/src/*.h
-	${CMAKE_SOURCE_DIR}/src/*.hpp)
+set(
+    header_files_list
+    ${CMAKE_SOURCE_DIR}/src/include/app_widget_manager.h
+    ${CMAKE_SOURCE_DIR}/src/include/base_widget.h
+    ${CMAKE_SOURCE_DIR}/src/include/controller_widget.h
+    ${CMAKE_SOURCE_DIR}/src/include/cpu_widget.h
+    ${CMAKE_SOURCE_DIR}/src/include/imgui_widget_manager.h
+    ${CMAKE_SOURCE_DIR}/src/include/ppu_nametable_widget.h
+    ${CMAKE_SOURCE_DIR}/src/include/ppu_pattern_table_widget.h
+    ${CMAKE_SOURCE_DIR}/src/include/screen_widget.h
+    ${CMAKE_SOURCE_DIR}/src/include/status_widget.h
+    ${CMAKE_SOURCE_DIR}/src/include/texture_image.h
+)
 
 # Configure assets header file
 configure_file(src/helpers/RootDir.h.in src/helpers/RootDir.h)
 include_directories(${CMAKE_BINARY_DIR}/src)
 
-add_executable(${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
+add_executable(${PROJECT_NAME} ${header_files_list} ${source_files_list})
 
 # OpenGL
 find_package(OpenGL REQUIRED)
@@ -60,23 +81,13 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
 
-# Create virtual folders to make it look nicer in VS
-if(MSVC_IDE)
-	# Macro to preserve source files hierarchy in the IDE
-	macro(GroupSources curdir)
-		file(GLOB children RELATIVE ${PROJECT_SOURCE_DIR}/${curdir} ${PROJECT_SOURCE_DIR}/${curdir}/*)
+# Create filter groups for VS solutions
+foreach(source IN LISTS source_files_list)
+	get_filename_component(source_path "${source}" PATH)
+	source_group("Sources" FILES "${source}")
+endforeach()
+foreach(source IN LISTS header_files_list)
+	get_filename_component(source_path "${source}" PATH)
+	source_group("Includes" FILES "${source}")
+endforeach()
 
-		foreach(child ${children})
-			if(IS_DIRECTORY ${PROJECT_SOURCE_DIR}/${curdir}/${child})
-				GroupSources(${curdir}/${child})
-			else()
-				string(REPLACE "/" "\\" groupname ${curdir})
-				string(REPLACE "src" "Sources" groupname ${groupname})
-				source_group(${groupname} FILES ${PROJECT_SOURCE_DIR}/${curdir}/${child})
-			endif()
-		endforeach()
-	endmacro()
-
-	# Run macro
-	GroupSources(src)
-endif()

@@ -11,13 +11,13 @@
 #include "include/status_widget.h"
 
 AppWidgetManager::AppWidgetManager() {
-    AddWindow(new ScreenWidget());
+    AddWidget(new ScreenWidget());
     m_NesStatusWindow = dynamic_cast<StatusWidget*>(
-        AddWindow(new StatusWidget()));
-    AddWindow(new CpuWidget());
-    AddWindow(new PpuPatternTableWidget(0));
-    AddWindow(new PpuPatternTableWidget(1));
-    AddWindow(new ControllerWidget(0));
+        AddWidget(new StatusWidget()));
+    AddWidget(new CpuWidget());
+    AddWidget(new PpuPatternTableWidget(0));
+    AddWidget(new PpuPatternTableWidget(1));
+    AddWidget(new ControllerWidget(0));
     // AddWindow(new ImGuiNesPpuNametableWindow(0));
     // AddWindow(new ImGuiNesPpuNametableWindow(1));
 }

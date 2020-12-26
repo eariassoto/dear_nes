@@ -13,7 +13,7 @@
 #endif
 
 #include "include/global_nes.h"
-#include "virtual-nes/cartridge.h"
+#include "dear_nes_lib/cartridge.h"
 
 bool StatusWidget::IsNesPoweredUp() const { return m_IsPowerUp; }
 
@@ -39,7 +39,7 @@ void StatusWidget::Render() {
 
     bool resetPressed = ImGui::Button("Reset");
     if (resetPressed) {
-        virtualnes::Nes* nesPtr = g_GetGlobalNes();
+        dearnes::Nes* nesPtr = g_GetGlobalNes();
         nesPtr->Reset();
     }
 
@@ -48,14 +48,14 @@ void StatusWidget::Render() {
 
     bool loadCartridgePressed = ImGui::Button("Load Cartridge");
     if (loadCartridgePressed) {
-        virtualnes::Nes* nesPtr = g_GetGlobalNes();
+        dearnes::Nes* nesPtr = g_GetGlobalNes();
         std::wstring newPath = GetFileFromUser();
         if (!newPath.empty()) {
             std::ifstream ifs;
             ifs.open(newPath, std::ifstream::binary);
 
             auto ret = m_CartridgeLoader.LoadNewCartridge(ifs);
-            if (auto pval = std::get_if<virtualnes::Cartridge*>(&ret)) {
+            if (auto pval = std::get_if<dearnes::Cartridge*>(&ret)) {
                 nesPtr->InsertCatridge(*pval);
             }
         }

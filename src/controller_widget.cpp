@@ -7,7 +7,7 @@
 #include <cinttypes>
 
 #include "include/global_nes.h"
-#include "virtual-nes/nes.h"
+#include "dear_nes_lib/nes.h"
 
 ControllerWidget::ControllerWidget(unsigned int controllerIdx)
     : m_ControllerIdx{controllerIdx},
@@ -36,7 +36,7 @@ void ControllerWidget::Render() {
             }
         }
     };
-    virtualnes::Nes* nesEmulator = g_GetGlobalNes();
+    dearnes::Nes* nesEmulator = g_GetGlobalNes();
     ImGui::Columns(3, "mycolumns");  // 4-ways, with border
     ImGui::Separator();
     ImGui::Text("Button");

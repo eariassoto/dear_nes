@@ -4,10 +4,10 @@
 #include <imgui.h>
 
 #include "include/global_nes.h"
-#include "virtual-nes/nes.h"
-#include "virtual-nes/enums.h"
+#include "dear_nes_lib/nes.h"
+#include "dear_nes_lib/enums.h"
 
-using virtualnes::CpuFlag;
+using dearnes::CpuFlag;
 
 void CpuWidget::Render() {
     if (!m_Show) {
@@ -26,7 +26,7 @@ void CpuWidget::Render() {
             return m_ColorFlagReset;
         }
     };
-    virtualnes::Nes* nesEmulator = g_GetGlobalNes();
+    dearnes::Nes* nesEmulator = g_GetGlobalNes();
     auto cpuPtr = nesEmulator->GetCpu();
 
     ImGui::Text("Status: ");
