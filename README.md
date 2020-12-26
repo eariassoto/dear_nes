@@ -1,6 +1,6 @@
 # Dear NES Emulator
 
-This project is a Nintendo Entertainment System (NES) emulator written in modern C++ and using ImGui as graphic layer. It targets to be a emulator focused for game developers, programmers and assembly/OS enthusiasts.
+This project is a Nintendo Entertainment System (NES) emulator written in modern C++ and using [Dear ImGui](https://github.com/ocornut/imgui) as graphic layer. It targets to be a emulator focused for game developers, programmers and assembly/OS enthusiasts.
 
 There are no release so far because the emulator is still missing features and stability/accuracy must be improved. [Documentation on the project and how-to-build is in progress].
 
