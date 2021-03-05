@@ -2,6 +2,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <chrono>
 
 struct GLFWwindow;
 class BaseWidget;
@@ -14,7 +15,7 @@ class ImGuiWidgetManager {
     void Initialize(GLFWwindow* window);
     void Shutdown();
 
-    void Update();
+    void Update(std::chrono::nanoseconds delta);
     void Render();
 
    protected:

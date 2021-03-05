@@ -92,7 +92,7 @@ int main(int argc, char* argv[]) {
                 nesEmulator->DoFrame();
             }
         }
-        uiManager.Update();
+        uiManager.Update(deltaTime);
         uiManager.Render();
 
         glfwSwapBuffers(window);

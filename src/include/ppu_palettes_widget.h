@@ -9,7 +9,7 @@ class PpuPalettesWidget : public BaseWidget {
    public:
     PpuPalettesWidget();
     virtual void Render() override;
-    virtual void Update() override;
+    virtual void Update(std::chrono::nanoseconds delta) override;
 
    private:
     void UpdatePatternTable();

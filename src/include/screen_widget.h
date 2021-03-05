@@ -7,7 +7,7 @@
 
 class ScreenWidget : public BaseWidget {
    public:
-    virtual void Update() override;
+    virtual void Update(std::chrono::nanoseconds delta) override;
     virtual void Render() override;
 
    private:

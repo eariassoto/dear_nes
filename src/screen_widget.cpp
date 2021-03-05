@@ -23,7 +23,7 @@ void ScreenWidget::Render() {
     End();
 }
 
-void ScreenWidget::Update() {
+void ScreenWidget::Update(std::chrono::nanoseconds delta) {
     if (m_Show) {
         m_NesScreenWidget.CopyTextureFromArray(
             g_GetGlobalNes()->GetPpu()->GetOutputScreen());

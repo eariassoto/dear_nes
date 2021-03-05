@@ -43,9 +43,9 @@ void ImGuiWidgetManager::Shutdown() {
 
 ImGuiWidgetManager::~ImGuiWidgetManager() { DeleteWindows(); }
 
-void ImGuiWidgetManager::Update() {
+void ImGuiWidgetManager::Update(std::chrono::nanoseconds delta) {
     for (BaseWidget* widget : m_Widgets) {
-        widget->Update();
+        widget->Update(delta);
     }
 }
 

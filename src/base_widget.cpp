@@ -3,7 +3,7 @@
 
 #include <imgui.h>
 
-void BaseWidget::Update() {}
+void BaseWidget::Update(std::chrono::nanoseconds delta) {}
 
 void BaseWidget::Render() {}
 
