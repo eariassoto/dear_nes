@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
 
     using clock = std::chrono::high_resolution_clock;
     using namespace std::chrono;
-    static constexpr nanoseconds frameTime{1000ms / 60};
+    constexpr nanoseconds frameTime{1000ms / 60};
 
     nanoseconds residualTime = 0ms;
     auto frameStartTime = clock::now();
@@ -112,37 +112,31 @@ void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }
-    nesEmulator->ClearControllerState(dearnes::CONTROLLER_PLAYER_1_IDX);
+    // TODO: define constants for NES buttons
+    using dearnes::CONTROLLER_PLAYER_1_IDX;
+    nesEmulator->ClearControllerState(CONTROLLER_PLAYER_1_IDX);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        nesEmulator->WriteControllerState(dearnes::CONTROLLER_PLAYER_1_IDX,
-                                          0x80);
+        nesEmulator->WriteControllerState(CONTROLLER_PLAYER_1_IDX, 0x80);
     }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        nesEmulator->WriteControllerState(dearnes::CONTROLLER_PLAYER_1_IDX,
-                                          0x40);
+        nesEmulator->WriteControllerState(CONTROLLER_PLAYER_1_IDX, 0x40);
     }
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-        nesEmulator->WriteControllerState(dearnes::CONTROLLER_PLAYER_1_IDX,
-                                          0x20);
+        nesEmulator->WriteControllerState(CONTROLLER_PLAYER_1_IDX, 0x20);
     }
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        nesEmulator->WriteControllerState(dearnes::CONTROLLER_PLAYER_1_IDX,
-                                          0x10);
+        nesEmulator->WriteControllerState(CONTROLLER_PLAYER_1_IDX, 0x10);
     }
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-        nesEmulator->WriteControllerState(dearnes::CONTROLLER_PLAYER_1_IDX,
-                                          0x08);
+        nesEmulator->WriteControllerState(CONTROLLER_PLAYER_1_IDX, 0x08);
     }
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-        nesEmulator->WriteControllerState(dearnes::CONTROLLER_PLAYER_1_IDX,
-                                          0x04);
+        nesEmulator->WriteControllerState(CONTROLLER_PLAYER_1_IDX, 0x04);
     }
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-        nesEmulator->WriteControllerState(dearnes::CONTROLLER_PLAYER_1_IDX,
-                                          0x02);
+        nesEmulator->WriteControllerState(CONTROLLER_PLAYER_1_IDX, 0x02);
     }
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-        nesEmulator->WriteControllerState(dearnes::CONTROLLER_PLAYER_1_IDX,
-                                          0x01);
+        nesEmulator->WriteControllerState(CONTROLLER_PLAYER_1_IDX, 0x01);
     }
 }

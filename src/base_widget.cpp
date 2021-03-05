@@ -7,8 +7,6 @@ void BaseWidget::Update() {}
 
 void BaseWidget::Render() {}
 
-bool BaseWidget::ShouldShow() const { return m_Show; }
-
 bool BaseWidget::Begin(const std::string& name) {
     return ImGui::Begin(name.c_str(), &m_Show);
 }

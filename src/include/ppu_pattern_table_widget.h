@@ -15,11 +15,11 @@ class PpuPatternTableWidget : public BaseWidget {
     void UpdatePatternTable();
 
     static constexpr unsigned int DEFAULT_PALETTE = 0;
-    static constexpr unsigned int PATTERN_TABLE_REAL_WIDHT = 128;
+    static constexpr unsigned int PATTERN_TABLE_REAL_WIDTH = 128;
     static constexpr unsigned int PATTERN_TABLE_REAL_HEIGHT = 128;
 
     unsigned int m_PatternTableIdx = 0;
     std::string m_WindowName;
     ImGuiTextureImage m_PpuPatternTable =
-        ImGuiTextureImage{PATTERN_TABLE_REAL_WIDHT, PATTERN_TABLE_REAL_HEIGHT};
+        ImGuiTextureImage{PATTERN_TABLE_REAL_WIDTH, PATTERN_TABLE_REAL_HEIGHT};
 };

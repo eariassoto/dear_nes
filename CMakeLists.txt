@@ -13,6 +13,7 @@ set(
     ${CMAKE_SOURCE_DIR}/src/imgui_widget_manager.cpp
     ${CMAKE_SOURCE_DIR}/src/main.cpp
     ${CMAKE_SOURCE_DIR}/src/ppu_nametable_widget.cpp
+    ${CMAKE_SOURCE_DIR}/src/ppu_palettes_widget.cpp
     ${CMAKE_SOURCE_DIR}/src/ppu_pattern_table_widget.cpp
     ${CMAKE_SOURCE_DIR}/src/screen_widget.cpp
     ${CMAKE_SOURCE_DIR}/src/status_widget.cpp
@@ -27,6 +28,7 @@ set(
     ${CMAKE_SOURCE_DIR}/src/include/cpu_widget.h
     ${CMAKE_SOURCE_DIR}/src/include/imgui_widget_manager.h
     ${CMAKE_SOURCE_DIR}/src/include/ppu_nametable_widget.h
+    ${CMAKE_SOURCE_DIR}/src/include/ppu_palettes_widget.h
     ${CMAKE_SOURCE_DIR}/src/include/ppu_pattern_table_widget.h
     ${CMAKE_SOURCE_DIR}/src/include/screen_widget.h
     ${CMAKE_SOURCE_DIR}/src/include/status_widget.h

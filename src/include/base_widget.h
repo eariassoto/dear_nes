@@ -2,8 +2,6 @@
 #pragma once
 #include <string>
 
-struct GLFWwindow;
-
 class BaseWidget {
    public:
     BaseWidget() = default;
@@ -11,7 +9,7 @@ class BaseWidget {
 
     virtual void Update();
     virtual void Render();
-    bool ShouldShow() const;
+    // TODO: Public API Hide & show
 
    protected:
     bool Begin(const std::string& name);

@@ -16,9 +16,9 @@ class ImGuiWidgetManager {
 
     void Update();
     void Render();
-    
-    protected:
-        BaseWidget* AddWidget(BaseWidget* newWin);
+
+   protected:
+    BaseWidget* AddWidget(BaseWidget* newWin);
 
    private:
     std::vector<BaseWidget*> m_Widgets;
