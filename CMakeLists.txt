@@ -66,7 +66,9 @@ add_library(IMGUI
 	"external/imgui/imgui_widgets.cpp"
 )
 
-set(LIBS glfw opengl32 GLAD IMGUI fmt::fmt dear_nes_lib)
+add_definitions(-DIMGUI_IMPL_OPENGL_LOADER_GLAD)
+
+set(LIBS glfw GL GLAD IMGUI fmt::fmt dear_nes_lib)
 
 include_directories(
 	"${CMAKE_SOURCE_DIR}/src"
