@@ -68,7 +68,13 @@ add_library(IMGUI
 
 add_definitions(-DIMGUI_IMPL_OPENGL_LOADER_GLAD)
 
-set(LIBS glfw GL GLAD IMGUI fmt::fmt dear_nes_lib)
+set(LIBS glfw GLAD IMGUI fmt::fmt dear_nes_lib)
+
+if(WIN32)
+    list(APPEND LIBS opengl32)
+elseif(UNIX AND NOT APPLE)
+    list(APPEND LIBS gl)
+endif()
 
 include_directories(
 	"${CMAKE_SOURCE_DIR}/src"
