@@ -1,25 +1,40 @@
 // Copyright (c) 2020-2021 Emmanuel Arias
-#include "soloud.h"
-#include "soloud_speech.h"
-#include "soloud_thread.h"
+#include <soloud.h>
+#include <soloud_speech.h>
+#include <soloud_thread.h>
+#include <iostream>
+#include <cassert>
+
+#include "include/simple_wave.h"
 
 int main(int argc, char* argv[]) {
     // Define a couple of variables
     SoLoud::Soloud soloud;  // SoLoud engine core
     SoLoud::Speech speech;  // A sound source (speech, in this case)
 
+    SimpleWave simpleWave;
+
+    simpleWave.setSamplerate(0.9f);
+    simpleWave.setFreq(0.5f);
+    simpleWave.setWaveform(100);
+    simpleWave.setVolume(1);
+
+    auto instance = simpleWave.createInstance();
+
     // Configure sound source
     speech.setText("Hello world");
 
     // initialize SoLoud.
     soloud.init();
+    soloud.setGlobalVolume(1.f);
 
     // Play the sound source (we could do this several times if we wanted)
-    soloud.play(speech);
-
+    int handle = soloud.play(simpleWave);
+    
     // Wait until sounds have finished
     while (soloud.getActiveVoiceCount() > 0) {
         // Still going, sleep for a bit
+        assert(soloud.isValidVoiceHandle(handle));
         SoLoud::Thread::sleep(100);
     }
 
