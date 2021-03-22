@@ -5,34 +5,34 @@ project(dear_nes)
 link_directories(${CMAKE_SOURCE_DIR}/lib)
 
 set(
-    source_files_list
-    ${CMAKE_SOURCE_DIR}/src/app_widget_manager.cpp
-    ${CMAKE_SOURCE_DIR}/src/base_widget.cpp
-    ${CMAKE_SOURCE_DIR}/src/controller_widget.cpp
-    ${CMAKE_SOURCE_DIR}/src/cpu_widget.cpp
-    ${CMAKE_SOURCE_DIR}/src/imgui_widget_manager.cpp
-    ${CMAKE_SOURCE_DIR}/src/main.cpp
-    ${CMAKE_SOURCE_DIR}/src/ppu_nametable_widget.cpp
-    ${CMAKE_SOURCE_DIR}/src/ppu_palettes_widget.cpp
-    ${CMAKE_SOURCE_DIR}/src/ppu_pattern_table_widget.cpp
-    ${CMAKE_SOURCE_DIR}/src/screen_widget.cpp
-    ${CMAKE_SOURCE_DIR}/src/status_widget.cpp
-    ${CMAKE_SOURCE_DIR}/src/texture_image.cpp
+	source_files_list
+	${CMAKE_SOURCE_DIR}/src/base_widget.cpp
+	${CMAKE_SOURCE_DIR}/src/controller_widget.cpp
+	${CMAKE_SOURCE_DIR}/src/cpu_widget.cpp
+	${CMAKE_SOURCE_DIR}/src/dearnes_window_manager.cpp
+	${CMAKE_SOURCE_DIR}/src/imgui_window_manager.cpp
+	${CMAKE_SOURCE_DIR}/src/main.cpp
+	${CMAKE_SOURCE_DIR}/src/ppu_nametable_widget.cpp
+	${CMAKE_SOURCE_DIR}/src/ppu_palettes_widget.cpp
+	${CMAKE_SOURCE_DIR}/src/ppu_pattern_table_widget.cpp
+	${CMAKE_SOURCE_DIR}/src/screen_widget.cpp
+	${CMAKE_SOURCE_DIR}/src/status_widget.cpp
+	${CMAKE_SOURCE_DIR}/src/texture_image.cpp	
 )
 	
 set(
-    header_files_list
-    ${CMAKE_SOURCE_DIR}/src/include/app_widget_manager.h
-    ${CMAKE_SOURCE_DIR}/src/include/base_widget.h
-    ${CMAKE_SOURCE_DIR}/src/include/controller_widget.h
-    ${CMAKE_SOURCE_DIR}/src/include/cpu_widget.h
-    ${CMAKE_SOURCE_DIR}/src/include/imgui_widget_manager.h
-    ${CMAKE_SOURCE_DIR}/src/include/ppu_nametable_widget.h
-    ${CMAKE_SOURCE_DIR}/src/include/ppu_palettes_widget.h
-    ${CMAKE_SOURCE_DIR}/src/include/ppu_pattern_table_widget.h
-    ${CMAKE_SOURCE_DIR}/src/include/screen_widget.h
-    ${CMAKE_SOURCE_DIR}/src/include/status_widget.h
-    ${CMAKE_SOURCE_DIR}/src/include/texture_image.h
+	header_files_list
+	${CMAKE_SOURCE_DIR}/src/include/base_widget.h
+	${CMAKE_SOURCE_DIR}/src/include/controller_widget.h
+	${CMAKE_SOURCE_DIR}/src/include/cpu_widget.h
+	${CMAKE_SOURCE_DIR}/src/include/dearnes_window_manager.h
+	${CMAKE_SOURCE_DIR}/src/include/imgui_window_manager.h
+	${CMAKE_SOURCE_DIR}/src/include/ppu_nametable_widget.h
+	${CMAKE_SOURCE_DIR}/src/include/ppu_palettes_widget.h
+	${CMAKE_SOURCE_DIR}/src/include/ppu_pattern_table_widget.h
+	${CMAKE_SOURCE_DIR}/src/include/screen_widget.h
+	${CMAKE_SOURCE_DIR}/src/include/status_widget.h
+	${CMAKE_SOURCE_DIR}/src/include/texture_image.h
 )
 
 # Configure assets header file
@@ -71,9 +71,9 @@ add_definitions(-DIMGUI_IMPL_OPENGL_LOADER_GLAD)
 set(LIBS glfw GLAD IMGUI fmt::fmt dear_nes_lib)
 
 if(WIN32)
-    list(APPEND LIBS opengl32)
+	list(APPEND LIBS opengl32)
 elseif(UNIX AND NOT APPLE)
-    list(APPEND LIBS gl)
+	list(APPEND LIBS gl)
 endif()
 
 include_directories(
