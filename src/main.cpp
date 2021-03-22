@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Emmanuel Arias
+// Copyright (c) 2020-2021 Emmanuel Arias
 #include <chrono>
 
 #include "dear_nes_lib/cartridge_loader.h"

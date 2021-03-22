@@ -1,4 +1,4 @@
-# Copyright (c) 2020 Emmanuel Arias
+# Copyright (c) 2020-2021 Emmanuel Arias
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 project(dear_nes)
 
@@ -73,7 +73,7 @@ set(LIBS glfw GLAD IMGUI fmt::fmt dear_nes_lib)
 if(WIN32)
 	list(APPEND LIBS opengl32)
 elseif(UNIX AND NOT APPLE)
-	list(APPEND LIBS gl)
+	list(APPEND LIBS GL)
 endif()
 
 include_directories(
