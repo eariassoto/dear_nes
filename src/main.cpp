@@ -1,56 +1,23 @@
-// Copyright (c) 2020 Emmanuel Arias
-// clang-format off
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <imgui.h>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
-// clang-format on
-#include <iostream>
+// Copyright (c) 2020-2021 Emmanuel Arias
 #include <chrono>
-#include <variant>
 
-#include "include/app_widget_manager.h"
-#include "include/status_widget.h"
-#include "include/global_nes.h"
-#include "helpers/RootDir.h"
-#include "dear_nes_lib/cartridge.h"
 #include "dear_nes_lib/cartridge_loader.h"
-#include "dear_nes_lib/enums.h"
 #include "dear_nes_lib/nes.h"
+#include "helpers/RootDir.h"
+#include "include/dearnes_window_manager.h"
+#include "include/global_nes.h"
+#include "include/status_widget.h"
 
 using Nes = dearnes::Nes;
 using Cartridge = dearnes::Cartridge;
 
-// Forward declaration
-void framebufferSizeCallback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow* window);
-
 int main(int argc, char* argv[]) {
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    // UiConfig uiConfig;
-    int screenWidth = 1250;
-    int screenHeight = 800;
-    GLFWwindow* window =
-        glfwCreateWindow(screenWidth, screenHeight, "Dear NES", NULL, NULL);
-    if (window == NULL) {
-        std::cout << "Failed to create GLFW window" << '\n';
-        glfwTerminate();
-        return -1;
+    DearNESWindowManager dearNESWindowManager;
+    bool success = dearNESWindowManager.CreateWindow();
+    if (!success) {
+        return 1;
     }
-    glfwMakeContextCurrent(window);
-
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        std::cout << "Failed to initialize GLAD" << '\n';
-        return -1;
-    }
-
-    glViewport(0, 0, screenWidth, screenHeight);
-    glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
+    dearNESWindowManager.RegisterWidgets();
 
     Nes* nesEmulator = g_GetGlobalNes();
 
@@ -64,27 +31,26 @@ int main(int argc, char* argv[]) {
     }
     nesEmulator->Reset();
 
-    AppWidgetManager uiManager;
-    uiManager.Initialize(window);
-    auto nesStatusWindow = uiManager.m_NesStatusWindow;
+    auto nesStatusWindow = dearNESWindowManager.m_NesStatusWindow;
 
-    using clock = std::chrono::high_resolution_clock;
-    using namespace std::chrono;
-    constexpr nanoseconds frameTime{1000ms / 60};
+    constexpr float frameTime = 1.f / 60;
+    typedef std::chrono::high_resolution_clock clock;
+    typedef std::chrono::duration<float> duration;
+    
+    float residualTime = 0.f;
+    auto previousTime = std::chrono::steady_clock::now();
+    while (!dearNESWindowManager.ShouldClose()) {
+        auto currentTime = std::chrono::steady_clock::now();
+        float deltaTime = std::chrono::duration<float>(
+                              std::chrono::steady_clock::now() - previousTime)
+                              .count();
+        previousTime = currentTime;
 
-    nanoseconds residualTime = 0ms;
-    auto frameStartTime = clock::now();
-    while (!glfwWindowShouldClose(window)) {
-        auto deltaTime = clock::now() - frameStartTime;
-        frameStartTime = clock::now();
-
-        glfwPollEvents();
-
-        processInput(window);
+        dearNESWindowManager.HandleEvents();
 
         if (nesStatusWindow->IsNesPoweredUp() &&
             nesEmulator->IsCartridgeLoaded()) {
-            if (residualTime > 0ns) {
+            if (residualTime > 0) {
                 residualTime -= deltaTime;
             } else {
                 residualTime += frameTime - deltaTime;
@@ -92,51 +58,13 @@ int main(int argc, char* argv[]) {
                 nesEmulator->DoFrame();
             }
         }
-        uiManager.Update(deltaTime);
-        uiManager.Render();
 
-        glfwSwapBuffers(window);
+        dearNESWindowManager.Update(deltaTime);
+        dearNESWindowManager.Render();
     }
 
-    // Cleanup
-    uiManager.Shutdown();
-    glfwTerminate();
+    dearNESWindowManager.DestroyWindow();
+
+    return 0;
 }
 
-void framebufferSizeCallback(GLFWwindow* window, int width, int height) {
-    glViewport(0, 0, width, height);
-}
-
-void processInput(GLFWwindow* window) {
-    Nes* nesEmulator = g_GetGlobalNes();
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-        glfwSetWindowShouldClose(window, true);
-    }
-    // TODO: define constants for NES buttons
-    using dearnes::CONTROLLER_PLAYER_1_IDX;
-    nesEmulator->ClearControllerState(CONTROLLER_PLAYER_1_IDX);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        nesEmulator->WriteControllerState(CONTROLLER_PLAYER_1_IDX, 0x80);
-    }
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        nesEmulator->WriteControllerState(CONTROLLER_PLAYER_1_IDX, 0x40);
-    }
-    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-        nesEmulator->WriteControllerState(CONTROLLER_PLAYER_1_IDX, 0x20);
-    }
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        nesEmulator->WriteControllerState(CONTROLLER_PLAYER_1_IDX, 0x10);
-    }
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-        nesEmulator->WriteControllerState(CONTROLLER_PLAYER_1_IDX, 0x08);
-    }
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-        nesEmulator->WriteControllerState(CONTROLLER_PLAYER_1_IDX, 0x04);
-    }
-    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-        nesEmulator->WriteControllerState(CONTROLLER_PLAYER_1_IDX, 0x02);
-    }
-    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-        nesEmulator->WriteControllerState(CONTROLLER_PLAYER_1_IDX, 0x01);
-    }
-}

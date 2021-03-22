@@ -31,7 +31,7 @@ void PpuPatternTableWidget::Render() {
     End();
 }
 
-void PpuPatternTableWidget::Update(std::chrono::nanoseconds delta) {
+void PpuPatternTableWidget::Update(float /*delta*/) {
     if (m_Show) {
         UpdatePatternTable();
         m_PpuPatternTable.Update();

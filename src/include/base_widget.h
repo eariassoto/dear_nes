@@ -8,8 +8,8 @@ class BaseWidget {
     BaseWidget() = default;
     virtual ~BaseWidget() = default;
 
-    virtual void Update(std::chrono::nanoseconds delta);
-    virtual void Render();
+    virtual void Update(float delta);
+    virtual void Render() = 0;
     // TODO: Public API Hide & show
 
    protected:

@@ -34,7 +34,7 @@ void PpuPalettesWidget::Render() {
     End();
 }
 
-void PpuPalettesWidget::Update(std::chrono::nanoseconds delta) {
+void PpuPalettesWidget::Update(float /*delta*/) {
     if (m_Show) {
         UpdatePatternTable();
         m_PpuBackgroundPalette.Update();
