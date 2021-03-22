@@ -144,7 +144,7 @@ void ImGuiWindowManager::HandleEvents() {
 
 void ImGuiWindowManager::Update(float deltaTime) {
     for (BaseWidget* widget : m_Widgets) {
-        widget->Update(std::chrono::nanoseconds{0});
+        widget->Update(deltaTime);
     }
 }
 

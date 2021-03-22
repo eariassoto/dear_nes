@@ -9,7 +9,7 @@ class PpuPatternTableWidget : public BaseWidget {
    public:
     PpuPatternTableWidget(unsigned int patternTableIdx);
     virtual void Render() override;
-    virtual void Update(std::chrono::nanoseconds delta) override;
+    virtual void Update(float delta) override;
 
    private:
     void UpdatePatternTable();

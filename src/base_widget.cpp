@@ -3,9 +3,7 @@
 
 #include <imgui.h>
 
-void BaseWidget::Update(std::chrono::nanoseconds delta) {}
-
-void BaseWidget::Render() {}
+void BaseWidget::Update(float delta) {}
 
 bool BaseWidget::Begin(const std::string& name) {
     return ImGui::Begin(name.c_str(), &m_Show);

@@ -12,17 +12,17 @@ PpuNametableWidget::PpuNametableWidget(unsigned int nametableIdx)
     : m_NametableIdx{nametableIdx},
       m_WindowName{fmt::format("Ppu Nametable {}", m_NametableIdx)} {
     for (int i = 0; i < 30 * 32; ++i) {
-        m_RefreshValues[i] = 0ns;
+        m_RefreshValues[i] = 0;
         m_NametableValues[i] = 0;
     }
 }
 
-void PpuNametableWidget::Update(std::chrono::nanoseconds delta) {
+void PpuNametableWidget::Update(float delta) {
     dearnes::Nes* nesEmulator = g_GetGlobalNes();
     auto m_PpuPtr = nesEmulator->GetPpu();
 
     for (int i = 0; i < 30 * 32; ++i) {
-        if (m_RefreshValues[i] > 0ns) {
+        if (m_RefreshValues[i] > 0) {
             m_RefreshValues[i] -= delta;
         }
 
@@ -43,14 +43,6 @@ void PpuNametableWidget::Render() {
         return;
     }
 
-    /*auto GetNametableString = [&]() -> std::string {
-        std::string nametableStr = "";
-
-
-        return nametableStr;
-    };
-
-    ImGui::Text(GetNametableString().c_str());*/
     size_t aux = 0;
     for (size_t y = 0; y < 30; ++y) {
         for (size_t x = 0; x < 32; ++x) {
@@ -58,7 +50,7 @@ void PpuNametableWidget::Render() {
 
             auto refresh = m_RefreshValues[32 * y + x];
             auto text = fmt::format("{:02x}", m_NametableValues[32 * y + x]);
-            if (refresh > 0ns) {
+            if (refresh > 0) {
                 ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f),
                                    text.c_str());
             } else {

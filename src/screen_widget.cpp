@@ -15,18 +15,18 @@ void ScreenWidget::Render() {
     }
     ImVec2 windowsSize = ImGui::GetContentRegionAvail();
     if (windowsSize.x < windowsSize.y) {
-        m_NesScreenWidget.ScaleImageToWidth(windowsSize.x);
+        m_NesScreenTextureImage.ScaleImageToWidth(windowsSize.x);
     } else {
-        m_NesScreenWidget.ScaleImageToHeight(windowsSize.y);
+        m_NesScreenTextureImage.ScaleImageToHeight(windowsSize.y);
     }
-    m_NesScreenWidget.Render();
+    m_NesScreenTextureImage.Render();
     End();
 }
 
-void ScreenWidget::Update(std::chrono::nanoseconds delta) {
+void ScreenWidget::Update(float delta) {
     if (m_Show) {
-        m_NesScreenWidget.CopyTextureFromArray(
+        m_NesScreenTextureImage.CopyTextureFromArray(
             g_GetGlobalNes()->GetPpu()->GetOutputScreen());
-        m_NesScreenWidget.Update();
+        m_NesScreenTextureImage.Update();
     }
 }

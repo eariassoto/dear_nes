@@ -13,15 +13,14 @@ class PpuNametableWidget : public BaseWidget {
    public:
     PpuNametableWidget(unsigned int nametableIdx);
     virtual void Render() override;
-    virtual void Update(std::chrono::nanoseconds delta) override;
+    virtual void Update(float delta) override;
 
    private:
     
-    std::chrono::nanoseconds m_InitialRefreshValue =
-        std ::chrono::duration_cast<std::chrono::nanoseconds>(1s);
+    float m_InitialRefreshValue = 1.5f;
 
     unsigned int m_NametableIdx = 0;
     std::array<uint8_t, 30 * 32> m_NametableValues;
-    std::array<std::chrono::nanoseconds, 30 * 32> m_RefreshValues;
+    std::array<float, 30 * 32> m_RefreshValues;
     std::string m_WindowName;
 };
