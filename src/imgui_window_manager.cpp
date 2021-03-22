@@ -33,8 +33,8 @@ using namespace gl;
 
 #include <GLFW/glfw3.h>
 
-#include "include\base_widget.h"
-#include "include\imgui_window_manager.h"
+#include "include/base_widget.h"
+#include "include/imgui_window_manager.h"
 
 static void glfw_error_callback(int error, const char* description) {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
