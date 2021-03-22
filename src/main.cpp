@@ -1,4 +1,36 @@
 // Copyright (c) 2020-2021 Emmanuel Arias
+#include "soloud.h"
+#include "soloud_speech.h"
+#include "soloud_thread.h"
+
+int main(int argc, char* argv[]) {
+    // Define a couple of variables
+    SoLoud::Soloud soloud;  // SoLoud engine core
+    SoLoud::Speech speech;  // A sound source (speech, in this case)
+
+    // Configure sound source
+    speech.setText("Hello world");
+
+    // initialize SoLoud.
+    soloud.init();
+
+    // Play the sound source (we could do this several times if we wanted)
+    soloud.play(speech);
+
+    // Wait until sounds have finished
+    while (soloud.getActiveVoiceCount() > 0) {
+        // Still going, sleep for a bit
+        SoLoud::Thread::sleep(100);
+    }
+
+    // Clean up SoLoud
+    soloud.deinit();
+
+    // All done.
+    return 0;
+}
+
+/*
 #include <chrono>
 
 #include "dear_nes_lib/cartridge_loader.h"
@@ -36,7 +68,7 @@ int main(int argc, char* argv[]) {
     constexpr float frameTime = 1.f / 60;
     typedef std::chrono::high_resolution_clock clock;
     typedef std::chrono::duration<float> duration;
-    
+
     float residualTime = 0.f;
     auto previousTime = std::chrono::steady_clock::now();
     while (!dearNESWindowManager.ShouldClose()) {
@@ -67,4 +99,4 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
-
+*/
