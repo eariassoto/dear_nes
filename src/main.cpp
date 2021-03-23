@@ -1,40 +1,4 @@
 // Copyright (c) 2020-2021 Emmanuel Arias
-#include <soloud.h>
-#include <soloud_thread.h>
-#include <iostream>
-
-#include "include/simple_wave.h"
-
-int main(int argc, char* argv[]) {
-    // Define a couple of variables
-    SoLoud::Soloud soloud;  // SoLoud engine core
-
-    SimpleWave simpleWave;
-    simpleWave.setVolume(1);
-
-    auto instance = simpleWave.createInstance();
-
-    // initialize SoLoud.
-    soloud.init();
-    soloud.setGlobalVolume(0.75);
-
-    // Play the sound source (we could do this several times if we wanted)
-    int handle = soloud.play(simpleWave);
-    
-    // Wait until sounds have finished
-    while (soloud.getActiveVoiceCount() > 0) {
-        // Still going, sleep for a bit
-        SoLoud::Thread::sleep(100);
-    }
-
-    // Clean up SoLoud
-    soloud.deinit();
-
-    // All done.
-    return 0;
-}
-
-/*
 #include <chrono>
 
 #include "dear_nes_lib/cartridge_loader.h"
@@ -101,6 +65,42 @@ int main(int argc, char* argv[]) {
 
     dearNESWindowManager.DestroyWindow();
 
+    return 0;
+}
+
+/*
+#include <soloud.h>
+#include <soloud_thread.h>
+#include <iostream>
+
+#include "include/simple_wave.h"
+
+int main(int argc, char* argv[]) {
+    // Define a couple of variables
+    SoLoud::Soloud soloud;  // SoLoud engine core
+
+    SimpleWave simpleWave;
+    simpleWave.setVolume(1);
+
+    auto instance = simpleWave.createInstance();
+
+    // initialize SoLoud.
+    soloud.init();
+    soloud.setGlobalVolume(0.75);
+
+    // Play the sound source (we could do this several times if we wanted)
+    int handle = soloud.play(simpleWave);
+    
+    // Wait until sounds have finished
+    while (soloud.getActiveVoiceCount() > 0) {
+        // Still going, sleep for a bit
+        SoLoud::Thread::sleep(100);
+    }
+
+    // Clean up SoLoud
+    soloud.deinit();
+
+    // All done.
     return 0;
 }
 */
