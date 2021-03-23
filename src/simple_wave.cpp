@@ -3,6 +3,8 @@
 
 #include <soloud_misc.h>
 #include <iostream>
+#include <cmath>
+#include <time.h>
 
 SimpleWaveInstance::SimpleWaveInstance(SimpleWave *aParent) {
     mParent = aParent;
@@ -14,11 +16,12 @@ SimpleWaveInstance::SimpleWaveInstance(SimpleWave *aParent) {
 unsigned int SimpleWaveInstance::getAudio(float *aBuffer,
                                           unsigned int aSamplesToRead,
                                           unsigned int aBufferSize) {
-    unsigned int i;
     int waveform = mParent->mWaveform;
     float d = 1.0f / mSamplerate;
-    for (i = 0; i < aSamplesToRead; i++) {
-        aBuffer[i] = -1;
+    for (unsigned int i = 0; i < aSamplesToRead; i++) {
+        aBuffer[i] = SoLoud::Misc::generateWaveform(
+                         waveform, fmod(mFreq * (float)mOffset, 1.0f)) *
+                     mParent->mADSR.val(mT, 10000000000000.0f);
         mOffset++;
         mT += d;
     }
@@ -31,8 +34,8 @@ bool SimpleWaveInstance::hasEnded() {
 }
 
 SimpleWave::SimpleWave() {
-    setSamplerate(44100);
-    mWaveform = SoLoud::Soloud::WAVE_SQUARE;
+    setSamplerate(44100.f);
+    mWaveform = SoLoud::Soloud::WAVE_SIN;
 }
 
 SimpleWave::~SimpleWave() { stop(); }

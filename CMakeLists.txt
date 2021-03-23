@@ -58,8 +58,6 @@ add_subdirectory(libs/dear_nes_lib)
 get_target_property(DEAR_NES_LIB_PUBLIC_HEADER_DIR dear_nes_lib INTERFACE_INCLUDE_DIRECTORIES)
 include_directories("${DEAR_NES_LIB_PUBLIC_HEADER_DIR}")
 
-add_subdirectory(external/soloud/build/cmake/SoloudStatic)
-
 # Imgui
 add_library(IMGUI
 	"external/imgui/imgui.cpp"
@@ -135,11 +133,14 @@ set(soloud_sources
 set(LIBS glfw GLAD IMGUI fmt::fmt soloud dear_nes_lib)
 
 if(WIN32)
+	list(APPEND soloud_sources "external/soloud/src/backend/winmm/soloud_winmm.cpp")
+	add_definitions(-DWITH_WINMM)
+
 	list(APPEND LIBS opengl32)
 elseif(UNIX AND NOT APPLE)
 	list(APPEND soloud_sources "external/soloud/src/backend/alsa/soloud_alsa.cpp")
-
 	add_definitions(-DWITH_ALSA)
+
 	list(APPEND LIBS GL asound)
 endif()
 

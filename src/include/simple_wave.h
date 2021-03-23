@@ -58,6 +58,7 @@ class SimpleWave : public SoLoud::AudioSource {
     ADSR mADSR;
     float mFreq;
     int mWaveform;
+
     SimpleWave();
     virtual ~SimpleWave();
     void setSamplerate(float aSamplerate);
