@@ -1,13 +1,15 @@
-// Copyright (c) 2020 Emmanuel Arias
+// Copyright (c) 2020-2021 Emmanuel Arias
 #include "include/ppu_palettes_widget.h"
 
 #include <imgui.h>
 
 #include "dear_nes_lib/nes.h"
 #include "dear_nes_lib/ppu.h"
-#include "include/global_nes.h"
+#include "include/dearnes_base_widget.h"
 
-PpuPalettesWidget::PpuPalettesWidget() : m_WindowName{"Ppu Palettes"} {}
+PpuPalettesWidget::PpuPalettesWidget(dearnes::Nes* nesPtr)
+    : DearNESBaseWidget(nesPtr)
+    , m_WindowName{"Ppu Palettes"} {}
 
 void PpuPalettesWidget::Render() {
     if (!m_Show) {
@@ -43,8 +45,7 @@ void PpuPalettesWidget::Update(float /*delta*/) {
 }
 
 void PpuPalettesWidget::UpdatePatternTable() {
-    dearnes::Nes* nesEmulator = g_GetGlobalNes();
-    auto ppuPtr = nesEmulator->GetPpu();
+    auto ppuPtr = m_NesPtr->GetPpu();
     for (uint8_t paletteIdx = 0; paletteIdx < 4; ++paletteIdx) {
         for (uint8_t colorIdx = 0; colorIdx < 4; ++colorIdx) {
             m_PpuBackgroundPalette.SetPixel(

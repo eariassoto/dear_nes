@@ -1,12 +1,15 @@
-// Copyright (c) 2020 Emmanuel Arias
+// Copyright (c) 2020-2021 Emmanuel Arias
 #pragma once
 #include <string>
 
-#include "include/base_widget.h"
+#include "include/dearnes_base_widget.h"
 #include "dear_nes_lib/cartridge_loader.h"
 
-class StatusWidget : public BaseWidget {
+class StatusWidget : public DearNESBaseWidget {
    public:
+   StatusWidget(dearnes::Nes* nesPtr);
+
+   virtual void Update(float delta) override;
     virtual void Render() override;
     bool IsNesPoweredUp() const;
 

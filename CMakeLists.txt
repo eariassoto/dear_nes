@@ -9,6 +9,7 @@ set(
 	${CMAKE_SOURCE_DIR}/src/base_widget.cpp
 	${CMAKE_SOURCE_DIR}/src/controller_widget.cpp
 	${CMAKE_SOURCE_DIR}/src/cpu_widget.cpp
+	${CMAKE_SOURCE_DIR}/src/dearnes_base_widget.cpp
 	${CMAKE_SOURCE_DIR}/src/dearnes_window_manager.cpp
 	${CMAKE_SOURCE_DIR}/src/imgui_window_manager.cpp
 	${CMAKE_SOURCE_DIR}/src/main.cpp
@@ -25,6 +26,7 @@ set(
 	${CMAKE_SOURCE_DIR}/src/include/base_widget.h
 	${CMAKE_SOURCE_DIR}/src/include/controller_widget.h
 	${CMAKE_SOURCE_DIR}/src/include/cpu_widget.h
+	${CMAKE_SOURCE_DIR}/src/include/dearnes_base_widget.h
 	${CMAKE_SOURCE_DIR}/src/include/dearnes_window_manager.h
 	${CMAKE_SOURCE_DIR}/src/include/imgui_window_manager.h
 	${CMAKE_SOURCE_DIR}/src/include/ppu_nametable_widget.h

@@ -2,8 +2,11 @@
 #include "include/screen_widget.h"
 #include <imgui.h>
 
-#include "include/global_nes.h"
+#include "dear_nes_lib/nes.h"
 #include "dear_nes_lib/ppu.h"
+#include "include/dearnes_base_widget.h"
+
+ScreenWidget::ScreenWidget(dearnes::Nes* nesPtr) : DearNESBaseWidget(nesPtr) {}
 
 void ScreenWidget::Render() {
     if (!m_Show) {
@@ -26,7 +29,7 @@ void ScreenWidget::Render() {
 void ScreenWidget::Update(float delta) {
     if (m_Show) {
         m_NesScreenTextureImage.CopyTextureFromArray(
-            g_GetGlobalNes()->GetPpu()->GetOutputScreen());
+            m_NesPtr->GetPpu()->GetOutputScreen());
         m_NesScreenTextureImage.Update();
     }
 }

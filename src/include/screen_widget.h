@@ -1,12 +1,15 @@
-// Copyright (c) 2020 Emmanuel Arias
+// Copyright (c) 2020-2021 Emmanuel Arias
 #pragma once
 #include <string>
 
-#include "include/texture_image.h"
+#include "include/dearnes_base_widget.h"
 #include "include/base_widget.h"
+#include "include/texture_image.h"
 
-class ScreenWidget : public BaseWidget {
+class ScreenWidget : public DearNESBaseWidget {
    public:
+ScreenWidget(dearnes::Nes* nesPtr);
+
     virtual void Update(float delta) override;
     virtual void Render() override;
 

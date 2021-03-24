@@ -1,13 +1,17 @@
-// Copyright (c) 2020 Emmanuel Arias
+// Copyright (c) 2020-2021 Emmanuel Arias
 #include "include/cpu_widget.h"
 
 #include <imgui.h>
 
-#include "include/global_nes.h"
+#include "include/dearnes_base_widget.h"
 #include "dear_nes_lib/nes.h"
 #include "dear_nes_lib/enums.h"
 
 using dearnes::CpuFlag;
+
+CpuWidget::CpuWidget(dearnes::Nes* nesPtr) : DearNESBaseWidget(nesPtr) {}
+
+void CpuWidget::Update(float /*delta*/) {}
 
 void CpuWidget::Render() {
     if (!m_Show) {
@@ -26,8 +30,8 @@ void CpuWidget::Render() {
             return m_ColorFlagReset;
         }
     };
-    dearnes::Nes* nesEmulator = g_GetGlobalNes();
-    auto cpuPtr = nesEmulator->GetCpu();
+
+    auto cpuPtr = m_NesPtr->GetCpu();
 
     ImGui::Text("Status: ");
     ImGui::SameLine();

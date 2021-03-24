@@ -1,17 +1,18 @@
-// Copyright (c) 2020 Emmanuel Arias
+// Copyright (c) 2020-2021 Emmanuel Arias
 #pragma once
 #include <array>
 #include <chrono>
 #include <string>
 
-#include "include/base_widget.h"
+#include "include/dearnes_base_widget.h"
 #include "include/texture_image.h"
 
 using namespace std::chrono_literals;
 
-class PpuNametableWidget : public BaseWidget {
+class PpuNametableWidget : public DearNESBaseWidget {
    public:
-    PpuNametableWidget(unsigned int nametableIdx);
+    PpuNametableWidget(dearnes::Nes* nesPtr, unsigned int nametableIdx);
+
     virtual void Render() override;
     virtual void Update(float delta) override;
 

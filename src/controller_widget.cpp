@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Emmanuel Arias
+// Copyright (c) 2020-2021 Emmanuel Arias
 #include "include/controller_widget.h"
 
 #include <fmt/core.h>
@@ -6,12 +6,15 @@
 
 #include <cinttypes>
 
-#include "include/global_nes.h"
+#include "include/dearnes_base_widget.h"
 #include "dear_nes_lib/nes.h"
 
-ControllerWidget::ControllerWidget(unsigned int controllerIdx)
-    : m_ControllerIdx{controllerIdx},
-      m_WindowName{fmt::format("Controller {}", (m_ControllerIdx + 1))} {}
+ControllerWidget::ControllerWidget(dearnes::Nes* nesPtr, unsigned int controllerIdx)
+    : DearNESBaseWidget(nesPtr)
+    , m_ControllerIdx{controllerIdx}
+    , m_WindowName{fmt::format("Controller {}", (m_ControllerIdx + 1))} {}
+
+void ControllerWidget::Update(float delta) {}
 
 void ControllerWidget::Render() {
     if (!m_Show) {
@@ -36,7 +39,6 @@ void ControllerWidget::Render() {
             }
         }
     };
-    dearnes::Nes* nesEmulator = g_GetGlobalNes();
     ImGui::Columns(3, "mycolumns");  // 4-ways, with border
     ImGui::Separator();
     ImGui::Text("Button");
@@ -49,7 +51,7 @@ void ControllerWidget::Render() {
 
     static int selected = -1;
     bool test = true;
-    uint8_t controllerByte = nesEmulator->GetControllerState(m_ControllerIdx);
+    uint8_t controllerByte = m_NesPtr->GetControllerState(m_ControllerIdx);
     for (int i = 0; i < NUM_BUTTONS; i++) {
         ImGui::Text(m_ButtonNames[i]);
         ImGui::NextColumn();
