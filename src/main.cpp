@@ -5,21 +5,20 @@
 #include "dear_nes_lib/nes.h"
 #include "helpers/RootDir.h"
 #include "include/dearnes_window_manager.h"
-#include "include/global_nes.h"
 #include "include/status_widget.h"
 
 using Nes = dearnes::Nes;
 using Cartridge = dearnes::Cartridge;
 
 int main(int argc, char* argv[]) {
-    DearNESWindowManager dearNESWindowManager;
+    Nes* nesEmulator = new Nes();
+
+    DearNESWindowManager dearNESWindowManager{nesEmulator};
     bool success = dearNESWindowManager.CreateWindow();
     if (!success) {
         return 1;
     }
     dearNESWindowManager.RegisterWidgets();
-
-    Nes* nesEmulator = g_GetGlobalNes();
 
     if (argc > 1) {
         dearnes::CartridgeLoader cartridgeLoader;
@@ -64,6 +63,8 @@ int main(int argc, char* argv[]) {
     }
 
     dearNESWindowManager.DestroyWindow();
+
+    delete nesEmulator;
 
     return 0;
 }

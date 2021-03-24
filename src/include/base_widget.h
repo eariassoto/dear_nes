@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Emmanuel Arias
+// Copyright (c) 2020-2021 Emmanuel Arias
 #pragma once
 #include <string>
 #include <chrono>
@@ -8,7 +8,7 @@ class BaseWidget {
     BaseWidget() = default;
     virtual ~BaseWidget() = default;
 
-    virtual void Update(float delta);
+    virtual void Update(float delta) = 0;
     virtual void Render() = 0;
     // TODO: Public API Hide & show
 

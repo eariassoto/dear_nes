@@ -1,16 +1,16 @@
-// Copyright (c) 2020 Emmanuel Arias
+// Copyright (c) 2020-2021 Emmanuel Arias
 #include "include/ppu_pattern_table_widget.h"
 
 #include <fmt/core.h>
 #include <imgui.h>
 
-#include "include/global_nes.h"
 #include "dear_nes_lib/nes.h"
 #include "dear_nes_lib/ppu.h"
+#include "include/dearnes_base_widget.h"
 
-PpuPatternTableWidget::PpuPatternTableWidget(
-    unsigned int patternTableIdx)
-    : m_PatternTableIdx{patternTableIdx},
+PpuPatternTableWidget::PpuPatternTableWidget(dearnes::Nes* nesPtr, unsigned int patternTableIdx)
+    : DearNESBaseWidget(nesPtr)
+    , m_PatternTableIdx{patternTableIdx},
       m_WindowName{fmt::format("Ppu Pattern Table {}", m_PatternTableIdx)} {}
 
 void PpuPatternTableWidget::Render() {
@@ -39,8 +39,7 @@ void PpuPatternTableWidget::Update(float /*delta*/) {
 }
 
 void PpuPatternTableWidget::UpdatePatternTable() {
-    dearnes::Nes* nesEmulator = g_GetGlobalNes();
-    auto ppuPtr = nesEmulator->GetPpu();
+    auto ppuPtr = m_NesPtr->GetPpu();
     for (uint16_t nTileX = 0; nTileX < 16; ++nTileX) {
         for (uint16_t nTileY = 0; nTileY < 16; ++nTileY) {
             uint16_t offset = nTileY * 256 + nTileX * 16;

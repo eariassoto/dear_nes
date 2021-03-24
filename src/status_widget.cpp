@@ -1,7 +1,8 @@
-// Copyright (c) 2020 Emmanuel Arias
+// Copyright (c) 2020-2021 Emmanuel Arias
 #include "include/status_widget.h"
 
 #include <imgui.h>
+#include "include/dearnes_base_widget.h"
 
 #ifdef _WIN32
 #include <shlobj.h>
@@ -12,10 +13,14 @@
 #include "helpers/RootDir.h"
 #endif
 
-#include "include/global_nes.h"
 #include "dear_nes_lib/cartridge.h"
+#include "dear_nes_lib/nes.h"
+
+StatusWidget::StatusWidget(dearnes::Nes* nesPtr) : DearNESBaseWidget(nesPtr) {}
 
 bool StatusWidget::IsNesPoweredUp() const { return m_IsPowerUp; }
+
+void StatusWidget::Update(float /*delta*/) {}
 
 void StatusWidget::Render() {
     if (!m_Show) {
@@ -39,8 +44,7 @@ void StatusWidget::Render() {
 
     bool resetPressed = ImGui::Button("Reset");
     if (resetPressed) {
-        dearnes::Nes* nesPtr = g_GetGlobalNes();
-        nesPtr->Reset();
+        m_NesPtr->Reset();
     }
 
 #ifdef _WIN32
@@ -48,7 +52,6 @@ void StatusWidget::Render() {
 
     bool loadCartridgePressed = ImGui::Button("Load Cartridge");
     if (loadCartridgePressed) {
-        dearnes::Nes* nesPtr = g_GetGlobalNes();
         std::wstring newPath = GetFileFromUser();
         if (!newPath.empty()) {
             std::ifstream ifs;
@@ -56,7 +59,7 @@ void StatusWidget::Render() {
 
             auto ret = m_CartridgeLoader.LoadNewCartridge(ifs);
             if (auto pval = std::get_if<dearnes::Cartridge*>(&ret)) {
-                nesPtr->InsertCatridge(*pval);
+                m_NesPtr->InsertCatridge(*pval);
             }
         }
     }

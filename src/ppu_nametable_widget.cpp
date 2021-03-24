@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Emmanuel Arias
+// Copyright (c) 2020-2021 Emmanuel Arias
 #include "include/ppu_nametable_widget.h"
 
 #include <fmt/core.h>
@@ -6,11 +6,12 @@
 
 #include "dear_nes_lib/nes.h"
 #include "dear_nes_lib/ppu.h"
-#include "include/global_nes.h"
+#include "include/dearnes_base_widget.h"
 
-PpuNametableWidget::PpuNametableWidget(unsigned int nametableIdx)
-    : m_NametableIdx{nametableIdx},
-      m_WindowName{fmt::format("Ppu Nametable {}", m_NametableIdx)} {
+PpuNametableWidget::PpuNametableWidget(dearnes::Nes* nesPtr, unsigned int nametableIdx)
+    : DearNESBaseWidget(nesPtr)
+    , m_NametableIdx{nametableIdx}
+    , m_WindowName{fmt::format("Ppu Nametable {}", m_NametableIdx)} {
     for (int i = 0; i < 30 * 32; ++i) {
         m_RefreshValues[i] = 0;
         m_NametableValues[i] = 0;
@@ -18,8 +19,7 @@ PpuNametableWidget::PpuNametableWidget(unsigned int nametableIdx)
 }
 
 void PpuNametableWidget::Update(float delta) {
-    dearnes::Nes* nesEmulator = g_GetGlobalNes();
-    auto m_PpuPtr = nesEmulator->GetPpu();
+    auto m_PpuPtr = m_NesPtr->GetPpu();
 
     for (int i = 0; i < 30 * 32; ++i) {
         if (m_RefreshValues[i] > 0) {

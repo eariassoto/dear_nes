@@ -1,13 +1,14 @@
-// Copyright (c) 2020 Emmanuel Arias
+// Copyright (c) 2020-2021 Emmanuel Arias
 #pragma once
 #include <string>
 
-#include "include/base_widget.h"
+#include "include/dearnes_base_widget.h"
 #include "include/texture_image.h"
 
-class PpuPatternTableWidget : public BaseWidget {
+class PpuPatternTableWidget : public DearNESBaseWidget {
    public:
-    PpuPatternTableWidget(unsigned int patternTableIdx);
+    PpuPatternTableWidget(dearnes::Nes* nesPtr, unsigned int patternTableIdx);
+    
     virtual void Render() override;
     virtual void Update(float delta) override;
 
