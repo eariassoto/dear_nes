@@ -4,17 +4,20 @@
 #include "dear_nes_lib/cartridge_loader.h"
 #include "dear_nes_lib/nes.h"
 #include "helpers/RootDir.h"
+#include "include/audio_manager.h"
 #include "include/dearnes_window_manager.h"
 #include "include/status_widget.h"
 
 using Nes = dearnes::Nes;
+using Ppu = dearnes::Ppu;
 using Cartridge = dearnes::Cartridge;
 
 int main(int argc, char* argv[]) {
     Nes* nesEmulator = new Nes();
-
+    Ppu* ppuPtr = nesEmulator->GetPpu();
+    nesEmulator->SetSampleFrequency(44100.f);
     DearNESWindowManager dearNESWindowManager{nesEmulator};
-    bool success = dearNESWindowManager.CreateWindow();
+    bool success = dearNESWindowManager.InitializeWindow();
     if (!success) {
         return 1;
     }
@@ -29,6 +32,9 @@ int main(int argc, char* argv[]) {
         }
     }
     nesEmulator->Reset();
+
+    AudioManager audioManager;
+    audioManager.Initialize(nesEmulator);
 
     auto nesStatusWindow = dearNESWindowManager.m_NesStatusWindow;
 
@@ -61,47 +67,10 @@ int main(int argc, char* argv[]) {
         dearNESWindowManager.Update(deltaTime);
         dearNESWindowManager.Render();
     }
-
+    audioManager.Shutdown();
     dearNESWindowManager.DestroyWindow();
 
     delete nesEmulator;
 
     return 0;
 }
-
-/*
-#include <soloud.h>
-#include <soloud_thread.h>
-#include <iostream>
-
-#include "include/simple_wave.h"
-
-int main(int argc, char* argv[]) {
-    // Define a couple of variables
-    SoLoud::Soloud soloud;  // SoLoud engine core
-
-    SimpleWave simpleWave;
-    simpleWave.setVolume(1);
-
-    auto instance = simpleWave.createInstance();
-
-    // initialize SoLoud.
-    soloud.init();
-    soloud.setGlobalVolume(0.75);
-
-    // Play the sound source (we could do this several times if we wanted)
-    int handle = soloud.play(simpleWave);
-    
-    // Wait until sounds have finished
-    while (soloud.getActiveVoiceCount() > 0) {
-        // Still going, sleep for a bit
-        SoLoud::Thread::sleep(100);
-    }
-
-    // Clean up SoLoud
-    soloud.deinit();
-
-    // All done.
-    return 0;
-}
-*/

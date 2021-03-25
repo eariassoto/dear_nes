@@ -6,9 +6,11 @@ link_directories(${CMAKE_SOURCE_DIR}/lib)
 
 set(
 	source_files_list
+	${CMAKE_SOURCE_DIR}/src/audio_manager.cpp
 	${CMAKE_SOURCE_DIR}/src/base_widget.cpp
 	${CMAKE_SOURCE_DIR}/src/controller_widget.cpp
 	${CMAKE_SOURCE_DIR}/src/cpu_widget.cpp
+	${CMAKE_SOURCE_DIR}/src/dearnes_audio_source.cpp
 	${CMAKE_SOURCE_DIR}/src/dearnes_base_widget.cpp
 	${CMAKE_SOURCE_DIR}/src/dearnes_window_manager.cpp
 	${CMAKE_SOURCE_DIR}/src/imgui_window_manager.cpp
@@ -17,16 +19,17 @@ set(
 	${CMAKE_SOURCE_DIR}/src/ppu_palettes_widget.cpp
 	${CMAKE_SOURCE_DIR}/src/ppu_pattern_table_widget.cpp
 	${CMAKE_SOURCE_DIR}/src/screen_widget.cpp
-	${CMAKE_SOURCE_DIR}/src/simple_wave.cpp
 	${CMAKE_SOURCE_DIR}/src/status_widget.cpp
 	${CMAKE_SOURCE_DIR}/src/texture_image.cpp	
 )
 	
 set(
 	header_files_list
+	${CMAKE_SOURCE_DIR}/src/include/audio_manager.h
 	${CMAKE_SOURCE_DIR}/src/include/base_widget.h
 	${CMAKE_SOURCE_DIR}/src/include/controller_widget.h
 	${CMAKE_SOURCE_DIR}/src/include/cpu_widget.h
+	${CMAKE_SOURCE_DIR}/src/include/dearnes_audio_source.h
 	${CMAKE_SOURCE_DIR}/src/include/dearnes_base_widget.h
 	${CMAKE_SOURCE_DIR}/src/include/dearnes_window_manager.h
 	${CMAKE_SOURCE_DIR}/src/include/imgui_window_manager.h
@@ -34,7 +37,6 @@ set(
 	${CMAKE_SOURCE_DIR}/src/include/ppu_palettes_widget.h
 	${CMAKE_SOURCE_DIR}/src/include/ppu_pattern_table_widget.h
 	${CMAKE_SOURCE_DIR}/src/include/screen_widget.h
-	${CMAKE_SOURCE_DIR}/src/include/simple_wave.h
 	${CMAKE_SOURCE_DIR}/src/include/status_widget.h
 	${CMAKE_SOURCE_DIR}/src/include/texture_image.h
 )

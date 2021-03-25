@@ -48,7 +48,7 @@ ImGuiWindowManager::~ImGuiWindowManager() {
     }
 }
 
-bool ImGuiWindowManager::CreateWindow() {
+bool ImGuiWindowManager::InitializeWindow() {
     // Setup window
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit()) return false;

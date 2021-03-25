@@ -10,7 +10,7 @@ class ImGuiWindowManager {
     ImGuiWindowManager();
     ~ImGuiWindowManager();
 
-    bool CreateWindow();
+    bool InitializeWindow();
     bool ShouldClose();
     void HandleEvents();
 
