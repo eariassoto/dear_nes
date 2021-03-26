@@ -62,6 +62,9 @@ add_subdirectory(libs/dear_nes_lib)
 get_target_property(DEAR_NES_LIB_PUBLIC_HEADER_DIR dear_nes_lib INTERFACE_INCLUDE_DIRECTORIES)
 include_directories("${DEAR_NES_LIB_PUBLIC_HEADER_DIR}")
 
+# spd log
+add_subdirectory("external/spdlog")
+
 # Imgui
 add_library(IMGUI
 	"external/imgui/imgui.cpp"
@@ -134,7 +137,7 @@ set(soloud_sources
 	"external/soloud/src/filter/soloud_waveshaperfilter.cpp"
 )
 
-set(LIBS glfw GLAD IMGUI fmt::fmt soloud dear_nes_lib)
+set(LIBS glfw GLAD IMGUI fmt::fmt soloud spdlog dear_nes_lib)
 
 if(WIN32)
 	list(APPEND soloud_sources "external/soloud/src/backend/winmm/soloud_winmm.cpp")

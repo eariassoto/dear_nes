@@ -15,3 +15,6 @@
 [submodule "external/soloud"]
 	path = external/soloud
 	url = https://github.com/jarikomppa/soloud
+[submodule "external/spdlog"]
+	path = external/spdlog
+	url = https://github.com/gabime/spdlog
