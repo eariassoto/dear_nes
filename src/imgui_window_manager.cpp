@@ -65,7 +65,7 @@ bool ImGuiWindowManager::CreateWindow() {
                                 NULL, NULL);
     if (m_Window == NULL) return false;
     glfwMakeContextCurrent(m_Window);
-    glfwSwapInterval(1);  // Enable vsync
+    glfwSwapInterval(0);  // Enable vsync
 
     // Initialize OpenGL loader
 #if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W)
