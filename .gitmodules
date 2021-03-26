@@ -12,3 +12,6 @@
 [submodule "libs/dear_nes_lib"]
 	path = libs/dear_nes_lib
 	url = https://github.com/eariassoto/dear_nes_lib
+[submodule "external/spdlog"]
+	path = external/spdlog
+	url = https://github.com/gabime/spdlog

@@ -58,6 +58,9 @@ add_subdirectory(libs/dear_nes_lib)
 get_target_property(DEAR_NES_LIB_PUBLIC_HEADER_DIR dear_nes_lib INTERFACE_INCLUDE_DIRECTORIES)
 include_directories("${DEAR_NES_LIB_PUBLIC_HEADER_DIR}")
 
+# spd log
+add_subdirectory("external/spdlog")
+
 # Imgui
 add_library(IMGUI
 	"external/imgui/imgui.cpp"
@@ -70,7 +73,7 @@ add_library(IMGUI
 
 add_definitions(-DIMGUI_IMPL_OPENGL_LOADER_GLAD)
 
-set(LIBS glfw GLAD IMGUI fmt::fmt dear_nes_lib)
+set(LIBS glfw GLAD IMGUI fmt::fmt spdlog dear_nes_lib)
 
 if(WIN32)
 	list(APPEND LIBS opengl32)
