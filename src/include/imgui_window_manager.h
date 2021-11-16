@@ -2,7 +2,7 @@
 #pragma once
 #include <vector>
 
-class GLFWwindow;
+struct GLFWwindow;
 class BaseWidget;
 
 class ImGuiWindowManager {
