@@ -1,6 +1,56 @@
-# Copyright (c) 2020-2021 Emmanuel Arias
-cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+# Copyright (c) 2020-2026 Emmanuel Arias
+cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 project(dear_nes)
+
+# Enable parallel compilation for Visual Studio
+if(MSVC)
+	add_compile_options(/MP)
+endif()
+
+include(FetchContent)
+
+# GLFW
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
+FetchContent_Declare(
+	glfw
+	GIT_REPOSITORY https://github.com/glfw/glfw.git
+	GIT_TAG        3.4
+)
+
+# fmt
+set(FMT_TEST OFF CACHE BOOL "" FORCE)
+set(FMT_DOC OFF CACHE BOOL "" FORCE)
+set(FMT_INSTALL OFF CACHE BOOL "" FORCE)
+FetchContent_Declare(
+	fmt
+	GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+	GIT_TAG        10.2.1
+)
+
+# spdlog
+set(SPDLOG_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(SPDLOG_BUILD_EXAMPLE OFF CACHE BOOL "" FORCE)
+set(SPDLOG_INSTALL OFF CACHE BOOL "" FORCE)
+set(SPDLOG_FMT_EXTERNAL ON CACHE BOOL "" FORCE)
+FetchContent_Declare(
+	spdlog
+	GIT_REPOSITORY https://github.com/gabime/spdlog.git
+	GIT_TAG        v1.13.0
+)
+
+# ImGui (docking branch)
+FetchContent_Declare(
+	imgui
+	GIT_REPOSITORY https://github.com/ocornut/imgui.git
+	GIT_TAG        docking
+)
+
+FetchContent_MakeAvailable(fmt glfw spdlog imgui)
+
+add_subdirectory(libs/dear_nes_lib)
 
 link_directories(${CMAKE_SOURCE_DIR}/lib)
 
@@ -46,29 +96,17 @@ add_executable(${PROJECT_NAME} ${header_files_list} ${source_files_list})
 # OpenGL
 find_package(OpenGL REQUIRED)
 
-# GLFW
-add_subdirectory("external/glfw")
-
 # GLAD
 add_library(GLAD "external/glad/glad.c")
 
-add_subdirectory(external/fmt)
-
-add_subdirectory(libs/dear_nes_lib)
-get_target_property(DEAR_NES_LIB_PUBLIC_HEADER_DIR dear_nes_lib INTERFACE_INCLUDE_DIRECTORIES)
-include_directories("${DEAR_NES_LIB_PUBLIC_HEADER_DIR}")
-
-# spd log
-add_subdirectory("external/spdlog")
-
-# Imgui
-add_library(IMGUI
-	"external/imgui/imgui.cpp"
-	"external/imgui/imgui_demo.cpp"
-	"external/imgui/imgui_draw.cpp"
-	"external/imgui/examples/imgui_impl_glfw.cpp"
-	"external/imgui/examples/imgui_impl_opengl3.cpp"
-	"external/imgui/imgui_widgets.cpp"
+add_library(IMGUI STATIC
+	"${imgui_SOURCE_DIR}/imgui.cpp"
+	"${imgui_SOURCE_DIR}/imgui_demo.cpp"
+	"${imgui_SOURCE_DIR}/imgui_draw.cpp"
+	"${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp"
+	"${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp"
+	"${imgui_SOURCE_DIR}/imgui_widgets.cpp"
+	"${imgui_SOURCE_DIR}/imgui_tables.cpp"
 )
 
 add_definitions(-DIMGUI_IMPL_OPENGL_LOADER_GLAD)
@@ -84,10 +122,11 @@ endif()
 include_directories(
 	"${CMAKE_SOURCE_DIR}/src"
 	"${CMAKE_SOURCE_DIR}/external"
-	"${CMAKE_SOURCE_DIR}/external/glfw/include"
-	"${CMAKE_SOURCE_DIR}/external/imgui"
-	"${CMAKE_SOURCE_DIR}/external/imgui/examples"
+	"${glfw_SOURCE_DIR}/include"
+	"${imgui_SOURCE_DIR}"
+	"${imgui_SOURCE_DIR}/backends"
 )
+# ==============================================================================
 
 target_link_libraries(${PROJECT_NAME} ${LIBS})
 
@@ -95,14 +134,3 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
-
-# Create filter groups for VS solutions
-foreach(source IN LISTS source_files_list)
-	get_filename_component(source_path "${source}" PATH)
-	source_group("Sources" FILES "${source}")
-endforeach()
-foreach(source IN LISTS header_files_list)
-	get_filename_component(source_path "${source}" PATH)
-	source_group("Includes" FILES "${source}")
-endforeach()
-
