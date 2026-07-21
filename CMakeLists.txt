@@ -50,9 +50,40 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(fmt glfw spdlog imgui)
 
-add_subdirectory(libs/dear_nes_lib)
+set(
+	dear_nes_lib_source_files
+	${CMAKE_SOURCE_DIR}/src/bus.cpp
+	${CMAKE_SOURCE_DIR}/src/cartridge.cpp
+	${CMAKE_SOURCE_DIR}/src/cartridge_header.cpp
+	${CMAKE_SOURCE_DIR}/src/cartridge_loader.cpp
+	${CMAKE_SOURCE_DIR}/src/cpu.cpp
+	${CMAKE_SOURCE_DIR}/src/dma.cpp
+	${CMAKE_SOURCE_DIR}/src/mapper.cpp
+	${CMAKE_SOURCE_DIR}/src/mapper_000.cpp
+	${CMAKE_SOURCE_DIR}/src/nes.cpp
+	${CMAKE_SOURCE_DIR}/src/ppu.cpp
+)
 
-link_directories(${CMAKE_SOURCE_DIR}/lib)
+set(
+	dear_nes_lib_header_files
+	${CMAKE_SOURCE_DIR}/src/include/dear_nes_lib/bus.h
+	${CMAKE_SOURCE_DIR}/src/include/dear_nes_lib/cartridge.h
+	${CMAKE_SOURCE_DIR}/src/include/dear_nes_lib/cartridge_header.h
+	${CMAKE_SOURCE_DIR}/src/include/dear_nes_lib/cartridge_loader.h
+	${CMAKE_SOURCE_DIR}/src/include/dear_nes_lib/cpu.h
+	${CMAKE_SOURCE_DIR}/src/include/dear_nes_lib/dma.h
+	${CMAKE_SOURCE_DIR}/src/include/dear_nes_lib/enums.h
+	${CMAKE_SOURCE_DIR}/src/include/dear_nes_lib/mapper.h
+	${CMAKE_SOURCE_DIR}/src/include/dear_nes_lib/mapper_000.h
+	${CMAKE_SOURCE_DIR}/src/include/dear_nes_lib/nes.h
+	${CMAKE_SOURCE_DIR}/src/include/dear_nes_lib/ppu.h
+)
+
+add_library(dear_nes_lib STATIC ${dear_nes_lib_header_files} ${dear_nes_lib_source_files})
+target_include_directories(dear_nes_lib PUBLIC ${CMAKE_SOURCE_DIR}/src/include)
+set_property(TARGET dear_nes_lib PROPERTY CXX_STANDARD 17)
+set_property(TARGET dear_nes_lib PROPERTY CXX_STANDARD_REQUIRED ON)
+
 
 set(
 	source_files_list
@@ -121,6 +152,7 @@ endif()
 
 include_directories(
 	"${CMAKE_SOURCE_DIR}/src"
+	"${CMAKE_SOURCE_DIR}/src/include"
 	"${CMAKE_SOURCE_DIR}/external"
 	"${glfw_SOURCE_DIR}/include"
 	"${imgui_SOURCE_DIR}"
