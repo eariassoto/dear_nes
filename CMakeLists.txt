@@ -29,7 +29,7 @@ set(FMT_INSTALL OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(
 	fmt
 	GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-	GIT_TAG        10.2.1
+	GIT_TAG        12.2.0
 )
 
 # ImGui (docking branch)
@@ -52,8 +52,17 @@ target_link_libraries(dear_nes_v2 PRIVATE
 	fmt::fmt
 )
 
-set_property(TARGET dear_nes_v2 PROPERTY CXX_STANDARD 17)
-set_property(TARGET dear_nes_v2 PROPERTY CXX_STANDARD_REQUIRED ON)
+set_target_properties(dear_nes_v2 PROPERTIES
+	CXX_STANDARD 17
+	CXX_STANDARD_REQUIRED ON
+	VS_DEBUGGING_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+)
+
+add_custom_command(TARGET dear_nes_v2 POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy_directory
+		"${CMAKE_SOURCE_DIR}/res"
+		"$<TARGET_FILE_DIR:dear_nes_v2>/res"
+)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
 
