@@ -2,6 +2,7 @@
 #include <fmt/base.h>
 
 #include <cstdint>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <vector>
@@ -22,14 +23,27 @@ struct iNesHeader {
 };
 
 struct CpuState {
-    uint8_t reg_a_;
-    uint8_t reg_x_;
-    uint8_t reg_y_;
-    uint8_t sp_;
-    uint8_t status_;
-    uint16_t pc_;
-    char ram_[0xFFFF];
+    uint8_t reg_a;
+    uint8_t reg_x;
+    uint8_t reg_y;
+    uint8_t sp;
+    uint8_t status;
+    uint16_t pc;
+    uint8_t ram[0x10000];
 };
+
+int cpu_tick(CpuState* cpu) {
+    uint8_t opcode = cpu->ram[cpu->pc++];
+
+    switch (opcode) {
+        case 0xEA:  // NOP
+            return 2;
+        default:
+            fmt::println("Unhandled opcode: {:02X} at PC: {:04X}",
+                         opcode, cpu->pc - 1);
+            return 0;
+    }
+}
 
 int main() {
     const std::string rom_path = "res/roms/nestest.nes";
@@ -52,12 +66,22 @@ int main() {
     size_t prg_size = static_cast<size_t>(header.m_PrgRomChunks) * 16384;
 
     CpuState* cpu_state = new CpuState();
-    
-    file.read(&cpu_state->ram_[0x8000], prg_size);
+
+    file.read(reinterpret_cast<char*>(&cpu_state->ram[0x8000]), prg_size);
+    if (prg_size == 16384) {
+        std::memcpy(&cpu_state->ram[0xC000], &cpu_state->ram[0x8000], 16384);
+    }
+
+    cpu_state->pc = 0xC000;
+    cpu_state->sp = 0xFD;
+    cpu_state->status = 0x24;
+
     do {
         // TODO: Tick CPU
-    } while (cpu_state->ram_[0x0002] != 0x00);
-    
+        int cycles = cpu_tick(cpu_state);
+        if (cycles == 0) break;
+    } while (cpu_state->ram[0x0002] != 0x00);
+
     delete cpu_state;
     return 0;
 }
