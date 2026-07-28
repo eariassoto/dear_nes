@@ -30,425 +30,525 @@ struct CpuState {
     uint8_t ram[0x10000];
 };
 
-enum Addr {
-    NONE = 0,
-    IMMEDIATE,
-    ZERO_PAGE,
-    INDEXED_ZERO_PAGE_X,
-    INDEXED_ZERO_PAGE_Y,
-    ABSOLUTE,
-    INDEXED_ABSOLUTE_X,
-    INDEXED_ABSOLUTE_Y,
-    ABSOLUTE_INDIRECT,
-    INDEXED_INDIRECT_X,
-    INDIRECT_INDEXED_Y,
-    RELATIVE,
+enum CpuFlag : uint8_t {
+    C = (0b1 << 0),  // Carry Bit
+    Z = (0b1 << 1),  // Zero
+    I = (0b1 << 2),  // Disable Interrupts
+    D = (0b1 << 3),  // Decimal Mode
+    B = (0b1 << 4),  // Break
+    U = (0b1 << 5),  // Unused
+    V = (0b1 << 6),  // Overflow
+    N = (0b1 << 7),  // Negative
 };
 
-enum InstrCode {
-    NOP = 0,
-    ADC,
-    AND,
-    ASL,
-    ASL_ACCUM_ADDR,
-    EXEC_BRANCH,
-    BCC,
-    BCS,
-    BEQ,
-    BIT,
-    BMI,
-    BNE,
-    BPL,
-    BRK,
-    BVC,
-    BVS,
-    CLC,
-    CLD,
-    CLI,
-    CLV,
-    CMP,
-    CPX,
-    CPY,
-    DEC,
-    DEX,
-    DEY,
-    EOR,
-    INC,
-    INX,
-    INY,
-    JMP,
-    JSR,
-    LDA,
-    LDX,
-    LDY,
-    LSR,
-    LSR_ACCUM_ADDR,
-    ORA,
-    PHA,
-    PHP,
-    PLA,
-    PLP,
-    ROL,
-    ROL_ACCUM_ADDR,
-    ROR,
-    ROR_ACCUM_ADDR,
-    RTI,
-    RTS,
-    SBC,
-    SEC,
-    SED,
-    SEI,
-    STA,
-    STX,
-    STY,
-    TAX,
-    TAY,
-    TSX,
-    TXA,
-    TXS,
-    TYA
+// Base cycle table for 6502 opcodes (0x00 to 0xFF)
+constexpr uint8_t base_cycles[256] = {
+    7, 6, 0, 0, 0, 3, 5, 0, 3, 2, 2, 0, 0, 4, 6, 0, // 0x00 - 0x0F
+    2, 5, 0, 0, 0, 4, 6, 0, 2, 4, 0, 0, 0, 4, 7, 0, // 0x10 - 0x1F
+    6, 6, 0, 0, 3, 3, 5, 0, 4, 2, 2, 0, 4, 4, 6, 0, // 0x20 - 0x2F
+    2, 5, 0, 0, 0, 4, 6, 0, 2, 4, 0, 0, 0, 4, 7, 0, // 0x30 - 0x3F
+    6, 6, 0, 0, 0, 3, 5, 0, 3, 2, 2, 0, 3, 4, 6, 0, // 0x40 - 0x4F
+    2, 5, 0, 0, 0, 4, 6, 0, 2, 4, 0, 0, 0, 4, 7, 0, // 0x50 - 0x5F
+    6, 6, 0, 0, 0, 3, 5, 0, 4, 2, 2, 0, 5, 4, 6, 0, // 0x60 - 0x6F
+    2, 5, 0, 0, 0, 4, 6, 0, 2, 4, 0, 0, 0, 4, 7, 0, // 0x70 - 0x7F
+    0, 6, 0, 0, 3, 3, 3, 0, 2, 0, 2, 0, 4, 4, 4, 0, // 0x80 - 0x8F
+    2, 6, 0, 0, 4, 4, 4, 0, 2, 5, 2, 0, 0, 5, 0, 0, // 0x90 - 0x9F
+    2, 6, 2, 0, 3, 3, 3, 0, 2, 2, 2, 0, 4, 4, 4, 0, // 0xA0 - 0xAF
+    2, 5, 0, 0, 4, 4, 4, 0, 2, 4, 2, 0, 4, 4, 4, 0, // 0xB0 - 0xBF
+    2, 6, 0, 0, 3, 3, 5, 0, 2, 2, 2, 0, 4, 4, 6, 0, // 0xC0 - 0xCF
+    2, 5, 0, 0, 0, 4, 6, 0, 2, 4, 0, 0, 0, 4, 7, 0, // 0xD0 - 0xDF
+    2, 6, 0, 0, 3, 3, 5, 0, 2, 2, 2, 0, 4, 4, 6, 0, // 0xE0 - 0xEF
+    2, 5, 0, 0, 0, 4, 6, 0, 2, 4, 0, 0, 0, 4, 7, 0  // 0xF0 - 0xFF
 };
 
-struct Instruction {
-    const InstrCode code;
-    Addr addressing_mode;
-    uint8_t base_cycles;
-};
+// ============================================================================
+// Flag Helper Functions
+// ============================================================================
+void set_flag(CpuState* cpu, CpuFlag flag, bool value) {
+    if (value) {
+        cpu->status |= flag;
+    } else {
+        cpu->status &= ~flag;
+    }
+}
 
-static Instruction nes_instructions[256] = {
-    {InstrCode::BRK, Addr::NONE, 7},                 // 0x00
-    {InstrCode::ORA, Addr::INDEXED_INDIRECT_X, 6},   // 0x01
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x02
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x03
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x04
-    {InstrCode::ORA, Addr::ZERO_PAGE, 3},            // 0x05
-    {InstrCode::ASL, Addr::ZERO_PAGE, 5},            // 0x06
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x07
-    {InstrCode::PHP, Addr::NONE, 3},                 // 0x08
-    {InstrCode::ORA, Addr::IMMEDIATE, 2},            // 0x09
-    {InstrCode::ASL_ACCUM_ADDR, Addr::NONE, 2},      // 0x0A
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x0B
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x0C
-    {InstrCode::ORA, Addr::ABSOLUTE, 4},             // 0x0D
-    {InstrCode::ASL, Addr::ABSOLUTE, 6},             // 0x0E
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x0F
-    {InstrCode::BPL, Addr::RELATIVE, 2},             // 0x10
-    {InstrCode::ORA, Addr::INDIRECT_INDEXED_Y, 5},   // 0x11
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x12
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x13
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x14
-    {InstrCode::ORA, Addr::INDEXED_ZERO_PAGE_X, 4},  // 0x15
-    {InstrCode::ASL, Addr::INDEXED_ZERO_PAGE_X, 6},  // 0x16
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x17
-    {InstrCode::CLC, Addr::NONE, 2},                 // 0x18
-    {InstrCode::ORA, Addr::INDEXED_ABSOLUTE_Y, 4},   // 0x19
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x1A
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x1B
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x1C
-    {InstrCode::ORA, Addr::INDEXED_ABSOLUTE_X, 4},   // 0x1D
-    {InstrCode::ASL, Addr::INDEXED_ABSOLUTE_X, 7},   // 0x1E
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x1F
-    {InstrCode::JSR, Addr::ABSOLUTE, 6},             // 0x20
-    {InstrCode::AND, Addr::INDEXED_INDIRECT_X, 6},   // 0x21
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x22
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x23
-    {InstrCode::BIT, Addr::ZERO_PAGE, 3},            // 0x24
-    {InstrCode::AND, Addr::ZERO_PAGE, 3},            // 0x25
-    {InstrCode::ROL, Addr::ZERO_PAGE, 5},            // 0x26
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x27
-    {InstrCode::PLP, Addr::NONE, 4},                 // 0x28
-    {InstrCode::AND, Addr::IMMEDIATE, 2},            // 0x29
-    {InstrCode::ROL_ACCUM_ADDR, Addr::NONE, 2},      // 0x2A
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x2B
-    {InstrCode::BIT, Addr::ABSOLUTE, 4},             // 0x2C
-    {InstrCode::AND, Addr::ABSOLUTE, 4},             // 0x2D
-    {InstrCode::ROL, Addr::ABSOLUTE, 6},             // 0x2E
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x2F
-    {InstrCode::BMI, Addr::RELATIVE, 2},             // 0x30
-    {InstrCode::AND, Addr::INDIRECT_INDEXED_Y, 5},   // 0x31
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x32
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x33
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x34
-    {InstrCode::AND, Addr::INDEXED_ZERO_PAGE_X, 4},  // 0x35
-    {InstrCode::ROL, Addr::INDEXED_ZERO_PAGE_X, 6},  // 0x36
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x37
-    {InstrCode::SEC, Addr::NONE, 2},                 // 0x38
-    {InstrCode::AND, Addr::INDEXED_ABSOLUTE_Y, 4},   // 0x39
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x3A
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x3B
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x3C
-    {InstrCode::AND, Addr::INDEXED_ABSOLUTE_X, 4},   // 0x3D
-    {InstrCode::ROL, Addr::INDEXED_ABSOLUTE_X, 7},   // 0x3E
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x3F
-    {InstrCode::RTI, Addr::NONE, 6},                 // 0x40
-    {InstrCode::EOR, Addr::INDEXED_INDIRECT_X, 6},   // 0x41
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x42
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x43
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x44
-    {InstrCode::EOR, Addr::ZERO_PAGE, 3},            // 0x45
-    {InstrCode::LSR, Addr::ZERO_PAGE, 5},            // 0x46
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x47
-    {InstrCode::PHA, Addr::NONE, 3},                 // 0x48
-    {InstrCode::EOR, Addr::IMMEDIATE, 2},            // 0x49
-    {InstrCode::LSR_ACCUM_ADDR, Addr::NONE, 2},      // 0x4A
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x4B
-    {InstrCode::JMP, Addr::ABSOLUTE, 3},             // 0x4C
-    {InstrCode::EOR, Addr::ABSOLUTE, 4},             // 0x4D
-    {InstrCode::LSR, Addr::ABSOLUTE, 6},             // 0x4E
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x4F
-    {InstrCode::BVC, Addr::RELATIVE, 2},             // 0x50
-    {InstrCode::EOR, Addr::INDIRECT_INDEXED_Y, 5},   // 0x51
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x52
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x53
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x54
-    {InstrCode::EOR, Addr::INDEXED_ZERO_PAGE_X, 4},  // 0x55
-    {InstrCode::LSR, Addr::INDEXED_ZERO_PAGE_X, 6},  // 0x56
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x57
-    {InstrCode::CLI, Addr::NONE, 2},                 // 0x58
-    {InstrCode::EOR, Addr::INDEXED_ABSOLUTE_Y, 4},   // 0x59
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x5A
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x5B
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x5C
-    {InstrCode::EOR, Addr::INDEXED_ABSOLUTE_X, 4},   // 0x5D
-    {InstrCode::LSR, Addr::INDEXED_ABSOLUTE_X, 7},   // 0x5E
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x5F
-    {InstrCode::RTS, Addr::NONE, 6},                 // 0x60
-    {InstrCode::ADC, Addr::INDEXED_INDIRECT_X, 6},   // 0x61
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x62
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x63
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x64
-    {InstrCode::ADC, Addr::ZERO_PAGE, 3},            // 0x65
-    {InstrCode::ROR, Addr::ZERO_PAGE, 5},            // 0x66
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x67
-    {InstrCode::PLA, Addr::NONE, 4},                 // 0x68
-    {InstrCode::ADC, Addr::IMMEDIATE, 2},            // 0x69
-    {InstrCode::ROR_ACCUM_ADDR, Addr::NONE, 2},      // 0x6A
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x6B
-    {InstrCode::JMP, Addr::ABSOLUTE_INDIRECT, 5},    // 0x6C
-    {InstrCode::ADC, Addr::ABSOLUTE, 4},             // 0x6D
-    {InstrCode::ROR, Addr::ABSOLUTE, 6},             // 0x6E
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x6F
-    {InstrCode::BVS, Addr::RELATIVE, 2},             // 0x70
-    {InstrCode::ADC, Addr::INDIRECT_INDEXED_Y, 5},   // 0x71
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x72
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x73
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x74
-    {InstrCode::ADC, Addr::INDEXED_ZERO_PAGE_X, 4},  // 0x75
-    {InstrCode::ROR, Addr::INDEXED_ZERO_PAGE_X, 6},  // 0x76
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x77
-    {InstrCode::SEI, Addr::NONE, 2},                 // 0x78
-    {InstrCode::ADC, Addr::INDEXED_ABSOLUTE_Y, 4},   // 0x79
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x7A
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x7B
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x7C
-    {InstrCode::ADC, Addr::INDEXED_ABSOLUTE_X, 4},   // 0x7D
-    {InstrCode::ROR, Addr::INDEXED_ABSOLUTE_X, 7},   // 0x7E
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x7F
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x80
-    {InstrCode::STA, Addr::INDEXED_INDIRECT_X, 6},   // 0x81
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x82
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x83
-    {InstrCode::STY, Addr::ZERO_PAGE, 3},            // 0x84
-    {InstrCode::STA, Addr::ZERO_PAGE, 3},            // 0x85
-    {InstrCode::STX, Addr::ZERO_PAGE, 3},            // 0x86
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x87
-    {InstrCode::DEY, Addr::NONE, 2},                 // 0x88
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x89
-    {InstrCode::TXA, Addr::NONE, 2},                 // 0x8A
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x8B
-    {InstrCode::STY, Addr::ABSOLUTE, 4},             // 0x8C
-    {InstrCode::STA, Addr::ABSOLUTE, 4},             // 0x8D
-    {InstrCode::STX, Addr::ABSOLUTE, 4},             // 0x8E
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x8F
-    {InstrCode::BCC, Addr::RELATIVE, 2},             // 0x90
-    {InstrCode::STA, Addr::INDIRECT_INDEXED_Y, 6},   // 0x91
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x92
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x93
-    {InstrCode::STY, Addr::INDEXED_ZERO_PAGE_X, 4},  // 0x94
-    {InstrCode::STA, Addr::INDEXED_ZERO_PAGE_X, 4},  // 0x95
-    {InstrCode::STX, Addr::INDEXED_ZERO_PAGE_Y, 4},  // 0x96
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x97
-    {InstrCode::TYA, Addr::NONE, 2},                 // 0x98
-    {InstrCode::STA, Addr::INDEXED_ABSOLUTE_Y, 5},   // 0x99
-    {InstrCode::TXS, Addr::NONE, 2},                 // 0x9A
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x9B
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x9C
-    {InstrCode::STA, Addr::INDEXED_ABSOLUTE_X, 5},   // 0x9D
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x9E
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0x9F
-    {InstrCode::LDY, Addr::IMMEDIATE, 2},            // 0xA0
-    {InstrCode::LDA, Addr::INDEXED_INDIRECT_X, 6},   // 0xA1
-    {InstrCode::LDX, Addr::IMMEDIATE, 2},            // 0xA2
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xA3
-    {InstrCode::LDY, Addr::ZERO_PAGE, 3},            // 0xA4
-    {InstrCode::LDA, Addr::ZERO_PAGE, 3},            // 0xA5
-    {InstrCode::LDX, Addr::ZERO_PAGE, 3},            // 0xA6
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xA7
-    {InstrCode::TAY, Addr::NONE, 2},                 // 0xA8
-    {InstrCode::LDA, Addr::IMMEDIATE, 2},            // 0xA9
-    {InstrCode::TAX, Addr::NONE, 2},                 // 0xAA
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xAB
-    {InstrCode::LDY, Addr::ABSOLUTE, 4},             // 0xAC
-    {InstrCode::LDA, Addr::ABSOLUTE, 4},             // 0xAD
-    {InstrCode::LDX, Addr::ABSOLUTE, 4},             // 0xAE
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xAF
-    {InstrCode::BCS, Addr::RELATIVE, 2},             // 0xB0
-    {InstrCode::LDA, Addr::INDIRECT_INDEXED_Y, 5},   // 0xB1
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xB2
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xB3
-    {InstrCode::LDY, Addr::INDEXED_ZERO_PAGE_X, 4},  // 0xB4
-    {InstrCode::LDA, Addr::INDEXED_ZERO_PAGE_X, 4},  // 0xB5
-    {InstrCode::LDX, Addr::INDEXED_ZERO_PAGE_Y, 4},  // 0xB6
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xB7
-    {InstrCode::CLV, Addr::NONE, 2},                 // 0xB8
-    {InstrCode::LDA, Addr::INDEXED_ABSOLUTE_Y, 4},   // 0xB9
-    {InstrCode::TSX, Addr::NONE, 2},                 // 0xBA
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xBB
-    {InstrCode::LDY, Addr::INDEXED_ABSOLUTE_X, 4},   // 0xBC
-    {InstrCode::LDA, Addr::INDEXED_ABSOLUTE_X, 4},   // 0xBD
-    {InstrCode::LDX, Addr::INDEXED_ABSOLUTE_Y, 4},   // 0xBE
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xBF
-    {InstrCode::CPY, Addr::IMMEDIATE, 2},            // 0xC0
-    {InstrCode::CMP, Addr::INDEXED_INDIRECT_X, 6},   // 0xC1
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xC2
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xC3
-    {InstrCode::CPY, Addr::ZERO_PAGE, 3},            // 0xC4
-    {InstrCode::CMP, Addr::ZERO_PAGE, 3},            // 0xC5
-    {InstrCode::DEC, Addr::ZERO_PAGE, 5},            // 0xC6
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xC7
-    {InstrCode::INY, Addr::NONE, 2},                 // 0xC8
-    {InstrCode::CMP, Addr::IMMEDIATE, 2},            // 0xC9
-    {InstrCode::DEX, Addr::NONE, 2},                 // 0xCA
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xCB
-    {InstrCode::CPY, Addr::ABSOLUTE, 4},             // 0xCC
-    {InstrCode::CMP, Addr::ABSOLUTE, 4},             // 0xCD
-    {InstrCode::DEC, Addr::ABSOLUTE, 6},             // 0xCE
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xCF
-    {InstrCode::BNE, Addr::RELATIVE, 2},             // 0xD0
-    {InstrCode::CMP, Addr::INDIRECT_INDEXED_Y, 5},   // 0xD1
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xD2
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xD3
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xD4
-    {InstrCode::CMP, Addr::INDEXED_ZERO_PAGE_X, 4},  // 0xD5
-    {InstrCode::DEC, Addr::INDEXED_ZERO_PAGE_X, 6},  // 0xD6
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xD7
-    {InstrCode::CLD, Addr::NONE, 2},                 // 0xD8
-    {InstrCode::CMP, Addr::INDEXED_ABSOLUTE_Y, 4},   // 0xD9
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xDA
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xDB
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xDC
-    {InstrCode::CMP, Addr::INDEXED_ABSOLUTE_X, 4},   // 0xDD
-    {InstrCode::DEC, Addr::INDEXED_ABSOLUTE_X, 7},   // 0xDE
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xDF
-    {InstrCode::CPX, Addr::IMMEDIATE, 2},            // 0xE0
-    {InstrCode::SBC, Addr::INDEXED_INDIRECT_X, 6},   // 0xE1
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xE2
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xE3
-    {InstrCode::CPX, Addr::ZERO_PAGE, 3},            // 0xE4
-    {InstrCode::SBC, Addr::ZERO_PAGE, 3},            // 0xE5
-    {InstrCode::INC, Addr::ZERO_PAGE, 5},            // 0xE6
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xE7
-    {InstrCode::INX, Addr::NONE, 2},                 // 0xE8
-    {InstrCode::SBC, Addr::IMMEDIATE, 2},            // 0xE9
-    {InstrCode::NOP, Addr::NONE, 2},                 // 0xEA
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xEB
-    {InstrCode::CPX, Addr::ABSOLUTE, 4},             // 0xEC
-    {InstrCode::SBC, Addr::ABSOLUTE, 4},             // 0xED
-    {InstrCode::INC, Addr::ABSOLUTE, 6},             // 0xEE
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xEF
-    {InstrCode::BEQ, Addr::RELATIVE, 2},             // 0xF0
-    {InstrCode::SBC, Addr::INDIRECT_INDEXED_Y, 5},   // 0xF1
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xF2
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xF3
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xF4
-    {InstrCode::SBC, Addr::INDEXED_ZERO_PAGE_X, 4},  // 0xF5
-    {InstrCode::INC, Addr::INDEXED_ZERO_PAGE_X, 6},  // 0xF6
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xF7
-    {InstrCode::SED, Addr::NONE, 2},                 // 0xF8
-    {InstrCode::SBC, Addr::INDEXED_ABSOLUTE_Y, 4},   // 0xF9
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xFA
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xFB
-    {InstrCode::NOP, Addr::NONE, 0},                 // 0xFC
-    {InstrCode::SBC, Addr::INDEXED_ABSOLUTE_X, 4},   // 0xFD
-    {InstrCode::INC, Addr::INDEXED_ABSOLUTE_X, 7},   // 0xFE
-    {InstrCode::NOP, Addr::NONE, 0}                  // 0xFF
-};
+bool get_flag(const CpuState* cpu, CpuFlag flag) {
+    return (cpu->status & flag) != 0;
+}
 
-int execute_instruction(uint8_t opcode, CpuState* cpu) {
-    Instruction const& instruction = nes_instructions[opcode];
-    switch (instruction.code) {
-        case NOP:
-        case ADC:
-        case AND:
-        case ASL:
-        case ASL_ACCUM_ADDR:
-        case EXEC_BRANCH:
-        case BCC:
-        case BCS:
-        case BEQ:
-        case BIT:
-        case BMI:
-        case BNE:
-        case BPL:
-        case BRK:
-        case BVC:
-        case BVS:
-        case CLC:
-        case CLD:
-        case CLI:
-        case CLV:
-        case CMP:
-        case CPX:
-        case CPY:
-        case DEC:
-        case DEX:
-        case DEY:
-        case EOR:
-        case INC:
-        case INX:
-        case INY:
-        case JMP:
-        case JSR:
-        case LDA:
-        case LDX:
-        case LDY:
-        case LSR:
-        case LSR_ACCUM_ADDR:
-        case ORA:
-        case PHA:
-        case PHP:
-        case PLA:
-        case PLP:
-        case ROL:
-        case ROL_ACCUM_ADDR:
-        case ROR:
-        case ROR_ACCUM_ADDR:
-        case RTI:
-        case RTS:
-        case SBC:
-        case SEC:
-        case SED:
-        case SEI:
-        case STA:
-        case STX:
-        case STY:
-        case TAX:
-        case TAY:
-        case TSX:
-        case TXA:
-        case TXS:
-        case TYA:
-            fmt::println("Unhandled opcode: {:02X} at PC: {:04X}",
-                         opcode, cpu->pc - 1);
+// ============================================================================
+// Addressing Mode Helper Functions (Stubs for implementation)
+// ============================================================================
+uint8_t read_byte(CpuState* cpu, uint16_t addr) {
+    return cpu->ram[addr];
+}
 
+uint16_t addr_immediate(CpuState* cpu) {
+    // TODO: Implement Immediate addressing mode
+    return 0;
+}
+
+uint16_t addr_zero_page(CpuState* cpu) {
+    // TODO: Implement Zero Page addressing mode
+    return 0;
+}
+
+uint16_t addr_zero_page_x(CpuState* cpu) {
+    // TODO: Implement Indexed Zero Page X addressing mode
+    return 0;
+}
+
+uint16_t addr_zero_page_y(CpuState* cpu) {
+    // TODO: Implement Indexed Zero Page Y addressing mode
+    return 0;
+}
+
+uint16_t addr_absolute(CpuState* cpu) {
+    // TODO: Implement Absolute addressing mode
+    return 0;
+}
+
+uint16_t addr_absolute_x(CpuState* cpu, int& cycles) {
+    // TODO: Implement Indexed Absolute X addressing mode (may add +1 cycle on page boundary cross)
+    return 0;
+}
+
+uint16_t addr_absolute_y(CpuState* cpu, int& cycles) {
+    // TODO: Implement Indexed Absolute Y addressing mode (may add +1 cycle on page boundary cross)
+    return 0;
+}
+
+uint16_t addr_absolute_indirect(CpuState* cpu) {
+    // TODO: Implement Absolute Indirect addressing mode
+    return 0;
+}
+
+uint16_t addr_indexed_indirect_x(CpuState* cpu) {
+    // TODO: Implement Indexed Indirect X addressing mode
+    return 0;
+}
+
+uint16_t addr_indirect_indexed_y(CpuState* cpu, int& cycles) {
+    // TODO: Implement Indirect Indexed Y addressing mode (may add +1 cycle on page boundary cross)
+    return 0;
+}
+
+int8_t addr_relative(CpuState* cpu) {
+    // TODO: Implement Relative addressing mode
+    return 0;
+}
+
+// ============================================================================
+// Core Instruction Handlers (Stubs grouped by common topics)
+// ============================================================================
+
+// --- Load & Store Operations ---
+void op_lda(CpuState* cpu, uint8_t value) {
+    // TODO: Implement LDA (Load Accumulator)
+}
+
+void op_ldx(CpuState* cpu, uint8_t value) {
+    // TODO: Implement LDX (Load X Register)
+}
+
+void op_ldy(CpuState* cpu, uint8_t value) {
+    // TODO: Implement LDY (Load Y Register)
+}
+
+void op_sta(CpuState* cpu, uint16_t addr) {
+    // TODO: Implement STA (Store Accumulator)
+}
+
+void op_stx(CpuState* cpu, uint16_t addr) {
+    // TODO: Implement STX (Store X Register)
+}
+
+void op_sty(CpuState* cpu, uint16_t addr) {
+    // TODO: Implement STY (Store Y Register)
+}
+
+// --- Register Transfer Operations ---
+void op_tax(CpuState* cpu) {
+    // TODO: Implement TAX (Transfer Accumulator to X)
+}
+
+void op_txa(CpuState* cpu) {
+    // TODO: Implement TXA (Transfer X to Accumulator)
+}
+
+void op_tay(CpuState* cpu) {
+    // TODO: Implement TAY (Transfer Accumulator to Y)
+}
+
+void op_tya(CpuState* cpu) {
+    // TODO: Implement TYA (Transfer Y to Accumulator)
+}
+
+void op_tsx(CpuState* cpu) {
+    // TODO: Implement TSX (Transfer Stack Pointer to X)
+}
+
+void op_txs(CpuState* cpu) {
+    // TODO: Implement TXS (Transfer X to Stack Pointer)
+}
+
+// --- Arithmetic & Bitwise Logic Operations ---
+void op_adc(CpuState* cpu, uint8_t value) {
+    // TODO: Implement ADC (Add with Carry)
+}
+
+void op_sbc(CpuState* cpu, uint8_t value) {
+    // TODO: Implement SBC (Subtract with Carry)
+}
+
+void op_and(CpuState* cpu, uint8_t value) {
+    // TODO: Implement AND (Logical AND)
+}
+
+void op_ora(CpuState* cpu, uint8_t value) {
+    // TODO: Implement ORA (Logical Inclusive OR)
+}
+
+void op_eor(CpuState* cpu, uint8_t value) {
+    // TODO: Implement EOR (Logical Exclusive OR)
+}
+
+void op_bit(CpuState* cpu, uint8_t value) {
+    // TODO: Implement BIT (Bit Test)
+}
+
+// --- Comparison Operations ---
+void op_cmp(CpuState* cpu, uint8_t value) {
+    // TODO: Implement CMP (Compare Accumulator)
+}
+
+void op_cpx(CpuState* cpu, uint8_t value) {
+    // TODO: Implement CPX (Compare X Register)
+}
+
+void op_cpy(CpuState* cpu, uint8_t value) {
+    // TODO: Implement CPY (Compare Y Register)
+}
+
+// --- Increment & Decrement Operations ---
+void op_inc(CpuState* cpu, uint16_t addr) {
+    // TODO: Implement INC (Increment Memory)
+}
+
+void op_dec(CpuState* cpu, uint16_t addr) {
+    // TODO: Implement DEC (Decrement Memory)
+}
+
+void op_inx(CpuState* cpu) {
+    // TODO: Implement INX (Increment X)
+}
+
+void op_dex(CpuState* cpu) {
+    // TODO: Implement DEX (Decrement X)
+}
+
+void op_iny(CpuState* cpu) {
+    // TODO: Implement INY (Increment Y)
+}
+
+void op_dey(CpuState* cpu) {
+    // TODO: Implement DEY (Decrement Y)
+}
+
+// --- Shift & Rotate Operations ---
+void op_asl_accum(CpuState* cpu) {
+    // TODO: Implement ASL (Arithmetic Shift Left Accumulator)
+}
+
+void op_asl_mem(CpuState* cpu, uint16_t addr) {
+    // TODO: Implement ASL (Arithmetic Shift Left Memory)
+}
+
+void op_lsr_accum(CpuState* cpu) {
+    // TODO: Implement LSR (Logical Shift Right Accumulator)
+}
+
+void op_lsr_mem(CpuState* cpu, uint16_t addr) {
+    // TODO: Implement LSR (Logical Shift Right Memory)
+}
+
+void op_rol_accum(CpuState* cpu) {
+    // TODO: Implement ROL (Rotate Left Accumulator)
+}
+
+void op_rol_mem(CpuState* cpu, uint16_t addr) {
+    // TODO: Implement ROL (Rotate Left Memory)
+}
+
+void op_ror_accum(CpuState* cpu) {
+    // TODO: Implement ROR (Rotate Right Accumulator)
+}
+
+void op_ror_mem(CpuState* cpu, uint16_t addr) {
+    // TODO: Implement ROR (Rotate Right Memory)
+}
+
+// --- Branching & Jumps ---
+void op_branch(CpuState* cpu, bool condition, int8_t offset, int& cycles) {
+    // TODO: Implement Branch logic (adds +1 cycle if branch taken, +1 extra if page crossed)
+}
+
+void op_jmp(CpuState* cpu, uint16_t addr) {
+    // TODO: Implement JMP (Jump)
+}
+
+void op_jsr(CpuState* cpu, uint16_t addr) {
+    // TODO: Implement JSR (Jump to Subroutine)
+}
+
+void op_rts(CpuState* cpu) {
+    // TODO: Implement RTS (Return from Subroutine)
+}
+
+void op_rti(CpuState* cpu) {
+    // TODO: Implement RTI (Return from Interrupt)
+}
+
+void op_brk(CpuState* cpu) {
+    // TODO: Implement BRK (Force Interrupt)
+}
+
+// --- Stack Operations ---
+void op_pha(CpuState* cpu) {
+    // TODO: Implement PHA (Push Accumulator)
+}
+
+void op_php(CpuState* cpu) {
+    // TODO: Implement PHP (Push Processor Status)
+}
+
+void op_pla(CpuState* cpu) {
+    // TODO: Implement PLA (Pull Accumulator)
+}
+
+void op_plp(CpuState* cpu) {
+    // TODO: Implement PLP (Pull Processor Status)
+}
+
+// ============================================================================
+// Instruction Execution (Direct Switch on Opcode with Cycle Tracking)
+// ============================================================================
+int execute_instruction(CpuState* cpu, uint8_t opcode) {
+    int cycles = base_cycles[opcode];
+
+    switch (opcode) {
+        // --- LDA Variants ---
+        case 0xA9: op_lda(cpu, read_byte(cpu, addr_immediate(cpu))); break;
+        case 0xA5: op_lda(cpu, read_byte(cpu, addr_zero_page(cpu))); break;
+        case 0xB5: op_lda(cpu, read_byte(cpu, addr_zero_page_x(cpu))); break;
+        case 0xAD: op_lda(cpu, read_byte(cpu, addr_absolute(cpu))); break;
+        case 0xBD: op_lda(cpu, read_byte(cpu, addr_absolute_x(cpu, cycles))); break;
+        case 0xB9: op_lda(cpu, read_byte(cpu, addr_absolute_y(cpu, cycles))); break;
+        case 0xA1: op_lda(cpu, read_byte(cpu, addr_indexed_indirect_x(cpu))); break;
+        case 0xB1: op_lda(cpu, read_byte(cpu, addr_indirect_indexed_y(cpu, cycles))); break;
+
+        // --- LDX Variants ---
+        case 0xA2: op_ldx(cpu, read_byte(cpu, addr_immediate(cpu))); break;
+        case 0xA6: op_ldx(cpu, read_byte(cpu, addr_zero_page(cpu))); break;
+        case 0xB6: op_ldx(cpu, read_byte(cpu, addr_zero_page_y(cpu))); break;
+        case 0xAE: op_ldx(cpu, read_byte(cpu, addr_absolute(cpu))); break;
+        case 0xBE: op_ldx(cpu, read_byte(cpu, addr_absolute_y(cpu, cycles))); break;
+
+        // --- LDY Variants ---
+        case 0xA0: op_ldy(cpu, read_byte(cpu, addr_immediate(cpu))); break;
+        case 0xA4: op_ldy(cpu, read_byte(cpu, addr_zero_page(cpu))); break;
+        case 0xB4: op_ldy(cpu, read_byte(cpu, addr_zero_page_x(cpu))); break;
+        case 0xAC: op_ldy(cpu, read_byte(cpu, addr_absolute(cpu))); break;
+        case 0xBC: op_ldy(cpu, read_byte(cpu, addr_absolute_x(cpu, cycles))); break;
+
+        // --- STA Variants ---
+        case 0x85: op_sta(cpu, addr_zero_page(cpu)); break;
+        case 0x95: op_sta(cpu, addr_zero_page_x(cpu)); break;
+        case 0x8D: op_sta(cpu, addr_absolute(cpu)); break;
+        case 0x9D: op_sta(cpu, addr_absolute_x(cpu, cycles)); break;
+        case 0x99: op_sta(cpu, addr_absolute_y(cpu, cycles)); break;
+        case 0x81: op_sta(cpu, addr_indexed_indirect_x(cpu)); break;
+        case 0x91: op_sta(cpu, addr_indirect_indexed_y(cpu, cycles)); break;
+
+        // --- STX Variants ---
+        case 0x86: op_stx(cpu, addr_zero_page(cpu)); break;
+        case 0x96: op_stx(cpu, addr_zero_page_y(cpu)); break;
+        case 0x8E: op_stx(cpu, addr_absolute(cpu)); break;
+
+        // --- STY Variants ---
+        case 0x84: op_sty(cpu, addr_zero_page(cpu)); break;
+        case 0x94: op_sty(cpu, addr_zero_page_x(cpu)); break;
+        case 0x8C: op_sty(cpu, addr_absolute(cpu)); break;
+
+        // --- Register Transfers ---
+        case 0xAA: op_tax(cpu); break;
+        case 0x8A: op_txa(cpu); break;
+        case 0xA8: op_tay(cpu); break;
+        case 0x98: op_tya(cpu); break;
+        case 0xBA: op_tsx(cpu); break;
+        case 0x9A: op_txs(cpu); break;
+
+        // --- ADC Variants ---
+        case 0x69: op_adc(cpu, read_byte(cpu, addr_immediate(cpu))); break;
+        case 0x65: op_adc(cpu, read_byte(cpu, addr_zero_page(cpu))); break;
+        case 0x75: op_adc(cpu, read_byte(cpu, addr_zero_page_x(cpu))); break;
+        case 0x6D: op_adc(cpu, read_byte(cpu, addr_absolute(cpu))); break;
+        case 0x7D: op_adc(cpu, read_byte(cpu, addr_absolute_x(cpu, cycles))); break;
+        case 0x79: op_adc(cpu, read_byte(cpu, addr_absolute_y(cpu, cycles))); break;
+        case 0x61: op_adc(cpu, read_byte(cpu, addr_indexed_indirect_x(cpu))); break;
+        case 0x71: op_adc(cpu, read_byte(cpu, addr_indirect_indexed_y(cpu, cycles))); break;
+
+        // --- SBC Variants ---
+        case 0xE9: op_sbc(cpu, read_byte(cpu, addr_immediate(cpu))); break;
+        case 0xE5: op_sbc(cpu, read_byte(cpu, addr_zero_page(cpu))); break;
+        case 0xF5: op_sbc(cpu, read_byte(cpu, addr_zero_page_x(cpu))); break;
+        case 0xED: op_sbc(cpu, read_byte(cpu, addr_absolute(cpu))); break;
+        case 0xFD: op_sbc(cpu, read_byte(cpu, addr_absolute_x(cpu, cycles))); break;
+        case 0xF9: op_sbc(cpu, read_byte(cpu, addr_absolute_y(cpu, cycles))); break;
+        case 0xE1: op_sbc(cpu, read_byte(cpu, addr_indexed_indirect_x(cpu))); break;
+        case 0xF1: op_sbc(cpu, read_byte(cpu, addr_indirect_indexed_y(cpu, cycles))); break;
+
+        // --- AND Variants ---
+        case 0x29: op_and(cpu, read_byte(cpu, addr_immediate(cpu))); break;
+        case 0x25: op_and(cpu, read_byte(cpu, addr_zero_page(cpu))); break;
+        case 0x35: op_and(cpu, read_byte(cpu, addr_zero_page_x(cpu))); break;
+        case 0x2D: op_and(cpu, read_byte(cpu, addr_absolute(cpu))); break;
+        case 0x3D: op_and(cpu, read_byte(cpu, addr_absolute_x(cpu, cycles))); break;
+        case 0x39: op_and(cpu, read_byte(cpu, addr_absolute_y(cpu, cycles))); break;
+        case 0x21: op_and(cpu, read_byte(cpu, addr_indexed_indirect_x(cpu))); break;
+        case 0x31: op_and(cpu, read_byte(cpu, addr_indirect_indexed_y(cpu, cycles))); break;
+
+        // --- ORA Variants ---
+        case 0x09: op_ora(cpu, read_byte(cpu, addr_immediate(cpu))); break;
+        case 0x05: op_ora(cpu, read_byte(cpu, addr_zero_page(cpu))); break;
+        case 0x15: op_ora(cpu, read_byte(cpu, addr_zero_page_x(cpu))); break;
+        case 0x0D: op_ora(cpu, read_byte(cpu, addr_absolute(cpu))); break;
+        case 0x1D: op_ora(cpu, read_byte(cpu, addr_absolute_x(cpu, cycles))); break;
+        case 0x19: op_ora(cpu, read_byte(cpu, addr_absolute_y(cpu, cycles))); break;
+        case 0x01: op_ora(cpu, read_byte(cpu, addr_indexed_indirect_x(cpu))); break;
+        case 0x11: op_ora(cpu, read_byte(cpu, addr_indirect_indexed_y(cpu, cycles))); break;
+
+        // --- EOR Variants ---
+        case 0x49: op_eor(cpu, read_byte(cpu, addr_immediate(cpu))); break;
+        case 0x45: op_eor(cpu, read_byte(cpu, addr_zero_page(cpu))); break;
+        case 0x55: op_eor(cpu, read_byte(cpu, addr_zero_page_x(cpu))); break;
+        case 0x4D: op_eor(cpu, read_byte(cpu, addr_absolute(cpu))); break;
+        case 0x5D: op_eor(cpu, read_byte(cpu, addr_absolute_x(cpu, cycles))); break;
+        case 0x59: op_eor(cpu, read_byte(cpu, addr_absolute_y(cpu, cycles))); break;
+        case 0x41: op_eor(cpu, read_byte(cpu, addr_indexed_indirect_x(cpu))); break;
+        case 0x51: op_eor(cpu, read_byte(cpu, addr_indirect_indexed_y(cpu, cycles))); break;
+
+        // --- BIT Variants ---
+        case 0x24: op_bit(cpu, read_byte(cpu, addr_zero_page(cpu))); break;
+        case 0x2C: op_bit(cpu, read_byte(cpu, addr_absolute(cpu))); break;
+
+        // --- CMP Variants ---
+        case 0xC9: op_cmp(cpu, read_byte(cpu, addr_immediate(cpu))); break;
+        case 0xC5: op_cmp(cpu, read_byte(cpu, addr_zero_page(cpu))); break;
+        case 0xD5: op_cmp(cpu, read_byte(cpu, addr_zero_page_x(cpu))); break;
+        case 0xCD: op_cmp(cpu, read_byte(cpu, addr_absolute(cpu))); break;
+        case 0xDD: op_cmp(cpu, read_byte(cpu, addr_absolute_x(cpu, cycles))); break;
+        case 0xD9: op_cmp(cpu, read_byte(cpu, addr_absolute_y(cpu, cycles))); break;
+        case 0xC1: op_cmp(cpu, read_byte(cpu, addr_indexed_indirect_x(cpu))); break;
+        case 0xD1: op_cmp(cpu, read_byte(cpu, addr_indirect_indexed_y(cpu, cycles))); break;
+
+        // --- CPX Variants ---
+        case 0xE0: op_cpx(cpu, read_byte(cpu, addr_immediate(cpu))); break;
+        case 0xE4: op_cpx(cpu, read_byte(cpu, addr_zero_page(cpu))); break;
+        case 0xEC: op_cpx(cpu, read_byte(cpu, addr_absolute(cpu))); break;
+
+        // --- CPY Variants ---
+        case 0xC0: op_cpy(cpu, read_byte(cpu, addr_immediate(cpu))); break;
+        case 0xC4: op_cpy(cpu, read_byte(cpu, addr_zero_page(cpu))); break;
+        case 0xCC: op_cpy(cpu, read_byte(cpu, addr_absolute(cpu))); break;
+
+        // --- Increment & Decrement ---
+        case 0xE6: op_inc(cpu, addr_zero_page(cpu)); break;
+        case 0xF6: op_inc(cpu, addr_zero_page_x(cpu)); break;
+        case 0xEE: op_inc(cpu, addr_absolute(cpu)); break;
+        case 0xFE: op_inc(cpu, addr_absolute_x(cpu, cycles)); break;
+
+        case 0xC6: op_dec(cpu, addr_zero_page(cpu)); break;
+        case 0xD6: op_dec(cpu, addr_zero_page_x(cpu)); break;
+        case 0xCE: op_dec(cpu, addr_absolute(cpu)); break;
+        case 0xDE: op_dec(cpu, addr_absolute_x(cpu, cycles)); break;
+
+        case 0xE8: op_inx(cpu); break;
+        case 0xCA: op_dex(cpu); break;
+        case 0xC8: op_iny(cpu); break;
+        case 0x88: op_dey(cpu); break;
+
+        // --- Shift & Rotate ---
+        case 0x0A: op_asl_accum(cpu); break;
+        case 0x06: op_asl_mem(cpu, addr_zero_page(cpu)); break;
+        case 0x16: op_asl_mem(cpu, addr_zero_page_x(cpu)); break;
+        case 0x0E: op_asl_mem(cpu, addr_absolute(cpu)); break;
+        case 0x1E: op_asl_mem(cpu, addr_absolute_x(cpu, cycles)); break;
+
+        case 0x4A: op_lsr_accum(cpu); break;
+        case 0x46: op_lsr_mem(cpu, addr_zero_page(cpu)); break;
+        case 0x56: op_lsr_mem(cpu, addr_zero_page_x(cpu)); break;
+        case 0x4E: op_lsr_mem(cpu, addr_absolute(cpu)); break;
+        case 0x5E: op_lsr_mem(cpu, addr_absolute_x(cpu, cycles)); break;
+
+        case 0x2A: op_rol_accum(cpu); break;
+        case 0x26: op_rol_mem(cpu, addr_zero_page(cpu)); break;
+        case 0x36: op_rol_mem(cpu, addr_zero_page_x(cpu)); break;
+        case 0x2E: op_rol_mem(cpu, addr_absolute(cpu)); break;
+        case 0x3E: op_rol_mem(cpu, addr_absolute_x(cpu, cycles)); break;
+
+        case 0x6A: op_ror_accum(cpu); break;
+        case 0x66: op_ror_mem(cpu, addr_zero_page(cpu)); break;
+        case 0x76: op_ror_mem(cpu, addr_zero_page_x(cpu)); break;
+        case 0x6E: op_ror_mem(cpu, addr_absolute(cpu)); break;
+        case 0x7E: op_ror_mem(cpu, addr_absolute_x(cpu, cycles)); break;
+
+        // --- Branching ---
+        case 0x90: op_branch(cpu, !get_flag(cpu, CpuFlag::C), addr_relative(cpu), cycles); break; // BCC
+        case 0xB0: op_branch(cpu, get_flag(cpu, CpuFlag::C), addr_relative(cpu), cycles); break;  // BCS
+        case 0xF0: op_branch(cpu, get_flag(cpu, CpuFlag::Z), addr_relative(cpu), cycles); break;  // BEQ
+        case 0xD0: op_branch(cpu, !get_flag(cpu, CpuFlag::Z), addr_relative(cpu), cycles); break; // BNE
+        case 0x30: op_branch(cpu, get_flag(cpu, CpuFlag::N), addr_relative(cpu), cycles); break;  // BMI
+        case 0x10: op_branch(cpu, !get_flag(cpu, CpuFlag::N), addr_relative(cpu), cycles); break; // BPL
+        case 0x50: op_branch(cpu, !get_flag(cpu, CpuFlag::V), addr_relative(cpu), cycles); break; // BVC
+        case 0x70: op_branch(cpu, get_flag(cpu, CpuFlag::V), addr_relative(cpu), cycles); break;  // BVS
+
+        // --- Jumps & Returns ---
+        case 0x4C: op_jmp(cpu, addr_absolute(cpu)); break;
+        case 0x6C: op_jmp(cpu, addr_absolute_indirect(cpu)); break;
+        case 0x20: op_jsr(cpu, addr_absolute(cpu)); break;
+        case 0x60: op_rts(cpu); break;
+        case 0x40: op_rti(cpu); break;
+        case 0x00: op_brk(cpu); break;
+
+        // --- Flag Operations ---
+        case 0x18: set_flag(cpu, CpuFlag::C, false); break; // CLC
+        case 0x38: set_flag(cpu, CpuFlag::C, true); break;  // SEC
+        case 0x58: set_flag(cpu, CpuFlag::I, false); break; // CLI
+        case 0x78: set_flag(cpu, CpuFlag::I, true); break;  // SEI
+        case 0xD8: set_flag(cpu, CpuFlag::D, false); break; // CLD
+        case 0xF8: set_flag(cpu, CpuFlag::D, true); break;  // SED
+        case 0xB8: set_flag(cpu, CpuFlag::V, false); break; // CLV
+
+        // --- Stack Operations ---
+        case 0x48: op_pha(cpu); break;
+        case 0x08: op_php(cpu); break;
+        case 0x68: op_pla(cpu); break;
+        case 0x28: op_plp(cpu); break;
+
+        // --- NOP ---
+        case 0xEA: break;
+
+        default:
+            fmt::println("Unhandled opcode: {:02X} at PC: {:04X}", opcode, cpu->pc - 1);
             break;
     }
-    return 0;
+    return cycles;
 }
 
 int cpu_tick(CpuState* cpu) {
     uint8_t opcode = cpu->ram[cpu->pc++];
-    return execute_instruction(opcode, cpu);
+    return execute_instruction(cpu, opcode);
 }
 
 int main() {
@@ -483,10 +583,21 @@ int main() {
     cpu_state->status = 0x24;
 
     do {
-        // TODO: Tick CPU
         int cycles = cpu_tick(cpu_state);
         if (cycles == 0) break;
-    } while (cpu_state->ram[0x0002] != 0x00);
+    } while (cpu_state->ram[0x0002] == 0x00);
+
+    uint8_t error_code = cpu_state->ram[0x0002];
+    uint8_t unofficial_code = cpu_state->ram[0x0003];
+    fmt::println("Execution stopped at PC: 0x{:04X}", cpu_state->pc);
+    fmt::println("NESTEST official error code ($02): 0x{:02X}", error_code);
+    fmt::println("NESTEST unofficial error code ($03): 0x{:02X}", unofficial_code);
+
+    if (error_code == 0x00) {
+        fmt::println("NESTEST official instructions PASSED!");
+    } else {
+        fmt::println("NESTEST official instructions FAILED with error: 0x{:02X}", error_code);
+    }
 
     delete cpu_state;
     return 0;
